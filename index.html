@@ -493,15 +493,15 @@ textarea{height:60px;resize:vertical}
 <div class="section" id="sec-merci">
   <div class="card">
     <div class="card-header">
-      <div><div class="card-title">Scanner codice a barre</div><div class="card-sub">Lettore USB (plug &amp; scan) · oppure usa la webcam del PC</div></div>
+      <div><div class="card-title">Scanner codice a barre</div><div class="card-sub">Lettore USB (plug &amp; scan) · Fotocamera telefono/iPad · Webcam PC</div></div>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-primary" onclick="avviaWebcamScanner()" id="btn-webcam">📷 Webcam</button>
+        <button class="btn btn-primary" onclick="avviaWebcamScanner()" id="btn-webcam">📷 Fotocamera / Webcam</button>
         <button class="btn btn-red" onclick="fermaWebcam()" id="btn-stop-webcam" style="display:none">⏹ Ferma</button>
       </div>
     </div>
     <div class="scanner-area" id="webcam-area" style="display:none">
       <div class="scanner-frame-wrap">
-        <video id="pc-video" autoplay muted playsinline></video>
+        <video id="pc-video" autoplay muted playsinline webkit-playsinline style="width:100%;max-height:250px;object-fit:cover;border-radius:6px"></video>
         <div class="scanner-crosshair"></div>
       </div>
       <div id="webcam-status" style="color:#aaa;font-size:12px;margin-top:8px;text-align:center">Inquadra il codice a barre…</div>
@@ -539,7 +539,7 @@ textarea{height:60px;resize:vertical}
       <div id="fattura-status" style="display:none;padding:12px;border-radius:8px;margin-bottom:12px;font-size:13px"></div>
       <div id="fattura-risultati" style="display:none">
         <div style="font-size:13px;font-weight:700;color:#1f7a3e;margin-bottom:8px">✅ Prodotti riconosciuti dalla fattura:</div>
-        <table><thead><tr><th>Prodotto</th><th>Qtà</th><th>Lotto</th><th>Prezzo</th><th></th></tr></thead>
+        <table><thead><tr><th>Prodotto</th><th>Qtà</th><th>Lotto</th><th>Scadenza</th><th>Prezzo</th><th></th></tr></thead>
         <tbody id="fattura-prodotti"></tbody></table>
         <div style="display:flex;gap:8px;margin-top:10px">
           <button class="btn btn-green" onclick="importaTuttiFattura()">📥 Importa tutti nel registro</button>
@@ -776,7 +776,53 @@ textarea{height:60px;resize:vertical}
       <button class="btn btn-green" onclick="salvaAnagrafica()" style="width:100%">💾 Salva Anagrafica</button>
     </div>
   </div>
-  <!-- BIGLIETTO DA VISITA PREVIEW -->
+  <!-- REGISTRO PERSONALE / OPERATORI -->
+  <div class="card" style="border:2px solid #2471a3">
+    <div class="card-header">
+      <div>
+        <div class="card-title" style="color:#2471a3">👥 Personale / Operatori</div>
+        <div class="card-sub">Inserisci le persone che lavorano nel ristorante — i nomi appariranno automaticamente in tutti i campi "Operatore"</div>
+      </div>
+      <button class="btn btn-sm" style="background:#2471a3;color:#fff" onclick="aggiungiOperatore()">+ Aggiungi Persona</button>
+    </div>
+    <div id="operatori-form" style="display:none;padding:16px;border-bottom:1px solid #eee">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:#666;display:block;margin-bottom:4px">NOME E COGNOME *</label>
+          <input class="form-input" type="text" id="op-nome" placeholder="Mario Rossi">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:#666;display:block;margin-bottom:4px">RUOLO</label>
+          <select class="form-input" id="op-ruolo">
+            <option value="Titolare">Titolare / OSA</option>
+            <option value="Responsabile HACCP">Responsabile HACCP</option>
+            <option value="Chef">Chef / Cuoco</option>
+            <option value="Sous-chef">Sous-chef</option>
+            <option value="Cuoco">Cuoco di partita</option>
+            <option value="Aiuto cuoco">Aiuto cuoco</option>
+            <option value="Pasticcere">Pasticcere</option>
+            <option value="Cameriere">Cameriere</option>
+            <option value="Responsabile sala">Responsabile sala</option>
+            <option value="Barista">Barista</option>
+            <option value="Lavapiatti">Lavapiatti</option>
+            <option value="Magazziniere">Magazziniere</option>
+            <option value="Stagista">Stagista</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:#666;display:block;margin-bottom:4px">TELEFONO</label>
+          <input class="form-input" type="tel" id="op-tel" placeholder="+39 ...">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-green" onclick="salvaOperatore()">✓ Salva</button>
+        <button class="btn" onclick="document.getElementById('operatori-form').style.display='none'">Annulla</button>
+      </div>
+    </div>
+    <div id="operatori-lista" style="padding:16px"></div>
+  </div>
+
+    <!-- BIGLIETTO DA VISITA PREVIEW -->
   <div class="card" id="an-preview-card" style="display:none">
     <div class="card-header"><div class="card-title">📇 Anteprima Biglietto da Visita</div></div>
     <div id="an-biglietto" style="background:#f8fdf9;border:2px solid #1f7a3e;border-radius:8px;padding:20px;margin:16px;font-family:serif"></div>
@@ -909,6 +955,7 @@ textarea{height:60px;resize:vertical}
     <button class="btn btn-sm" style="background:#e0f7fa;color:#006064;border-color:#00bcd4" onclick="mostraScheda('decong',this)">❄️ Decongelamento</button>
     <button class="btn btn-sm" style="background:#e8f5e9;color:#1b5e20;border-color:#4caf50" onclick="mostraScheda('formaz',this)">🎓 Formazione Personale</button>
     <button class="btn btn-sm" style="background:#fce4ec;color:#880e4f;border-color:#e91e63" onclick="mostraScheda('allergserv',this)">⚠️ Allergeni Servizio</button>
+    <button class="btn btn-sm" style="background:#e3f2fd;color:#0d47a1;border-color:#1976d2" onclick="mostraScheda('conserv',this)">🕐 Tempi Conservazione</button>
   </div>
 
   <!-- SCHEDA 1 - NON CONFORMITÀ -->
@@ -1565,6 +1612,201 @@ textarea{height:60px;resize:vertical}
       <div id="formaz-alert" style="display:none;background:#fff3cd;border:1px solid #d4a017;border-radius:8px;padding:12px;margin:10px 16px;font-size:12px;color:#7a5800"></div>
       <table><thead><tr><th>Nome</th><th>Ruolo</th><th>Formazione</th><th>Ente</th><th>Data</th><th>Scadenza</th><th>N. Attestato</th><th>Stato</th><th></th></tr></thead>
       <tbody id="formaz-lista"></tbody></table>
+    </div>
+  </div>
+
+  <!-- TEMPI DI CONSERVAZIONE -->
+  <div id="sch-conserv" style="display:none">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">🕐 Tempi di Conservazione dei Prodotti</div>
+          <div class="card-sub">Reg. CE 852/2004 — Tempi massimi dopo apertura confezione e/o lavorazione. Temperatura +4°C / -18°C</div>
+        </div>
+        <button class="btn btn-sm" style="background:#0d47a1;color:#fff" onclick="stampaConservazione()">🖨️ Stampa</button>
+      </div>
+      <div style="padding:16px">
+        <!-- TABS -->
+        <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap">
+          <button class="btn btn-sm" style="background:#e8f5e9;color:#2e7d32;border-color:#4caf50;font-weight:700" onclick="showConsTab('crudi')">🥩 Prodotti Crudi +4°C</button>
+          <button class="btn btn-sm" style="background:#fff3e0;color:#e65100;border-color:#ff9800" onclick="showConsTab('cotti')">🍳 Prodotti Cotti +4°C</button>
+          <button class="btn btn-sm" style="background:#e3f2fd;color:#0d47a1;border-color:#1976d2" onclick="showConsTab('congelati')">❄️ Congelati -18°C</button>
+          <button class="btn btn-sm" style="background:#f3e5f5;color:#6a1b9a;border-color:#9c27b0" onclick="showConsTab('sottovuoto')">📦 Sottovuoto +4°C</button>
+        </div>
+
+        <!-- CRUDI +4°C -->
+        <div id="cons-crudi">
+          <h3 style="font-size:13px;color:#2e7d32;margin-bottom:10px;border-bottom:2px solid #4caf50;padding-bottom:4px">LATTIERO-CASEARI — Temperatura +4°C</h3>
+          <table><thead><tr><th>Prodotto</th><th>Tempo Conservazione</th></tr></thead><tbody>
+            <tr><td>Latte UHT</td><td>3 giorni</td></tr>
+            <tr><td>Panna</td><td>3 giorni</td></tr>
+            <tr><td>Burro</td><td>7 giorni</td></tr>
+            <tr><td>Margarina</td><td>14 giorni</td></tr>
+            <tr><td>Prodotti di latteria</td><td>3 giorni</td></tr>
+            <tr><td>Formaggi freschi (crescenza, ricotta)</td><td>4 giorni</td></tr>
+            <tr><td>Formaggi cremosi (taleggio, gorgonzola, caprini, robiola)</td><td>4 giorni</td></tr>
+            <tr><td>Formaggi stagionati</td><td>20 giorni</td></tr>
+            <tr><td>Grana o parmigiano in crosta</td><td>1 mese</td></tr>
+            <tr><td>Grana o parmigiano grattugiato</td><td>7 giorni</td></tr>
+          </tbody></table>
+
+          <h3 style="font-size:13px;color:#2e7d32;margin:16px 0 10px;border-bottom:2px solid #4caf50;padding-bottom:4px">SALUMI (a pezzi interi)</h3>
+          <table><thead><tr><th>Prodotto</th><th>Tempo Conservazione</th></tr></thead><tbody>
+            <tr><td>Pancetta</td><td>7 giorni</td></tr>
+            <tr><td>Salami crudi</td><td>5 giorni</td></tr>
+            <tr><td>Mortadella</td><td>6 giorni</td></tr>
+            <tr><td>Prosciutto cotto e crudo</td><td>7 giorni</td></tr>
+            <tr><td>Salsicce</td><td>3 giorni</td></tr>
+            <tr><td>Salumi cotti</td><td>7 giorni</td></tr>
+            <tr><td>Carni salate</td><td>7 giorni</td></tr>
+            <tr><td>Wurstel</td><td>5 giorni</td></tr>
+            <tr><td>Salsiccia fresca o affumicata</td><td>3 giorni</td></tr>
+            <tr><td>Muscoletto di prosciutto crudo</td><td>20 giorni</td></tr>
+            <tr><td>Salumi, prosciutti affettati</td><td>3 giorni</td></tr>
+          </tbody></table>
+
+          <h3 style="font-size:13px;color:#2e7d32;margin:16px 0 10px;border-bottom:2px solid #4caf50;padding-bottom:4px">VERDURE</h3>
+          <table><thead><tr><th>Prodotto</th><th>Tempo Conservazione</th></tr></thead><tbody>
+            <tr><td>Verdure lavorate da utilizzare per la cottura</td><td>3 giorni</td></tr>
+            <tr><td>Verdure lavorate da utilizzare crude</td><td>1 giorno</td></tr>
+            <tr><td>Verdure IV gamma</td><td>2 giorni</td></tr>
+          </tbody></table>
+
+          <h3 style="font-size:13px;color:#2e7d32;margin:16px 0 10px;border-bottom:2px solid #4caf50;padding-bottom:4px">UOVA</h3>
+          <table><thead><tr><th>Prodotto</th><th>Tempo Conservazione</th></tr></thead><tbody>
+            <tr><td>Uova pastorizzate</td><td>2 giorni</td></tr>
+            <tr><td>Tuorli, albumi di uova fresche</td><td>Entro la giornata</td></tr>
+          </tbody></table>
+
+          <h3 style="font-size:13px;color:#2e7d32;margin:16px 0 10px;border-bottom:2px solid #4caf50;padding-bottom:4px">CARNE BOVINA</h3>
+          <table><thead><tr><th>Prodotto</th><th>Tempo Conservazione</th></tr></thead><tbody>
+            <tr><td>Bistecche, costine</td><td>3 giorni</td></tr>
+            <tr><td>Parti intere, arrosti, brasati</td><td>4 giorni</td></tr>
+            <tr><td>Spezzatini, bocconcini</td><td>2 giorni</td></tr>
+            <tr><td>Macinati</td><td>2 giorni</td></tr>
+            <tr><td>Frattaglie</td><td>1 giorno</td></tr>
+          </tbody></table>
+
+          <h3 style="font-size:13px;color:#2e7d32;margin:16px 0 10px;border-bottom:2px solid #4caf50;padding-bottom:4px">CARNE AVICOLA</h3>
+          <table><thead><tr><th>Prodotto</th><th>Tempo Conservazione</th></tr></thead><tbody>
+            <tr><td>A pezzi, semilavorati</td><td>2 giorni</td></tr>
+            <tr><td>Interi</td><td>5 giorni</td></tr>
+          </tbody></table>
+
+          <h3 style="font-size:13px;color:#2e7d32;margin:16px 0 10px;border-bottom:2px solid #4caf50;padding-bottom:4px">PESCE</h3>
+          <table><thead><tr><th>Prodotto</th><th>Tempo Conservazione</th></tr></thead><tbody>
+            <tr><td>Pesce intero e a tranci</td><td>2 giorni</td></tr>
+          </tbody></table>
+
+          <h3 style="font-size:13px;color:#2e7d32;margin:16px 0 10px;border-bottom:2px solid #4caf50;padding-bottom:4px">PRODOTTI DI GASTRONOMIA</h3>
+          <table><thead><tr><th>Prodotto</th><th>Tempo Conservazione</th></tr></thead><tbody>
+            <tr><td>Pasta fresca ripiena e non</td><td>5 giorni</td></tr>
+            <tr><td>Creme crude</td><td>2 giorni</td></tr>
+          </tbody></table>
+
+          <h3 style="font-size:13px;color:#2e7d32;margin:16px 0 10px;border-bottom:2px solid #4caf50;padding-bottom:4px">SPEZIE E CONDIMENTI</h3>
+          <table><thead><tr><th>Prodotto</th><th>Tempo Conservazione</th></tr></thead><tbody>
+            <tr><td>Maionese industriale, salsa aurora</td><td>1 mese</td></tr>
+            <tr><td>Ketchup, salsa chili</td><td>4 mesi</td></tr>
+            <tr><td>Senape</td><td>6 mesi</td></tr>
+            <tr><td>Estratti (brodo granulare, dadi)</td><td>6 mesi</td></tr>
+            <tr><td>Spezie in polvere</td><td>6 mesi</td></tr>
+            <tr><td>Cannella, chiodi di garofano, noce moscata</td><td>1 anno</td></tr>
+          </tbody></table>
+
+          <h3 style="font-size:13px;color:#2e7d32;margin:16px 0 10px;border-bottom:2px solid #4caf50;padding-bottom:4px">PRODOTTI CONFEZIONATI (dopo apertura)</h3>
+          <table><thead><tr><th>Prodotto</th><th>Tempo Conservazione</th></tr></thead><tbody>
+            <tr><td>Verdure in scatola, pomodori pelati</td><td>3 giorni</td></tr>
+            <tr><td>Frutta sciroppata</td><td>7 giorni</td></tr>
+            <tr><td>Budini, creme</td><td>2 giorni</td></tr>
+            <tr><td>Carne</td><td>2 giorni</td></tr>
+            <tr><td>Sughi, brodi</td><td>2 giorni</td></tr>
+            <tr><td>Pesce</td><td>2 giorni</td></tr>
+            <tr><td>Salse di pomodoro</td><td>5 giorni</td></tr>
+            <tr><td>Tonno</td><td>2 giorni</td></tr>
+            <tr><td>Olive</td><td>1 mese</td></tr>
+          </tbody></table>
+
+          <h3 style="font-size:13px;color:#2e7d32;margin:16px 0 10px;border-bottom:2px solid #4caf50;padding-bottom:4px">PRODOTTI SCONGELATI</h3>
+          <table><thead><tr><th>Prodotto</th><th>Tempo Conservazione</th></tr></thead><tbody>
+            <tr><td>Carne, pollame, pesce, semilavorati</td><td style="color:#c62828;font-weight:700">1 giorno (24h)</td></tr>
+          </tbody></table>
+          <div style="background:#ffebee;border-radius:6px;padding:8px 12px;margin-top:6px;font-size:11px;color:#c62828;font-weight:600">
+            ⚠️ Qualsiasi prodotto scongelato deve essere utilizzato entro 24 ore dal termine dello scongelamento e NON deve subire il ricongelamento.
+          </div>
+        </div>
+
+        <!-- COTTI +4°C -->
+        <div id="cons-cotti" style="display:none">
+          <h3 style="font-size:13px;color:#e65100;margin-bottom:10px;border-bottom:2px solid #ff9800;padding-bottom:4px">PRODOTTI COTTI — Temperatura +4°C</h3>
+          <table><thead><tr><th>Prodotto</th><th>Tempo Conservazione</th></tr></thead><tbody>
+            <tr><td>Sughi</td><td>2 giorni</td></tr>
+            <tr><td>Carne</td><td>2 giorni</td></tr>
+            <tr><td>Pesce</td><td>2 giorni</td></tr>
+            <tr><td>Verdure e frutta</td><td>2 giorni</td></tr>
+            <tr><td>Creme pasticceria</td><td>2 giorni</td></tr>
+            <tr><td>Polpettone in gelatina</td><td>6 giorni</td></tr>
+            <tr><td>Uova in gelatina</td><td>3 giorni</td></tr>
+            <tr><td>Insalate in salsa</td><td>3 giorni</td></tr>
+            <tr><td>Gelatine</td><td>3 giorni</td></tr>
+            <tr><td>Prodotti sott'olio</td><td>6 giorni</td></tr>
+          </tbody></table>
+        </div>
+
+        <!-- CONGELATI -18°C -->
+        <div id="cons-congelati" style="display:none">
+          <h3 style="font-size:13px;color:#0d47a1;margin-bottom:10px;border-bottom:2px solid #1976d2;padding-bottom:4px">PRODOTTI CRUDI — Temperatura -18°C dopo abbattimento</h3>
+          <table><thead><tr><th>Prodotto</th><th>Tempo Conservazione</th></tr></thead><tbody>
+            <tr><td>Pesce acqua dolce</td><td>6 mesi</td></tr>
+            <tr><td>Filetti pesce</td><td>2 mesi</td></tr>
+            <tr><td>Carne macinata o a pezzi di maiale o manzo</td><td>3 mesi</td></tr>
+            <tr><td>Arrosti</td><td>4 mesi</td></tr>
+            <tr><td>Bistecche con o senza osso di vitello</td><td>6 mesi</td></tr>
+            <tr><td>Bistecche con o senza osso di maiale</td><td>3 mesi</td></tr>
+            <tr><td>Pollo o tacchino intero</td><td>1 anno</td></tr>
+            <tr><td>Pollo o tacchino a pezzi</td><td>6 mesi</td></tr>
+            <tr><td>Verdure da consumare cotte</td><td>8 mesi</td></tr>
+            <tr><td>Frutta</td><td>8 mesi</td></tr>
+            <tr><td>Agrumi</td><td>4 mesi</td></tr>
+          </tbody></table>
+
+          <h3 style="font-size:13px;color:#0d47a1;margin:16px 0 10px;border-bottom:2px solid #1976d2;padding-bottom:4px">PRODOTTI COTTI — Temperatura -18°C dopo abbattimento</h3>
+          <table><thead><tr><th>Prodotto</th><th>Tempo Conservazione</th></tr></thead><tbody>
+            <tr><td>Primi complessi con carne (lasagna, cannelloni, ravioli)</td><td>2 mesi</td></tr>
+            <tr><td>Piatti senza carne (a base pasta, formaggi)</td><td>4 mesi</td></tr>
+            <tr><td>Zuppe, passati, creme</td><td>4 mesi</td></tr>
+            <tr><td>Salse e fondi per cottura</td><td>3 mesi</td></tr>
+            <tr><td>Arrosti di maiale e manzo</td><td>2 mesi</td></tr>
+            <tr><td>Pollame</td><td>2 mesi</td></tr>
+            <tr><td>Verdure cotte (fagiolini)</td><td>6 mesi</td></tr>
+            <tr><td>Mele cotte, salsa di mele</td><td>8 mesi</td></tr>
+          </tbody></table>
+        </div>
+
+        <!-- SOTTOVUOTO +4°C -->
+        <div id="cons-sottovuoto" style="display:none">
+          <h3 style="font-size:13px;color:#6a1b9a;margin-bottom:10px;border-bottom:2px solid #9c27b0;padding-bottom:4px">CARNE BOVINA SOTTOVUOTO — Temperatura +4°C</h3>
+          <table><thead><tr><th>Prodotto</th><th>Tempo Conservazione</th></tr></thead><tbody>
+            <tr><td>Bistecche, costine</td><td>7 giorni</td></tr>
+            <tr><td>Parti intere, arrosti, brasati</td><td>7 giorni</td></tr>
+            <tr><td>Spezzatini, bocconcini</td><td>7 giorni</td></tr>
+            <tr><td>Macinati</td><td>4 giorni</td></tr>
+            <tr><td>Frattaglie</td><td>3 giorni</td></tr>
+          </tbody></table>
+
+          <h3 style="font-size:13px;color:#6a1b9a;margin:16px 0 10px;border-bottom:2px solid #9c27b0;padding-bottom:4px">CARNE AVICOLA SOTTOVUOTO</h3>
+          <table><thead><tr><th>Prodotto</th><th>Tempo Conservazione</th></tr></thead><tbody>
+            <tr><td>A pezzi (petto, cosce), semilavorati</td><td>5 giorni</td></tr>
+            <tr><td>Interi</td><td>7 giorni</td></tr>
+          </tbody></table>
+        </div>
+
+        <div style="margin-top:16px;padding:10px;background:#f5f5f5;border-radius:6px;font-size:10px;color:#888;line-height:1.6">
+          <strong>Nota:</strong> Qualora la data di scadenza originaria risulti inferiore ai tempi previsti dopo l'apertura, fare riferimento alla data di scadenza data dal fornitore.<br>
+          <strong>Fonti:</strong> Kansas State University — Refrigerator Storage Chart / UNI — Manuale di corretta prassi igienica per la ristorazione collettiva (1994) — FERCO / National Food Safety Database — USA.<br>
+          I prodotti in banda stagnata (latta), se avanzati vanno conservati in contenitori adatti e diversi dalle scatole originali.
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2370,14 +2612,43 @@ function selCatMerce(id){
 }
 
 /* ===== AUTOCOMPLETE PRODOTTO ===== */
+// Mappa categorie Ordine Merce → categorie Merci in Entrata
+const ORDINE_TO_MERCI = {
+  CARNI: ['carni_bovino','carni_vitello','carni_maiale','carni_pollame','carni_coniglio','carni_selvaggina'],
+  PESCE: ['pesce_fresco','pesce_conserve'],
+  PASTA: ['pasta_surgelata','sughi'],
+  ORTOFRUTTA: ['ortofrutta'],
+  LATTICINI: ['latticini'],
+  DISPENSA: ['dispensa','conserve'],
+  VINI: ['vini'],
+  PANIFICIO: ['panificio','grissini_crackers'],
+  DOLCI: ['dessert'],
+  VARIO: ['vario']
+};
+
 function acProdotto(q){
   const list=document.getElementById('ac-prodotto-list');
   const cat=document.getElementById('m-categoria').value;
   let items=[];
   if(cat&&PRODOTTI_CAT[cat])items=[...PRODOTTI_CAT[cat]];
+  // Add from PRODOTTI_DB (Ordine Merce) — mapped to same category
+  if(cat && ORDINE_TO_MERCI[cat]){
+    ORDINE_TO_MERCI[cat].forEach(ordCat=>{
+      if(PRODOTTI_DB[ordCat] && PRODOTTI_DB[ordCat].items){
+        PRODOTTI_DB[ordCat].items.forEach(p=>{
+          if(!items.includes(p)) items.push(p);
+        });
+      }
+    });
+  }
   // Also add products from past records in same category
   const merciStorico=load('merci').filter(m=>!cat||m.categoria===cat).map(m=>m.prodotto).filter(Boolean);
   merciStorico.forEach(p=>{if(!items.includes(p))items.push(p);});
+  // Also add from custom ordine catalogo
+  const customProds=JSON.parse(localStorage.getItem('tc_ordine_custom')||'[]');
+  customProds.forEach(p=>{
+    if(p.nome && !items.includes(p.nome)) items.push(p.nome);
+  });
   const filtered=q?items.filter(i=>i.toLowerCase().includes(q.toLowerCase())):items;
   if(!filtered.length){list.style.display='none';return;}
   list.style.display='block';
@@ -2396,27 +2667,108 @@ function selProdotto(nome){
 
 function chiudiAc(id){const el=document.getElementById(id);if(el)el.style.display='none';}
 
-/* ===== BARCODE SCANNER ===== */
+/* ===== BARCODE SCANNER (Mobile + Desktop) ===== */
 let pcCodeReader=null;
-function avviaWebcamScanner(){
+let scannerStream=null;
+let scannerInterval=null;
+
+async function avviaWebcamScanner(){
   document.getElementById('webcam-area').style.display='block';
   document.getElementById('btn-webcam').style.display='none';
   document.getElementById('btn-stop-webcam').style.display='inline-block';
-  const ZX=window.ZXing;
-  if(!ZX){document.getElementById('webcam-status').textContent='Libreria non disponibile — usa il lettore USB o digita il codice manualmente.';return;}
-  pcCodeReader=new ZX.BrowserMultiFormatReader();
-  ZX.BrowserCodeReader.listVideoInputDevices().then(devices=>{
-    const back=devices.find(d=>/(back|rear|environment)/i.test(d.label))||devices[devices.length-1];
-    document.getElementById('webcam-status').textContent='Inquadra il codice a barre…';
-    pcCodeReader.decodeFromVideoDevice(back?.deviceId,'pc-video',(result,err)=>{
-      if(result){impostaBarcode(result.getText());fermaWebcam();}
+  const statusEl=document.getElementById('webcam-status');
+  const videoEl=document.getElementById('pc-video');
+  statusEl.textContent='Avvio fotocamera...';
+
+  // Request camera — prefer back camera on mobile
+  try {
+    scannerStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: {ideal:'environment'}, width:{ideal:1280}, height:{ideal:720} },
+      audio: false
     });
-  }).catch(e=>{document.getElementById('webcam-status').textContent='Errore accesso webcam: '+e.message;});
+    videoEl.srcObject = scannerStream;
+    await videoEl.play();
+    statusEl.textContent='Inquadra il codice a barre…';
+
+    // Try native BarcodeDetector first (Chrome Android, Safari 16.4+)
+    if('BarcodeDetector' in window){
+      try {
+        const detector = new BarcodeDetector({formats:['ean_13','ean_8','code_128','code_39','itf','upc_a','upc_e','qr_code']});
+        statusEl.textContent='📱 Inquadra il codice a barre… (BarcodeDetector nativo)';
+        scannerInterval = setInterval(async()=>{
+          try {
+            const barcodes = await detector.detect(videoEl);
+            if(barcodes.length > 0){
+              const code = barcodes[0].rawValue;
+              if(code){
+                clearInterval(scannerInterval);
+                scannerInterval=null;
+                impostaBarcode(code);
+                fermaWebcam();
+              }
+            }
+          } catch(e){}
+        }, 300);
+        return;
+      } catch(e){
+        // BarcodeDetector failed, fall through to ZXing
+      }
+    }
+
+    // Fallback: ZXing library
+    const ZX=window.ZXing;
+    if(ZX){
+      pcCodeReader=new ZX.BrowserMultiFormatReader();
+      statusEl.textContent='📱 Inquadra il codice a barre… (ZXing)';
+      pcCodeReader.decodeFromVideoElement(videoEl,(result,err)=>{
+        if(result){
+          impostaBarcode(result.getText());
+          fermaWebcam();
+        }
+      });
+    } else {
+      // No BarcodeDetector, no ZXing — manual canvas scanning
+      statusEl.textContent='📱 Inquadra il codice a barre…';
+      scanWithCanvas(videoEl, statusEl);
+    }
+
+  } catch(e){
+    statusEl.innerHTML='❌ Errore fotocamera: '+e.message+'<br><br>'+
+      '<strong>Su telefono/iPad:</strong> Il file deve essere aperto tramite un server (non file://). '+
+      'Prova ad aprire l\'app da Firebase Hosting o da un server locale.<br>'+
+      'Oppure usa il <strong>lettore USB CCD</strong> o digita il codice manualmente.';
+  }
 }
+
+function scanWithCanvas(videoEl, statusEl){
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  scannerInterval = setInterval(()=>{
+    if(videoEl.readyState !== videoEl.HAVE_ENOUGH_DATA) return;
+    canvas.width = videoEl.videoWidth;
+    canvas.height = videoEl.videoHeight;
+    ctx.drawImage(videoEl, 0, 0);
+    // Try BarcodeDetector on canvas
+    if('BarcodeDetector' in window){
+      const detector = new BarcodeDetector({formats:['ean_13','ean_8','code_128','code_39','itf']});
+      detector.detect(canvas).then(barcodes=>{
+        if(barcodes.length>0){
+          clearInterval(scannerInterval);
+          scannerInterval=null;
+          impostaBarcode(barcodes[0].rawValue);
+          fermaWebcam();
+        }
+      }).catch(e=>{});
+    }
+  }, 500);
+}
+
 function fermaWebcam(){
+  if(scannerInterval){clearInterval(scannerInterval);scannerInterval=null;}
   if(pcCodeReader){try{pcCodeReader.reset();}catch(e){}}
+  if(scannerStream){scannerStream.getTracks().forEach(t=>t.stop());scannerStream=null;}
   const v=document.getElementById('pc-video');
-  if(v&&v.srcObject){v.srcObject.getTracks().forEach(t=>t.stop());v.srcObject=null;}
+  if(v){v.srcObject=null;}
   document.getElementById('webcam-area').style.display='none';
   document.getElementById('btn-webcam').style.display='inline-block';
   document.getElementById('btn-stop-webcam').style.display='none';
@@ -2435,7 +2787,55 @@ function impostaBarcode(code){
   document.getElementById('m-lotto').value=code;
   document.getElementById('barcode-banner-code').textContent=code;
   document.getElementById('barcode-prefill-banner').style.display='block';
-  document.getElementById('m-prodotto').focus();
+  // Try to lookup product name from barcode via Open Food Facts API
+  cercaProdottoDaBarcode(code);
+}
+
+async function cercaProdottoDaBarcode(ean){
+  const banner = document.getElementById('barcode-prefill-banner');
+  banner.innerHTML = '📦 Codice: <strong>'+ean+'</strong> — ⏳ Ricerca prodotto...';
+  try {
+    const res = await fetch('https://world.openfoodfacts.org/api/v2/product/'+ean+'.json');
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    if(data.status === 1 && data.product){
+      const p = data.product;
+      const nome = p.product_name_it || p.product_name || '';
+      const marca = p.brands || '';
+      const qty = p.quantity || '';
+      const displayName = nome + (marca ? ' ('+marca+')' : '');
+      if(displayName){
+        document.getElementById('m-prodotto').value = displayName;
+        banner.innerHTML = '📦 Codice: <strong>'+ean+'</strong> — ✅ Trovato: <strong>'+displayName+'</strong>'+(qty?' — '+qty:'');
+        banner.style.background = '#e8f5e9';
+        banner.style.borderColor = '#4caf50';
+        banner.style.color = '#2e7d32';
+        // Try to auto-select category based on product categories
+        if(p.categories_tags){
+          const cats = p.categories_tags.join(' ').toLowerCase();
+          if(cats.includes('meat')||cats.includes('carn')) selCatMerce('CARNI');
+          else if(cats.includes('fish')||cats.includes('pesce')) selCatMerce('PESCE');
+          else if(cats.includes('pasta')||cats.includes('cereal')) selCatMerce('PASTA');
+          else if(cats.includes('dairy')||cats.includes('latte')||cats.includes('cheese')||cats.includes('formag')) selCatMerce('LATTICINI');
+          else if(cats.includes('fruit')||cats.includes('vegetable')||cats.includes('ortof')) selCatMerce('ORTOFRUTTA');
+          else if(cats.includes('wine')||cats.includes('vino')||cats.includes('beverage')||cats.includes('bevand')) selCatMerce('VINI');
+          else if(cats.includes('bread')||cats.includes('pane')||cats.includes('bakery')) selCatMerce('PANIFICIO');
+        }
+        document.getElementById('m-qty').focus();
+        return;
+      }
+    }
+    // Not found
+    banner.innerHTML = '📦 Codice: <strong>'+ean+'</strong> — ⚠️ Prodotto non trovato nel database. Inserisci il nome manualmente.';
+    banner.style.background = '#fff3cd';
+    banner.style.borderColor = '#d4a017';
+    banner.style.color = '#7a5800';
+    document.getElementById('m-prodotto').focus();
+  } catch(err){
+    // Network error — probably offline or blocked
+    banner.innerHTML = '📦 Codice: <strong>'+ean+'</strong> — Inserisci il nome prodotto manualmente.';
+    document.getElementById('m-prodotto').focus();
+  }
 }
 function clearBarcode(){
   document.getElementById('barcode-input').value='';
@@ -2613,10 +3013,40 @@ function saveMerce(){
   const rec={};fields.forEach(f=>{const el=document.getElementById('m-'+f);if(el)rec[f]=el.value;});
   rec.categoria=document.getElementById('m-categoria').value||'';
   if(!rec.data)rec.data=today.toISOString().slice(0,10);
-  const merci=load('merci');merci.unshift(rec);save('merci',merci);
+  const merci=load('merci');
+  if(typeof window._editMerceIdx==='number' && window._editMerceIdx>=0){
+    merci[window._editMerceIdx]=rec;
+    window._editMerceIdx=-1;
+  } else {
+    merci.unshift(rec);
+  }
+  save('merci',merci);
   resetFormMerce();renderMerci();
 }
 function deleteMerce(i){if(confirm('Eliminare?')){const m=load('merci');m.splice(i,1);save('merci',m);renderMerci();}}
+function editMerce(i){
+  const merci=load('merci');
+  const r=merci[i];if(!r)return;
+  // Pre-fill the registration form with existing data
+  document.getElementById('m-data').value=r.data||'';
+  document.getElementById('m-fornitore').value=r.fornitore||'';
+  document.getElementById('m-prodotto').value=r.prodotto||'';
+  document.getElementById('m-qty').value=r.qty||'';
+  document.getElementById('m-lotto').value=r.lotto||'';
+  document.getElementById('m-scadenza').value=r.scadenza||'';
+  document.getElementById('m-temp').value=r.temp||'';
+  document.getElementById('m-imballo').value=r.imballo||'si';
+  document.getElementById('m-conforme').value=r.conforme||'si';
+  document.getElementById('m-note').value=r.note||'';
+  // Select category
+  if(r.categoria) selCatMerce(r.categoria);
+  // Set edit mode
+  window._editMerceIdx = i;
+  // Scroll to form
+  document.getElementById('m-fornitore').scrollIntoView({behavior:'smooth'});
+  document.getElementById('m-fornitore').focus();
+  showToast('Modifica il prodotto e clicca Registra merce','#2471a3');
+}
 function renderMerci(){
   const q=(document.getElementById('merci-search')?.value||'').toLowerCase();
   const merci=load('merci').filter(m=>!q||m.fornitore?.toLowerCase().includes(q)||m.prodotto?.toLowerCase().includes(q));
@@ -2633,6 +3063,7 @@ function renderMerci(){
   </tr>`).join('');
 
   checkScadenzeMerci();
+  setTimeout(setupOperatoreDropdowns, 100);
 }
 
 /* ===== DASHBOARD ===== */
@@ -3094,6 +3525,7 @@ function loadAnagrafica(){return JSON.parse(localStorage.getItem('tc_anagrafica'
 function saveAnagraficaData(v){localStorage.setItem('tc_anagrafica',JSON.stringify(v));}
 
 function renderAnagrafica(){
+  renderOperatoriLista();
   const a=loadAnagrafica();
   const fields=['nome','tipo','indirizzo','citta','piva','cf','titolare','resp','tel','email','scia','ulss','data-notifica','data-form'];
   fields.forEach(f=>{const el=document.getElementById('an-'+f);if(el)el.value=a[f.replace('-','_')]||'';});
@@ -3360,6 +3792,8 @@ function mostraScheda(id,btn){
   if(id==='decong')renderDecongLista();
   if(id==='formaz')renderFormazLista();
   if(id==='allergserv')renderAllergServLista();
+  if(id==='conserv')showConsTab('crudi');
+  setTimeout(setupOperatoreDropdowns, 100);
 }
 
 function renderSchede(){
@@ -3368,7 +3802,9 @@ function renderSchede(){
 }
 
 /* NON CONFORMITÀ */
+let editNCId=-1;
 function nuovaNC(){
+  editNCId=-1;
   document.getElementById('nc-form').style.display='block';
   document.getElementById('nc-data').value=today.toISOString().slice(0,10);
   ['nc-resp','nc-desc','nc-elimina','nc-azione'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
@@ -3378,7 +3814,9 @@ function salvaNC(){
   const desc=document.getElementById('nc-desc')?.value.trim();
   if(!desc){alert('Inserisci la descrizione');return;}
   const rec={id:Date.now(),data,resp:document.getElementById('nc-resp')?.value||'',desc,elimina:document.getElementById('nc-elimina')?.value||'',azione:document.getElementById('nc-azione')?.value||''};
-  const list=load('nc_list');list.unshift(rec);save('nc_list',list);
+  const list=load('nc_list');
+  if(editNCId>0){const idx=list.findIndex(r=>r.id===editNCId);if(idx>=0){rec.id=editNCId;list[idx]=rec;}editNCId=-1;}else{list.unshift(rec);}
+  save('nc_list',list);
   document.getElementById('nc-form').style.display='none';
   renderNC();showToast('Non conformità salvata','#1f7a3e');
 }
@@ -3390,9 +3828,21 @@ function renderNC(){
   tbody.innerHTML=list.map(r=>`<tr><td>${r.data}</td><td style="max-width:200px">${r.desc}</td><td>${r.elimina||'—'}</td><td>${r.azione||'—'}</td><td>${r.resp||'—'}</td><td><button class="btn btn-sm" style="background:#fdecea;color:#c0392b" onclick="delNC(${r.id})">🗑</button></td></tr>`).join('');
 }
 function delNC(id){if(!confirm('Eliminare?'))return;save('nc_list',load('nc_list').filter(r=>r.id!==id));renderNC();}
+function editNCRow(id){
+  const r=load('nc_list').find(r=>r.id===id);if(!r)return;
+  editNCId=id;
+  document.getElementById('nc-form').style.display='block';
+  document.getElementById('nc-data').value=r.data||'';
+  document.getElementById('nc-resp').value=r.resp||'';
+  document.getElementById('nc-desc').value=r.desc||'';
+  document.getElementById('nc-elimina').value=r.elimina||'';
+  document.getElementById('nc-azione').value=r.azione||'';
+}
 
 /* INFESTANTI */
+let editInfId=-1;
 function nuovoInfestante(){
+  editInfId=-1;
   document.getElementById('inf-form').style.display='block';
   document.getElementById('inf-data').value=today.toISOString().slice(0,10);
 }
@@ -3400,7 +3850,9 @@ function salvaInfestante(){
   const data=document.getElementById('inf-data')?.value;
   if(!data){alert('Inserisci la data');return;}
   const rec={id:Date.now(),data,rod:document.getElementById('inf-rod')?.value||'OK',str:document.getElementById('inf-str')?.value||'OK',vol:document.getElementById('inf-vol')?.value||'OK',note:document.getElementById('inf-note')?.value||''};
-  const list=load('inf_list');list.unshift(rec);save('inf_list',list);
+  const list=load('inf_list');
+  if(editInfId>0){const idx=list.findIndex(r=>r.id===editInfId);if(idx>=0){rec.id=editInfId;list[idx]=rec;}editInfId=-1;}else{list.unshift(rec);}
+  save('inf_list',list);
   document.getElementById('inf-form').style.display='none';
   renderInfestanti();showToast('Controllo infestanti salvato','#1f7a3e');
 }
@@ -3412,9 +3864,21 @@ function renderInfestanti(){
   tbody.innerHTML=list.map(r=>`<tr><td>${r.data}</td><td style="color:${r.rod==='NC'?'#c0392b':'#1f7a3e'}">${r.rod}</td><td style="color:${r.str==='NC'?'#c0392b':'#1f7a3e'}">${r.str}</td><td style="color:${r.vol==='NC'?'#c0392b':'#1f7a3e'}">${r.vol}</td><td>${r.note||'—'}</td><td><button class="btn btn-sm" style="background:#fdecea;color:#c0392b" onclick="delInf(${r.id})">🗑</button></td></tr>`).join('');
 }
 function delInf(id){if(!confirm('Eliminare?'))return;save('inf_list',load('inf_list').filter(r=>r.id!==id));renderInfestanti();}
+function editInfRow(id){
+  const r=load('inf_list').find(r=>r.id===id);if(!r)return;
+  editInfId=id;
+  document.getElementById('inf-form').style.display='block';
+  document.getElementById('inf-data').value=r.data||'';
+  document.getElementById('inf-rod').value=r.rod||'OK';
+  document.getElementById('inf-str').value=r.str||'OK';
+  document.getElementById('inf-vol').value=r.vol||'OK';
+  document.getElementById('inf-note').value=r.note||'';
+}
 
 /* VALIDAZIONE COTTURA */
+let editVCId=-1;
 function nuovaValidCottura(){
+  editVCId=-1;
   const oggi = new Date();
   document.getElementById('vc-data-prod').value = oggi.toISOString().split('T')[0];
   document.getElementById('vc-ora-cott').value = oggi.toTimeString().slice(0,5);
@@ -3462,7 +3926,9 @@ function salvaValidCottura(){
     scadenza: document.getElementById('vc-scadenza')?.value||'',
     noteEt: document.getElementById('vc-note-et')?.value||''
   };
-  const list=load('vc_list');list.unshift(rec);save('vc_list',list);
+  const list=load('vc_list');
+  if(editVCId>0){const idx=list.findIndex(r=>r.id===editVCId);if(idx>=0){rec.id=editVCId;list[idx]=rec;}editVCId=-1;}else{list.unshift(rec);}
+  save('vc_list',list);
   document.getElementById('vc-form').style.display='none';
   renderValidCottura();
   showToast('Validazione cottura salvata','#1f7a3e');
@@ -3499,6 +3965,26 @@ function renderValidCottura(){
 }
 
 function delVC(id){if(!confirm('Eliminare?'))return;save('vc_list',load('vc_list').filter(r=>r.id!==id));renderValidCottura();}
+function editVCRow(id){
+  const r=load('vc_list').find(r=>r.id===id);if(!r)return;
+  editVCId=id;
+  document.getElementById('vc-form').style.display='block';
+  document.getElementById('vc-prod').value=r.prod||'';
+  document.getElementById('vc-stato').value=r.stato||'';
+  document.getElementById('vc-metodo').value=r.metodo||'';
+  document.getElementById('vc-durata').value=r.durata||'';
+  document.getElementById('vc-temp').value=r.temp||'';
+  document.getElementById('vc-data-prod').value=r.dataProd||'';
+  document.getElementById('vc-ora-cott').value=r.oraCott||'';
+  document.getElementById('vc-dest').value=r.dest||'Refrigerato';
+  document.getElementById('vc-lotto').value=r.lotto||'';
+  document.getElementById('vc-operatore').value=r.operatore||'';
+  document.getElementById('vc-qta').value=r.qta||'';
+  document.getElementById('vc-ora-abb').value=r.oraAbb||'';
+  document.getElementById('vc-temp-abb').value=r.tempAbb||'';
+  document.getElementById('vc-scadenza').value=r.scadenza||'';
+  document.getElementById('vc-note-et').value=r.noteEt||'';
+}
 
 /* ── STAMPA ETICHETTA POST-COTTURA ── */
 function stampaEtichettaVC(id){
@@ -3647,12 +4133,15 @@ function generaBarcode(str){
 }
 
 /* CONSERVABILITÀ */
-function nuovaConservabilita(){document.getElementById('cs-form').style.display='block';}
+let editCSId=-1;
+function nuovaConservabilita(){editCSId=-1;document.getElementById('cs-form').style.display='block';}
 function salvaConservabilita(){
   const prod=document.getElementById('cs-prod')?.value.trim();
   if(!prod){alert('Inserisci il prodotto');return;}
   const rec={id:Date.now(),prod,mod:document.getElementById('cs-mod')?.value||'',giorni:document.getElementById('cs-giorni')?.value||'',note:document.getElementById('cs-note')?.value||''};
-  const list=load('cs_list');list.unshift(rec);save('cs_list',list);
+  const list=load('cs_list');
+  if(editCSId>0){const idx=list.findIndex(r=>r.id===editCSId);if(idx>=0){rec.id=editCSId;list[idx]=rec;}editCSId=-1;}else{list.unshift(rec);}
+  save('cs_list',list);
   document.getElementById('cs-form').style.display='none';
   renderConservabilita();showToast('Conservabilità salvata','#1f7a3e');
 }
@@ -3664,6 +4153,15 @@ function renderConservabilita(){
   tbody.innerHTML=list.map(r=>`<tr><td>${r.prod}</td><td>${r.mod}</td><td><strong>${r.giorni||'—'}</strong> gg</td><td>${r.note||'—'}</td><td><button class="btn btn-sm" style="background:#fdecea;color:#c0392b" onclick="delCS(${r.id})">🗑</button></td></tr>`).join('');
 }
 function delCS(id){if(!confirm('Eliminare?'))return;save('cs_list',load('cs_list').filter(r=>r.id!==id));renderConservabilita();}
+function editCSRow(id){
+  const r=load('cs_list').find(r=>r.id===id);if(!r)return;
+  editCSId=id;
+  document.getElementById('cs-form').style.display='block';
+  document.getElementById('cs-prod').value=r.prod||'';
+  document.getElementById('cs-mod').value=r.mod||'';
+  document.getElementById('cs-giorni').value=r.giorni||'';
+  document.getElementById('cs-note').value=r.note||'';
+}
 
 /* ALLERGENI SCHEMA (Scheda 7) */
 function renderAllergeniSchema(){
@@ -3688,7 +4186,9 @@ function renderAllergeniSchema(){
 }
 
 /* FORNITURE */
+let editFornId=-1;
 function nuovaFornitura(){
+  editFornId=-1;
   document.getElementById('forn-form').style.display='block';
   document.getElementById('fo-data').value=today.toISOString().slice(0,10);
 }
@@ -3696,7 +4196,9 @@ function salvaFornitura(){
   const prod=document.getElementById('fo-prod')?.value.trim();
   if(!prod){alert('Inserisci i prodotti');return;}
   const rec={id:Date.now(),data:document.getElementById('fo-data')?.value||'',prod,forn:document.getElementById('fo-forn')?.value||'',ctrlProd:document.getElementById('fo-ctrl-prod')?.value||'OK',ctrlMezzo:document.getElementById('fo-ctrl-mezzo')?.value||'OK'};
-  const list=load('forn_scheda');list.unshift(rec);save('forn_scheda',list);
+  const list=load('forn_scheda');
+  if(editFornId>0){const idx=list.findIndex(r=>r.id===editFornId);if(idx>=0){rec.id=editFornId;list[idx]=rec;}editFornId=-1;}else{list.unshift(rec);}
+  save('forn_scheda',list);
   document.getElementById('forn-form').style.display='none';
   renderForniture();showToast('Fornitura salvata','#1f7a3e');
 }
@@ -3708,6 +4210,16 @@ function renderForniture(){
   tbody.innerHTML=list.map(r=>`<tr><td>${r.data}</td><td>${r.prod}</td><td>${r.forn||'—'}</td><td style="color:${r.ctrlProd==='NC'?'#c0392b':'#1f7a3e'}">${r.ctrlProd}</td><td style="color:${r.ctrlMezzo==='NC'?'#c0392b':'#1f7a3e'}">${r.ctrlMezzo}</td><td><button class="btn btn-sm" style="background:#fdecea;color:#c0392b" onclick="delFornitura(${r.id})">🗑</button></td></tr>`).join('');
 }
 function delFornitura(id){if(!confirm('Eliminare?'))return;save('forn_scheda',load('forn_scheda').filter(r=>r.id!==id));renderForniture();}
+function editFornRow(id){
+  const r=load('forn_scheda').find(r=>r.id===id);if(!r)return;
+  editFornId=id;
+  document.getElementById('forn-form').style.display='block';
+  document.getElementById('fo-data').value=r.data||'';
+  document.getElementById('fo-prod').value=r.prod||'';
+  document.getElementById('fo-forn').value=r.forn||'';
+  document.getElementById('fo-ctrl-prod').value=r.ctrlProd||'OK';
+  document.getElementById('fo-ctrl-mezzo').value=r.ctrlMezzo||'OK';
+}
 
 /* REGISTRO SANIFICAZIONE */
 const SAN_AREE_GIORN=['Piani di lavoro','Taglieri e utensili','Affettatrice','Pavimenti cucina','Lavelli','Sala','Servizi igienici','Area rifiuti'];
@@ -3724,38 +4236,78 @@ function renderSanificazione(){
   
   let html='<div style="font-size:12px;font-weight:700;margin-bottom:8px;color:#1f7a3e">CONTROLLI GIORNALIERI</div>';
   html+='<div style="overflow-x:auto"><table style="font-size:11px;border-collapse:collapse;width:100%"><thead><tr><th style="padding:4px 8px;text-align:left;background:#e4f5ec;min-width:150px">Area</th>';
-  for(let d=1;d<=days;d++)html+=`<th style="padding:4px;text-align:center;background:#e4f5ec;min-width:26px">${d}</th>`;
+  for(let d=1;d<=days;d++)html+=`<th style="padding:4px;text-align:center;background:#e4f5ec;min-width:28px;font-size:10px">${d}</th>`;
   html+='</tr></thead><tbody>';
   SAN_AREE_GIORN.forEach(area=>{
-    html+=`<tr><td style="padding:4px 8px;font-weight:600;border:1px solid #ddd">${area}</td>`;
+    html+=`<tr><td style="padding:4px 8px;font-weight:600;border:1px solid #ddd;font-size:11px">${area}</td>`;
     for(let d=1;d<=days;d++){
       const v=saved[`g_${area}_${d}`]||'';
-      html+=`<td style="text-align:center;border:1px solid #ddd;padding:2px"><input type="text" id="san_g_${area.replace(/\s/g,'_')}_${d}" value="${v}" maxlength="1" style="width:22px;text-align:center;border:none;font-size:11px;font-weight:700;color:#1f7a3e" placeholder="S"></td>`;
+      const isOn = v==='1'||v==='S'||v==='s'||v==='✓';
+      const dotColor = isOn ? '#4caf50' : '#ddd';
+      const dotBorder = isOn ? '#2e7d32' : '#bbb';
+      html+=`<td style="text-align:center;border:1px solid #ddd;padding:2px;cursor:pointer" onclick="toggleSanDot('g','${area}',${d})">
+        <div id="san_g_${area.replace(/\s/g,'_')}_${d}" data-on="${isOn?1:0}" 
+          style="width:18px;height:18px;border-radius:50%;background:${dotColor};border:2px solid ${dotBorder};margin:0 auto;transition:all 0.2s"></div>
+      </td>`;
     }
     html+='</tr>';
   });
   html+='</tbody></table></div>';
   
-  html+='<div style="font-size:12px;font-weight:700;margin:14px 0 8px;color:#1f7a3e">CONTROLLI SETTIMANALI</div>';
+  html+='<div style="font-size:12px;font-weight:700;margin:14px 0 8px;color:#d4a017">CONTROLLI SETTIMANALI</div>';
   html+='<div style="overflow-x:auto"><table style="font-size:11px;border-collapse:collapse;width:100%"><thead><tr><th style="padding:4px 8px;text-align:left;background:#fff3cd;min-width:150px">Area</th>';
   const weeks=[1,8,15,22,29].filter(w=>w<=days);
-  weeks.forEach(w=>html+=`<th style="padding:4px;text-align:center;background:#fff3cd;min-width:40px">Sett.${Math.ceil(w/7)}</th>`);
+  weeks.forEach((w,i)=>html+=`<th style="padding:4px 8px;text-align:center;background:#fff3cd;min-width:50px">Sett.${i+1}</th>`);
   html+='</tr></thead><tbody>';
   SAN_AREE_SETT.forEach(area=>{
-    html+=`<tr><td style="padding:4px 8px;font-weight:600;border:1px solid #ddd">${area}</td>`;
+    html+=`<tr><td style="padding:4px 8px;font-weight:600;border:1px solid #ddd;font-size:11px">${area}</td>`;
     weeks.forEach(w=>{
       const v=saved[`s_${area}_${w}`]||'';
-      html+=`<td style="text-align:center;border:1px solid #ddd;padding:2px"><input type="text" id="san_s_${area.replace(/\s/g,'_')}_${w}" value="${v}" maxlength="1" style="width:32px;text-align:center;border:none;font-size:11px;font-weight:700;color:#d4a017" placeholder="S"></td>`;
+      const isOn = v==='1'||v==='S'||v==='s'||v==='✓';
+      const dotColor = isOn ? '#ff9800' : '#ddd';
+      const dotBorder = isOn ? '#e65100' : '#bbb';
+      html+=`<td style="text-align:center;border:1px solid #ddd;padding:4px;cursor:pointer" onclick="toggleSanDot('s','${area}',${w})">
+        <div id="san_s_${area.replace(/\s/g,'_')}_${w}" data-on="${isOn?1:0}"
+          style="width:22px;height:22px;border-radius:50%;background:${dotColor};border:2px solid ${dotBorder};margin:0 auto;transition:all 0.2s"></div>
+      </td>`;
     });
     html+='</tr>';
   });
   html+='</tbody></table></div>';
+
+  // Legenda
+  html+='<div style="margin-top:10px;display:flex;gap:16px;align-items:center;font-size:11px;color:#666">';
+  html+='<span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#ddd;border:2px solid #bbb"></span> Da fare</span>';
+  html+='<span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#4caf50;border:2px solid #2e7d32"></span> Fatto (giornaliero)</span>';
+  html+='<span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#ff9800;border:2px solid #e65100"></span> Fatto (settimanale)</span>';
+  html+='</div>';
   
   const grid=document.getElementById('san-grid');
   if(grid)grid.innerHTML=html;
   const op=loadObj(key,{});
   if(document.getElementById('san-op'))document.getElementById('san-op').value=op.operatore||'';
   if(document.getElementById('san-resp-haccp'))document.getElementById('san-resp-haccp').value=op.resp||'';
+}
+
+function toggleSanDot(tipo, area, num){
+  const id = `san_${tipo}_${area.replace(/\s/g,'_')}_${num}`;
+  const dot = document.getElementById(id);
+  if(!dot) return;
+  const isOn = dot.getAttribute('data-on')==='1';
+  if(isOn){
+    dot.setAttribute('data-on','0');
+    dot.style.background='#ddd';
+    dot.style.borderColor='#bbb';
+  } else {
+    dot.setAttribute('data-on','1');
+    if(tipo==='g'){
+      dot.style.background='#4caf50';
+      dot.style.borderColor='#2e7d32';
+    } else {
+      dot.style.background='#ff9800';
+      dot.style.borderColor='#e65100';
+    }
+  }
 }
 
 function salvaSanificazione(){
@@ -3765,14 +4317,14 @@ function salvaSanificazione(){
   SAN_AREE_GIORN.forEach(area=>{
     for(let d=1;d<=days;d++){
       const el=document.getElementById(`san_g_${area.replace(/\s/g,'_')}_${d}`);
-      if(el&&el.value)data[`g_${area}_${d}`]=el.value;
+      if(el && el.getAttribute('data-on')==='1') data[`g_${area}_${d}`]='1';
     }
   });
   const weeks=[1,8,15,22,29].filter(w=>w<=days);
   SAN_AREE_SETT.forEach(area=>{
     weeks.forEach(w=>{
       const el=document.getElementById(`san_s_${area.replace(/\s/g,'_')}_${w}`);
-      if(el&&el.value)data[`s_${area}_${w}`]=el.value;
+      if(el && el.getAttribute('data-on')==='1') data[`s_${area}_${w}`]='1';
     });
   });
   data.operatore=document.getElementById('san-op')?.value||'';
@@ -3783,13 +4335,16 @@ function salvaSanificazione(){
 
 
 /* ===== ABBATTITORE ===== */
-function nuovoAbbattimento(){document.getElementById('abb-form').style.display='block';document.getElementById('ab-data').value=today.toISOString().slice(0,10);}
+let editAbbId=-1;
+function nuovoAbbattimento(){editAbbId=-1;document.getElementById('abb-form').style.display='block';document.getElementById('ab-data').value=today.toISOString().slice(0,10);}
 function salvaAbbattimento(){
   const prod=document.getElementById('ab-prod')?.value.trim();
   if(!prod){alert('Inserisci il prodotto');return;}
   const tfin=parseFloat(document.getElementById('ab-tfin')?.value||'0');
   const rec={id:Date.now(),data:document.getElementById('ab-data')?.value||'',prod,tin:document.getElementById('ab-tin')?.value||'',tfin,ora:document.getElementById('ab-ora')?.value||'',op:document.getElementById('ab-op')?.value||'',note:document.getElementById('ab-note')?.value||''};
-  const list=load('abb_list');list.unshift(rec);save('abb_list',list);
+  const list=load('abb_list');
+  if(editAbbId>0){const idx=list.findIndex(r=>r.id===editAbbId);if(idx>=0){rec.id=editAbbId;list[idx]=rec;}editAbbId=-1;}else{list.unshift(rec);}
+  save('abb_list',list);
   document.getElementById('abb-form').style.display='none';
   renderAbbattimento();showToast('Ciclo abbattimento salvato','#1f7a3e');
 }
@@ -3802,14 +4357,29 @@ function renderAbbattimento(){
   }).join('');
 }
 function delAbb(id){if(!confirm('Eliminare?'))return;save('abb_list',load('abb_list').filter(r=>r.id!==id));renderAbbattimento();}
+function editAbbRow(id){
+  const r=load('abb_list').find(r=>r.id===id);if(!r)return;
+  editAbbId=id;
+  document.getElementById('abb-form').style.display='block';
+  document.getElementById('ab-data').value=r.data||'';
+  document.getElementById('ab-prod').value=r.prod||'';
+  document.getElementById('ab-tin').value=r.tin||'';
+  document.getElementById('ab-tfin').value=r.tfin||'';
+  document.getElementById('ab-ora').value=r.ora||'';
+  document.getElementById('ab-op').value=r.op||'';
+  document.getElementById('ab-note').value=r.note||'';
+}
 
 /* ===== PRODUZIONI ===== */
-function nuovaProduzione(){document.getElementById('prod-form').style.display='block';document.getElementById('pr-data').value=today.toISOString().slice(0,10);document.getElementById('pr-lotto').value='P'+today.toISOString().slice(0,10).replace(/-/g,'');}
+let editProdId=-1;
+function nuovaProduzione(){editProdId=-1;document.getElementById('prod-form').style.display='block';document.getElementById('pr-data').value=today.toISOString().slice(0,10);document.getElementById('pr-lotto').value='P'+today.toISOString().slice(0,10).replace(/-/g,'');}
 function salvaProduzione(){
   const prod=document.getElementById('pr-prod')?.value.trim();
   if(!prod){alert('Inserisci il prodotto');return;}
   const rec={id:Date.now(),data:document.getElementById('pr-data')?.value||'',prod,lotto:document.getElementById('pr-lotto')?.value||'',qty:document.getElementById('pr-qty')?.value||'',scad:document.getElementById('pr-scad')?.value||'',dest:document.getElementById('pr-dest')?.value||'',ingr:document.getElementById('pr-ingr')?.value||'',op:document.getElementById('pr-op')?.value||''};
-  const list=load('prod_list');list.unshift(rec);save('prod_list',list);
+  const list=load('prod_list');
+  if(editProdId>0){const idx=list.findIndex(r=>r.id===editProdId);if(idx>=0){rec.id=editProdId;list[idx]=rec;}editProdId=-1;}else{list.unshift(rec);}
+  save('prod_list',list);
   document.getElementById('prod-form').style.display='none';
   renderProduzioni();showToast('Produzione salvata','#1f7a3e');
 }
@@ -3819,14 +4389,30 @@ function renderProduzioni(){
   tbody.innerHTML=list.map(r=>`<tr><td>${r.data}</td><td><strong>${r.prod}</strong></td><td><code>${r.lotto||'—'}</code></td><td>${r.qty||'—'}</td><td>${r.scad||'—'}</td><td>${r.dest||'—'}</td><td>${r.op||'—'}</td><td><button class="btn btn-sm" style="background:#fdecea;color:#c0392b" onclick="delProd(${r.id})">🗑</button></td></tr>`).join('');
 }
 function delProd(id){if(!confirm('Eliminare?'))return;save('prod_list',load('prod_list').filter(r=>r.id!==id));renderProduzioni();}
+function editProdRow(id){
+  const r=load('prod_list').find(r=>r.id===id);if(!r)return;
+  editProdId=id;
+  document.getElementById('prod-form').style.display='block';
+  document.getElementById('pr-data').value=r.data||'';
+  document.getElementById('pr-prod').value=r.prod||'';
+  document.getElementById('pr-lotto').value=r.lotto||'';
+  document.getElementById('pr-qty').value=r.qty||'';
+  document.getElementById('pr-scad').value=r.scad||'';
+  document.getElementById('pr-dest').value=r.dest||'';
+  document.getElementById('pr-ingr').value=r.ingr||'';
+  document.getElementById('pr-op').value=r.op||'';
+}
 
 /* ===== CAMPIONAMENTI ===== */
-function nuovoCampionamento(){document.getElementById('camp-form').style.display='block';document.getElementById('ca-data').value=today.toISOString().slice(0,10);}
+let editCampId=-1;
+function nuovoCampionamento(){editCampId=-1;document.getElementById('camp-form').style.display='block';document.getElementById('ca-data').value=today.toISOString().slice(0,10);}
 function salvaCampionamento(){
   const prod=document.getElementById('ca-prod')?.value.trim();
   if(!prod){alert('Inserisci il prodotto o area');return;}
   const rec={id:Date.now(),data:document.getElementById('ca-data')?.value||'',tipo:document.getElementById('ca-tipo')?.value||'',prod,lab:document.getElementById('ca-lab')?.value||'',resData:document.getElementById('ca-res-data')?.value||'',esito:document.getElementById('ca-esito')?.value||'',note:document.getElementById('ca-note')?.value||''};
-  const list=load('camp_list');list.unshift(rec);save('camp_list',list);
+  const list=load('camp_list');
+  if(editCampId>0){const idx=list.findIndex(r=>r.id===editCampId);if(idx>=0){rec.id=editCampId;list[idx]=rec;}editCampId=-1;}else{list.unshift(rec);}
+  save('camp_list',list);
   document.getElementById('camp-form').style.display='none';
   renderCampionamenti();showToast('Campionamento salvato','#1f7a3e');
 }
@@ -3839,14 +4425,29 @@ function renderCampionamenti(){
   }).join('');
 }
 function delCamp(id){if(!confirm('Eliminare?'))return;save('camp_list',load('camp_list').filter(r=>r.id!==id));renderCampionamenti();}
+function editCampRow(id){
+  const r=load('camp_list').find(r=>r.id===id);if(!r)return;
+  editCampId=id;
+  document.getElementById('camp-form').style.display='block';
+  document.getElementById('ca-data').value=r.data||'';
+  document.getElementById('ca-tipo').value=r.tipo||'';
+  document.getElementById('ca-prod').value=r.prod||'';
+  document.getElementById('ca-lab').value=r.lab||'';
+  document.getElementById('ca-res-data').value=r.resData||'';
+  document.getElementById('ca-esito').value=r.esito||'';
+  document.getElementById('ca-note').value=r.note||'';
+}
 
 /* ===== MOCA ===== */
-function nuovoMOCA(){document.getElementById('moca-form').style.display='block';}
+let editMOCAId=-1;
+function nuovoMOCA(){editMOCAId=-1;document.getElementById('moca-form').style.display='block';}
 function salvaMOCA(){
   const forn=document.getElementById('mo-forn')?.value.trim();
   if(!forn){alert('Inserisci il fornitore');return;}
   const rec={id:Date.now(),forn,prod:document.getElementById('mo-prod')?.value||'',tipo:document.getElementById('mo-tipo')?.value||'',conf:document.getElementById('mo-conf')?.value||''};
-  const list=load('moca_list');list.unshift(rec);save('moca_list',list);
+  const list=load('moca_list');
+  if(editMOCAId>0){const idx=list.findIndex(r=>r.id===editMOCAId);if(idx>=0){rec.id=editMOCAId;list[idx]=rec;}editMOCAId=-1;}else{list.unshift(rec);}
+  save('moca_list',list);
   document.getElementById('moca-form').style.display='none';
   renderMOCA();showToast('Fornitore MOCA salvato','#1f7a3e');
 }
@@ -3856,14 +4457,26 @@ function renderMOCA(){
   tbody.innerHTML=list.map(r=>`<tr><td><strong>${r.forn}</strong></td><td>${r.prod}</td><td>${r.tipo}</td><td style="color:${r.conf==='Sì'?'#1f7a3e':'#c0392b'};font-weight:700">${r.conf==='Sì'?'✅ Presente':'❌ Mancante'}</td><td><button class="btn btn-sm" style="background:#fdecea;color:#c0392b" onclick="delMOCA(${r.id})">🗑</button></td></tr>`).join('');
 }
 function delMOCA(id){if(!confirm('Eliminare?'))return;save('moca_list',load('moca_list').filter(r=>r.id!==id));renderMOCA();}
+function editMOCARow(id){
+  const r=load('moca_list').find(r=>r.id===id);if(!r)return;
+  editMOCAId=id;
+  document.getElementById('moca-form').style.display='block';
+  document.getElementById('mo-forn').value=r.forn||'';
+  document.getElementById('mo-prod').value=r.prod||'';
+  document.getElementById('mo-tipo').value=r.tipo||'';
+  document.getElementById('mo-conf').value=r.conf||'';
+}
 
 /* ===== DISINFESTAZIONE ===== */
-function nuovoIntervento(){document.getElementById('dises-form').style.display='block';document.getElementById('di-data').value=today.toISOString().slice(0,10);}
+let editDisesId=-1;
+function nuovoIntervento(){editDisesId=-1;document.getElementById('dises-form').style.display='block';document.getElementById('di-data').value=today.toISOString().slice(0,10);}
 function salvaIntervento(){
   const ditta=document.getElementById('di-ditta')?.value.trim();
   if(!ditta){alert('Inserisci la ditta o operatore');return;}
   const rec={id:Date.now(),data:document.getElementById('di-data')?.value||'',tipo:document.getElementById('di-tipo')?.value||'',ditta,agente:document.getElementById('di-agente')?.value||'',pross:document.getElementById('di-pross')?.value||'',esito:document.getElementById('di-esito')?.value||'',note:document.getElementById('di-note')?.value||''};
-  const list=load('dises_list');list.unshift(rec);save('dises_list',list);
+  const list=load('dises_list');
+  if(editDisesId>0){const idx=list.findIndex(r=>r.id===editDisesId);if(idx>=0){rec.id=editDisesId;list[idx]=rec;}editDisesId=-1;}else{list.unshift(rec);}
+  save('dises_list',list);
   document.getElementById('dises-form').style.display='none';
   renderDisinfestazione();showToast('Intervento disinfestazione salvato','#1f7a3e');
 }
@@ -3876,6 +4489,18 @@ function renderDisinfestazione(){
   }).join('');
 }
 function delDises(id){if(!confirm('Eliminare?'))return;save('dises_list',load('dises_list').filter(r=>r.id!==id));renderDisinfestazione();}
+function editDisesRow(id){
+  const r=load('dises_list').find(r=>r.id===id);if(!r)return;
+  editDisesId=id;
+  document.getElementById('dises-form').style.display='block';
+  document.getElementById('di-data').value=r.data||'';
+  document.getElementById('di-tipo').value=r.tipo||'';
+  document.getElementById('di-ditta').value=r.ditta||'';
+  document.getElementById('di-agente').value=r.agente||'';
+  document.getElementById('di-pross').value=r.pross||'';
+  document.getElementById('di-esito').value=r.esito||'';
+  document.getElementById('di-note').value=r.note||'';
+}
 
 /* ===== VADEMECUM ===== */
 function renderVademecum(){/* static content, nothing to render */}
@@ -4890,9 +5515,193 @@ function stampaMenuFisso(){
 }
 
 /* ═══════════════════════════════════════════════
+   REGISTRO PERSONALE / OPERATORI
+   ═══════════════════════════════════════════════ */
+let editOpIdx = -1;
+
+function loadOperatori(){ return JSON.parse(localStorage.getItem('tc_operatori')||'[]'); }
+function saveOperatori(v){ localStorage.setItem('tc_operatori',JSON.stringify(v)); }
+
+function aggiungiOperatore(){
+  editOpIdx = -1;
+  document.getElementById('operatori-form').style.display='block';
+  document.getElementById('op-nome').value='';
+  document.getElementById('op-ruolo').value='Chef';
+  document.getElementById('op-tel').value='';
+  document.getElementById('op-nome').focus();
+}
+
+function salvaOperatore(){
+  const nome = document.getElementById('op-nome').value.trim();
+  if(!nome){alert('Inserisci il nome');return;}
+  const rec = {
+    nome: nome,
+    ruolo: document.getElementById('op-ruolo').value,
+    tel: document.getElementById('op-tel').value.trim()
+  };
+  const arr = loadOperatori();
+  if(editOpIdx >= 0){ arr[editOpIdx] = rec; editOpIdx = -1; }
+  else { arr.push(rec); }
+  saveOperatori(arr);
+  document.getElementById('operatori-form').style.display='none';
+  renderOperatoriLista();
+}
+
+function editOperatore(i){
+  const arr = loadOperatori();
+  const r = arr[i]; if(!r) return;
+  editOpIdx = i;
+  document.getElementById('operatori-form').style.display='block';
+  document.getElementById('op-nome').value = r.nome||'';
+  document.getElementById('op-ruolo').value = r.ruolo||'Chef';
+  document.getElementById('op-tel').value = r.tel||'';
+}
+
+function eliminaOperatore(i){
+  if(!confirm('Eliminare questa persona?')) return;
+  const arr = loadOperatori();
+  arr.splice(i,1);
+  saveOperatori(arr);
+  renderOperatoriLista();
+}
+
+function renderOperatoriLista(){
+  const arr = loadOperatori();
+  const div = document.getElementById('operatori-lista');
+  if(!div) return;
+  if(!arr.length){
+    div.innerHTML='<div style="text-align:center;color:#999;font-size:13px;padding:12px">Nessun operatore inserito. Clicca "+ Aggiungi Persona".</div>';
+    return;
+  }
+  const ruoloColors = {
+    'Titolare':'#c62828','Responsabile HACCP':'#1565c0','Chef':'#2e7d32','Sous-chef':'#558b2f',
+    'Cuoco':'#33691e','Aiuto cuoco':'#689f38','Pasticcere':'#6a1b9a','Cameriere':'#00838f',
+    'Responsabile sala':'#00695c','Barista':'#4e342e','Lavapiatti':'#546e7a','Magazziniere':'#37474f','Stagista':'#ff8f00'
+  };
+  div.innerHTML = arr.map((r,i)=>{
+    const col = ruoloColors[r.ruolo]||'#555';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee">' +
+      '<div style="display:flex;align-items:center;gap:10px">' +
+        '<div style="width:36px;height:36px;border-radius:50%;background:'+col+'15;color:'+col+';display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px">'+r.nome.charAt(0).toUpperCase()+'</div>' +
+        '<div><div style="font-weight:700;font-size:13px;color:#222">'+r.nome+'</div>' +
+        '<div style="font-size:11px;color:'+col+';font-weight:600">'+r.ruolo+(r.tel?' — '+r.tel:'')+'</div></div>' +
+      '</div>' +
+      '<div style="display:flex;gap:4px">' +
+        '<button class="btn btn-sm" onclick="editOperatore('+i+')">✏️</button>' +
+        '<button class="btn btn-sm" style="color:red" onclick="eliminaOperatore('+i+')">✕</button>' +
+      '</div></div>';
+  }).join('');
+}
+
+/* --- Funzione globale: popola tutti i campi operatore con menu dropdown --- */
+function setupOperatoreDropdowns(){
+  const operatori = loadOperatori();
+  if(!operatori.length) return;
+
+  // Find all input fields that are operator fields
+  const opFields = document.querySelectorAll(
+    '#olio-op, #decong-op, #formaz-nome, #as-cameriere, #ab-op, #pr-op, #san-op, #san-resp-haccp, #e-chef, ' +
+    'input[id$="-op"], input[id$="-operatore"]'
+  );
+  
+  opFields.forEach(field => {
+    if(field.dataset.opSetup) return; // Already set up
+    field.dataset.opSetup = '1';
+    
+    // Create dropdown
+    const wrapper = field.parentElement;
+    wrapper.style.position = 'relative';
+    
+    const dropdown = document.createElement('div');
+    dropdown.className = 'op-dropdown';
+    dropdown.style.cssText = 'display:none;position:absolute;top:100%;left:0;right:0;z-index:100;background:#fff;border:1px solid #2471a3;border-radius:0 0 6px 6px;max-height:180px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.15)';
+    wrapper.appendChild(dropdown);
+    
+    function showDropdown(){
+      const q = field.value.toLowerCase();
+      const filtered = q ? operatori.filter(o=>o.nome.toLowerCase().includes(q)) : operatori;
+      if(!filtered.length){dropdown.style.display='none';return;}
+      dropdown.style.display='block';
+      dropdown.innerHTML = filtered.map(o => 
+        '<div style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:8px" ' +
+        'onmousedown="event.preventDefault()" onclick="this.parentElement.previousElementSibling?null:null;selectOperatore(this,\''+o.nome.replace(/'/g,"\\'")+'\')">' +
+        '<span style="font-weight:700;color:#2471a3">'+o.nome+'</span>' +
+        '<span style="font-size:10px;color:#888">'+o.ruolo+'</span></div>'
+      ).join('');
+    }
+    
+    field.addEventListener('focus', showDropdown);
+    field.addEventListener('input', showDropdown);
+    field.addEventListener('blur', ()=>{ setTimeout(()=>dropdown.style.display='none', 200); });
+  });
+}
+
+function selectOperatore(el, nome){
+  // Find the input field (it's the sibling before the dropdown)
+  const dropdown = el.parentElement;
+  const wrapper = dropdown.parentElement;
+  const input = wrapper.querySelector('input');
+  if(input){
+    input.value = nome;
+    input.dispatchEvent(new Event('input'));
+  }
+  dropdown.style.display = 'none';
+}
+
+// Hook into section renders to setup dropdowns
+const _origRenderSchede = typeof renderSchede === 'function' ? renderSchede : null;
+
+/* ═══════════════════════════════════════════════
+   TEMPI DI CONSERVAZIONE
+   ═══════════════════════════════════════════════ */
+function showConsTab(tab){
+  ['crudi','cotti','congelati','sottovuoto'].forEach(t=>{
+    const el=document.getElementById('cons-'+t);
+    if(el) el.style.display = t===tab ? 'block' : 'none';
+  });
+}
+
+function stampaConservazione(){
+  const content = document.getElementById('sch-conserv');
+  if(!content) return;
+  // Show all tabs for printing
+  ['crudi','cotti','congelati','sottovuoto'].forEach(t=>{
+    const el=document.getElementById('cons-'+t);
+    if(el) el.style.display='block';
+  });
+  const css = `
+    *{box-sizing:border-box;margin:0;padding:0}
+    @page{size:A4 portrait;margin:12mm 14mm}
+    body{font-family:Arial,Helvetica,sans-serif;color:#222;font-size:9pt;background:#fff}
+    h3{font-size:11pt;margin:14px 0 6px;padding-bottom:3px;border-bottom:1.5px solid #222;color:#222}
+    table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:9pt}
+    th{background:#eee;font-weight:700;text-align:left;padding:4px 8px;border:0.5px solid #999}
+    td{padding:3px 8px;border:0.5px solid #ccc}
+    .card-header,.card-sub,.btn{display:none}
+    div[style*="display:none"]{display:block!important}
+    div[style*="background:#f5f5f5"]{font-size:8pt;margin-top:12px;padding:8px;border-top:1px solid #ccc}
+    div[style*="background:#ffebee"]{background:#ffebee!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:6px;font-size:9pt;margin:4px 0}
+    @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+  `;
+  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Tempi di Conservazione</title><style>'+css+'</style></head><body><h1 style="text-align:center;font-size:16pt;margin-bottom:4px">TEMPI DI CONSERVAZIONE DEI PRODOTTI</h1><div style="text-align:center;font-size:10pt;color:#555;margin-bottom:16px">Dopo apertura confezione e/o lavorazione</div>'+content.querySelector('div[style*="padding:16px"]').innerHTML+'<script>window.onload=function(){window.print();}<\/script></body></html>';
+
+  let iframe = document.getElementById('print-iframe-conserv');
+  if(!iframe){
+    iframe = document.createElement('iframe');
+    iframe.id = 'print-iframe-conserv';
+    iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:0;height:0;border:0';
+    document.body.appendChild(iframe);
+  }
+  const doc = iframe.contentWindow.document;
+  doc.open();doc.write(html);doc.close();
+  setTimeout(function(){ iframe.contentWindow.focus(); iframe.contentWindow.print(); }, 400);
+}
+
+/* ═══════════════════════════════════════════════
    OLIO FRITTURA
    ═══════════════════════════════════════════════ */
-function nuovoOlio(){
+let editOlioIdx = -1;
+function nuovoOlio(){editOlioIdx=-1;
   document.getElementById('olio-form').style.display='block';
   document.getElementById('olio-data').value=new Date().toISOString().slice(0,10);
 }
@@ -4909,16 +5718,32 @@ function salvaOlio(){
   };
   if(!r.data||!r.frig){alert('Compilare almeno data e friggitrice');return;}
   const arr=JSON.parse(localStorage.getItem('tc_olio')||'[]');
-  arr.push(r);localStorage.setItem('tc_olio',JSON.stringify(arr));
+  if(editOlioIdx>=0){arr[editOlioIdx]=r;editOlioIdx=-1;}
+  else{arr.push(r);}
+  localStorage.setItem('tc_olio',JSON.stringify(arr));
   document.getElementById('olio-form').style.display='none';
   renderOlioLista();
+}
+function editOlio(i){
+  const arr=JSON.parse(localStorage.getItem('tc_olio')||'[]');
+  const r=arr[i];if(!r)return;
+  editOlioIdx=i;
+  document.getElementById('olio-form').style.display='block';
+  document.getElementById('olio-data').value=r.data||'';
+  document.getElementById('olio-frig').value=r.frig||'';
+  document.getElementById('olio-tipo').value=r.tipo||'';
+  document.getElementById('olio-temp').value=r.temp||'';
+  document.getElementById('olio-polari').value=r.polari||'';
+  document.getElementById('olio-esito').value=r.esito||'';
+  document.getElementById('olio-op').value=r.op||'';
+  document.getElementById('olio-note').value=r.note||'';
 }
 function renderOlioLista(){
   const arr=JSON.parse(localStorage.getItem('tc_olio')||'[]');
   const tb=document.getElementById('olio-lista');if(!tb)return;
   tb.innerHTML=arr.map((r,i)=>{
     const cls=r.esito==='NC'?'style="background:#ffebee"':r.esito==='Cambio'?'style="background:#fff8e1"':'';
-    return '<tr '+cls+'><td>'+r.data+'</td><td>'+r.frig+'</td><td>'+r.tipo+'</td><td>'+(r.temp||'-')+'</td><td>'+(r.polari||'-')+'</td><td>'+r.esito+'</td><td>'+r.op+'</td><td>'+r.note+'</td><td><button class="btn btn-sm" style="color:red" onclick="eliminaOlio('+i+')">✕</button></td></tr>';
+    return '<tr '+cls+'><td>'+r.data+'</td><td>'+r.frig+'</td><td>'+r.tipo+'</td><td>'+(r.temp||'-')+'</td><td>'+(r.polari||'-')+'</td><td>'+r.esito+'</td><td>'+r.op+'</td><td>'+r.note+'</td><td><button class="btn btn-sm" style="color:red" onclick="editOlio('+i+')">✏️</button><button class="btn btn-sm" style="color:red" onclick="eliminaOlio('+i+')">✕</button></td></tr>';
   }).join('');
 }
 function eliminaOlio(i){
@@ -4931,7 +5756,8 @@ function eliminaOlio(i){
 /* ═══════════════════════════════════════════════
    DECONGELAMENTO
    ═══════════════════════════════════════════════ */
-function nuovoDecong(){
+let editDecongIdx = -1;
+function nuovoDecong(){editDecongIdx=-1;
   document.getElementById('decong-form').style.display='block';
   const now=new Date();
   document.getElementById('decong-inizio').value=now.toISOString().slice(0,16);
@@ -4949,9 +5775,25 @@ function salvaDecong(){
   };
   if(!r.prod||!r.inizio){alert('Compilare almeno prodotto e data inizio');return;}
   const arr=JSON.parse(localStorage.getItem('tc_decong')||'[]');
-  arr.push(r);localStorage.setItem('tc_decong',JSON.stringify(arr));
+  if(editDecongIdx>=0){arr[editDecongIdx]=r;editDecongIdx=-1;}
+  else{arr.push(r);}
+  localStorage.setItem('tc_decong',JSON.stringify(arr));
   document.getElementById('decong-form').style.display='none';
   renderDecongLista();
+}
+function editDecong(i){
+  const arr=JSON.parse(localStorage.getItem('tc_decong')||'[]');
+  const r=arr[i];if(!r)return;
+  editDecongIdx=i;
+  document.getElementById('decong-form').style.display='block';
+  document.getElementById('decong-prod').value=r.prod||'';
+  document.getElementById('decong-qta').value=r.qta||'';
+  document.getElementById('decong-lotto').value=r.lotto||'';
+  document.getElementById('decong-metodo').value=r.metodo||'';
+  document.getElementById('decong-inizio').value=r.inizio||'';
+  document.getElementById('decong-fine').value=r.fine||'';
+  document.getElementById('decong-temp').value=r.temp||'';
+  document.getElementById('decong-op').value=r.op||'';
 }
 function renderDecongLista(){
   const arr=JSON.parse(localStorage.getItem('tc_decong')||'[]');
@@ -4959,7 +5801,7 @@ function renderDecongLista(){
   tb.innerHTML=arr.map((r,i)=>{
     const t=parseFloat(r.temp);
     const cls=(t>4)?'style="background:#ffebee"':'';
-    return '<tr '+cls+'><td>'+r.prod+'</td><td>'+r.qta+'</td><td>'+r.lotto+'</td><td>'+r.metodo+'</td><td>'+(r.inizio||'-')+'</td><td>'+(r.fine||'-')+'</td><td>'+(r.temp||'-')+'</td><td>'+r.op+'</td><td><button class="btn btn-sm" style="color:red" onclick="eliminaDecong('+i+')">✕</button></td></tr>';
+    return '<tr '+cls+'><td>'+r.prod+'</td><td>'+r.qta+'</td><td>'+r.lotto+'</td><td>'+r.metodo+'</td><td>'+(r.inizio||'-')+'</td><td>'+(r.fine||'-')+'</td><td>'+(r.temp||'-')+'</td><td>'+r.op+'</td><td><button class="btn btn-sm" style="color:red" onclick="editDecong('+i+')">✏️</button><button class="btn btn-sm" style="color:red" onclick="eliminaDecong('+i+')">✕</button></td></tr>';
   }).join('');
 }
 function eliminaDecong(i){
@@ -4972,7 +5814,8 @@ function eliminaDecong(i){
 /* ═══════════════════════════════════════════════
    FORMAZIONE PERSONALE
    ═══════════════════════════════════════════════ */
-function nuovaFormaz(){
+let editFormazIdx = -1;
+function nuovaFormaz(){editFormazIdx=-1;
   document.getElementById('formaz-form').style.display='block';
 }
 function salvaFormaz(){
@@ -4987,9 +5830,24 @@ function salvaFormaz(){
   };
   if(!r.nome||!r.tipo){alert('Compilare almeno nome e tipo formazione');return;}
   const arr=JSON.parse(localStorage.getItem('tc_formaz')||'[]');
-  arr.push(r);localStorage.setItem('tc_formaz',JSON.stringify(arr));
+  if(editFormazIdx>=0){arr[editFormazIdx]=r;editFormazIdx=-1;}
+  else{arr.push(r);}
+  localStorage.setItem('tc_formaz',JSON.stringify(arr));
   document.getElementById('formaz-form').style.display='none';
   renderFormazLista();
+}
+function editFormaz(i){
+  const arr=JSON.parse(localStorage.getItem('tc_formaz')||'[]');
+  const r=arr[i];if(!r)return;
+  editFormazIdx=i;
+  document.getElementById('formaz-form').style.display='block';
+  document.getElementById('formaz-nome').value=r.nome||'';
+  document.getElementById('formaz-ruolo').value=r.ruolo||'';
+  document.getElementById('formaz-tipo').value=r.tipo||'';
+  document.getElementById('formaz-ente').value=r.ente||'';
+  document.getElementById('formaz-data').value=r.data||'';
+  document.getElementById('formaz-scad').value=r.scad||'';
+  document.getElementById('formaz-num').value=r.num||'';
 }
 function renderFormazLista(){
   const arr=JSON.parse(localStorage.getItem('tc_formaz')||'[]');
@@ -5003,7 +5861,7 @@ function renderFormazLista(){
       if(diffGg<0){stato='❌ SCADUTO';cls='style="background:#ffebee"';alertMsg+='⚠️ <strong>'+r.nome+'</strong> — '+r.tipo+' SCADUTO da '+Math.abs(diffGg)+' giorni!<br>';}
       else if(diffGg<=90){stato='⚠️ Scade tra '+diffGg+'gg';cls='style="background:#fff8e1"';alertMsg+='🔔 <strong>'+r.nome+'</strong> — '+r.tipo+' scade tra '+diffGg+' giorni<br>';}
     }
-    return '<tr '+cls+'><td>'+r.nome+'</td><td>'+r.ruolo+'</td><td>'+r.tipo+'</td><td>'+r.ente+'</td><td>'+r.data+'</td><td>'+r.scad+'</td><td>'+r.num+'</td><td>'+stato+'</td><td><button class="btn btn-sm" style="color:red" onclick="eliminaFormaz('+i+')">✕</button></td></tr>';
+    return '<tr '+cls+'><td>'+r.nome+'</td><td>'+r.ruolo+'</td><td>'+r.tipo+'</td><td>'+r.ente+'</td><td>'+r.data+'</td><td>'+r.scad+'</td><td>'+r.num+'</td><td>'+stato+'</td><td><button class="btn btn-sm" style="color:red" onclick="editFormaz('+i+')">✏️</button><button class="btn btn-sm" style="color:red" onclick="eliminaFormaz('+i+')">✕</button></td></tr>';
   }).join('');
   const alertDiv=document.getElementById('formaz-alert');
   if(alertDiv){
@@ -5021,7 +5879,8 @@ function eliminaFormaz(i){
 /* ═══════════════════════════════════════════════
    ALLERGENI PER SERVIZIO
    ═══════════════════════════════════════════════ */
-function nuovoAllergServ(){
+let editAllergServIdx = -1;
+function nuovoAllergServ(){editAllergServIdx=-1;
   document.getElementById('allergserv-form').style.display='block';
   document.getElementById('as-data').value=new Date().toISOString().slice(0,10);
 }
@@ -5036,15 +5895,29 @@ function salvaAllergServ(){
   };
   if(!r.data||!r.tavolo||!r.allergene){alert('Compilare almeno data, tavolo e allergene');return;}
   const arr=JSON.parse(localStorage.getItem('tc_allergserv')||'[]');
-  arr.push(r);localStorage.setItem('tc_allergserv',JSON.stringify(arr));
+  if(editAllergServIdx>=0){arr[editAllergServIdx]=r;editAllergServIdx=-1;}
+  else{arr.push(r);}
+  localStorage.setItem('tc_allergserv',JSON.stringify(arr));
   document.getElementById('allergserv-form').style.display='none';
   renderAllergServLista();
+}
+function editAllergServ(i){
+  const arr=JSON.parse(localStorage.getItem('tc_allergserv')||'[]');
+  const r=arr[i];if(!r)return;
+  editAllergServIdx=i;
+  document.getElementById('allergserv-form').style.display='block';
+  document.getElementById('as-data').value=r.data||'';
+  document.getElementById('as-tavolo').value=r.tavolo||'';
+  document.getElementById('as-allergene').value=r.allergene||'';
+  document.getElementById('as-piatti').value=r.piatti||'';
+  document.getElementById('as-cameriere').value=r.cameriere||'';
+  document.getElementById('as-esito').value=r.esito||'';
 }
 function renderAllergServLista(){
   const arr=JSON.parse(localStorage.getItem('tc_allergserv')||'[]');
   const tb=document.getElementById('allergserv-lista');if(!tb)return;
   tb.innerHTML=arr.map((r,i)=>{
-    return '<tr><td>'+r.data+'</td><td>'+r.tavolo+'</td><td>'+r.allergene+'</td><td>'+r.piatti+'</td><td>'+r.cameriere+'</td><td>'+r.esito+'</td><td><button class="btn btn-sm" style="color:red" onclick="eliminaAllergServ('+i+')">✕</button></td></tr>';
+    return '<tr><td>'+r.data+'</td><td>'+r.tavolo+'</td><td>'+r.allergene+'</td><td>'+r.piatti+'</td><td>'+r.cameriere+'</td><td>'+r.esito+'</td><td><button class="btn btn-sm" style="color:red" onclick="editAllergServ('+i+')">✏️</button><button class="btn btn-sm" style="color:red" onclick="eliminaAllergServ('+i+')">✕</button></td></tr>';
   }).join('');
 }
 function eliminaAllergServ(i){
@@ -5298,7 +6171,7 @@ async function scanFattura(){
         method:'POST',
         headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
         body:JSON.stringify({
-          model:'llama-4-scout-17b-16e-instruct',
+          model:'meta-llama/llama-4-scout-17b-16e-instruct',
           messages:[{
             role:'user',
             content:[
@@ -5349,7 +6222,7 @@ async function scanFattura(){
 
       const tbody = document.getElementById('fattura-prodotti');
       tbody.innerHTML = prodotti.map((p,i) => {
-        return '<tr><td><input class="form-input" style="font-size:12px" value="'+(p.prodotto||'')+'" onchange="fatturaRiconosciuti['+i+'].prodotto=this.value"></td><td><input class="form-input" style="font-size:12px;width:80px" value="'+(p.qty||'')+'" onchange="fatturaRiconosciuti['+i+'].qty=this.value"></td><td><input class="form-input" style="font-size:12px;width:100px" value="'+(p.lotto||'')+'" onchange="fatturaRiconosciuti['+i+'].lotto=this.value"></td><td><input class="form-input" style="font-size:12px;width:80px" value="'+(p.prezzo||'')+'" onchange="fatturaRiconosciuti['+i+'].prezzo=this.value"></td><td><button class="btn btn-sm" style="color:red" onclick="fatturaRiconosciuti.splice('+i+',1);scanFatturaRender()">✕</button></td></tr>';
+        return '<tr><td><input class="form-input" style="font-size:12px" value="'+(p.prodotto||'')+'" onchange="fatturaRiconosciuti['+i+'].prodotto=this.value"></td><td><input class="form-input" style="font-size:12px;width:80px" value="'+(p.qty||'')+'" onchange="fatturaRiconosciuti['+i+'].qty=this.value"></td><td><input class="form-input" style="font-size:12px;width:100px" value="'+(p.lotto||'')+'" onchange="fatturaRiconosciuti['+i+'].lotto=this.value" placeholder="Inserisci lotto"></td><td><input class="form-input" type="date" style="font-size:12px;width:120px" value="'+(p.scadenza||'')+'" onchange="fatturaRiconosciuti['+i+'].scadenza=this.value"></td><td><input class="form-input" style="font-size:12px;width:80px" value="'+(p.prezzo||'')+'" onchange="fatturaRiconosciuti['+i+'].prezzo=this.value"></td><td><button class="btn btn-sm" style="color:red" onclick="fatturaRiconosciuti.splice('+i+',1);scanFatturaRender()">✕</button></td></tr>';
       }).join('');
       document.getElementById('fattura-risultati').style.display = 'block';
 
@@ -5365,7 +6238,7 @@ async function scanFattura(){
 function scanFatturaRender(){
   const tbody = document.getElementById('fattura-prodotti');
   tbody.innerHTML = fatturaRiconosciuti.map((p,i) => {
-    return '<tr><td><input class="form-input" style="font-size:12px" value="'+(p.prodotto||'')+'" onchange="fatturaRiconosciuti['+i+'].prodotto=this.value"></td><td><input class="form-input" style="font-size:12px;width:80px" value="'+(p.qty||'')+'" onchange="fatturaRiconosciuti['+i+'].qty=this.value"></td><td><input class="form-input" style="font-size:12px;width:100px" value="'+(p.lotto||'')+'" onchange="fatturaRiconosciuti['+i+'].lotto=this.value"></td><td><input class="form-input" style="font-size:12px;width:80px" value="'+(p.prezzo||'')+'" onchange="fatturaRiconosciuti['+i+'].prezzo=this.value"></td><td><button class="btn btn-sm" style="color:red" onclick="fatturaRiconosciuti.splice('+i+',1);scanFatturaRender()">✕</button></td></tr>';
+    return '<tr><td><input class="form-input" style="font-size:12px" value="'+(p.prodotto||'')+'" onchange="fatturaRiconosciuti['+i+'].prodotto=this.value"></td><td><input class="form-input" style="font-size:12px;width:80px" value="'+(p.qty||'')+'" onchange="fatturaRiconosciuti['+i+'].qty=this.value"></td><td><input class="form-input" style="font-size:12px;width:100px" value="'+(p.lotto||'')+'" onchange="fatturaRiconosciuti['+i+'].lotto=this.value" placeholder="Inserisci lotto"></td><td><input class="form-input" type="date" style="font-size:12px;width:120px" value="'+(p.scadenza||'')+'" onchange="fatturaRiconosciuti['+i+'].scadenza=this.value"></td><td><input class="form-input" style="font-size:12px;width:80px" value="'+(p.prezzo||'')+'" onchange="fatturaRiconosciuti['+i+'].prezzo=this.value"></td><td><button class="btn btn-sm" style="color:red" onclick="fatturaRiconosciuti.splice('+i+',1);scanFatturaRender()">✕</button></td></tr>';
   }).join('');
 }
 
@@ -5584,7 +6457,7 @@ async function cpInvia(){
         'Authorization':'Bearer '+key
       },
       body:JSON.stringify({
-        model:'llama-3.3-70b-versatile',
+        model:'meta-llama/llama-4-scout-17b-16e-instruct',
         messages:[
           {role:'system', content:cpCostruisciSistema()},
           ...cpStorico.slice(-12)
