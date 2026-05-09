@@ -1900,6 +1900,7 @@ textarea{height:60px;resize:vertical}
       <button onclick="cpPromptRapido('foodcost')" class="cp-quick-btn">💰 Food Cost</button>
       <button onclick="cpPromptRapido('menu')" class="cp-quick-btn">🍽️ Menu</button>
       <button onclick="cpPromptRapido('allergeni')" class="cp-quick-btn">⚠️ Allergeni</button>
+      <button onclick="cpPromptRapido('normativa')" class="cp-quick-btn" style="background:#c62828;color:#fff;border-color:#c62828">🔔 Normativa</button>
     </div>
   </div>
 
@@ -1918,6 +1919,28 @@ textarea{height:60px;resize:vertical}
       <button class="btn" onclick="cpRimuoviKey()" style="font-size:11px">Rimuovi</button>
     </div>
     <div id="cp-key-status" style="font-size:11px;color:#888;margin-top:6px"></div>
+  </div>
+
+  <!-- AGGIORNAMENTI NORMATIVA -->
+  <div class="card" style="border:2px solid #c62828;background:#fff5f5">
+    <div class="card-header">
+      <div>
+        <div class="card-title" style="color:#c62828">🔔 Aggiornamenti Normativa HACCP</div>
+        <div class="card-sub">Controlla le ultime novità su normative, regolamenti e obblighi per la ristorazione</div>
+      </div>
+    </div>
+    <div style="padding:16px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+        <button class="btn" style="background:#c62828;color:#fff;font-size:13px;font-weight:700" onclick="checkNormativa('completo')">📋 Check Completo Normativa</button>
+        <button class="btn" style="background:#e65100;color:#fff;font-size:12px" onclick="checkNormativa('sanzioni')">💰 Sanzioni e Multe</button>
+        <button class="btn" style="background:#1565c0;color:#fff;font-size:12px" onclick="checkNormativa('temperature')">🌡️ Temperature Obbligatorie</button>
+        <button class="btn" style="background:#2e7d32;color:#fff;font-size:12px" onclick="checkNormativa('formazione')">🎓 Formazione Personale</button>
+        <button class="btn" style="background:#6a1b9a;color:#fff;font-size:12px" onclick="checkNormativa('allergeni')">⚠️ Obblighi Allergeni</button>
+        <button class="btn" style="background:#00695c;color:#fff;font-size:12px" onclick="checkNormativa('tracciabilita')">📦 Tracciabilità</button>
+      </div>
+      <div id="normativa-result" style="display:none;background:#fff;border:1px solid #ddd;border-radius:8px;padding:16px;max-height:500px;overflow-y:auto;font-size:13px;line-height:1.7"></div>
+      <div id="normativa-status" style="display:none;padding:12px;border-radius:8px;font-size:13px;text-align:center"></div>
+    </div>
   </div>
 
   <!-- CHAT BOX -->
@@ -2700,11 +2723,11 @@ async function avviaWebcamScanner(){
             const barcodes = await detector.detect(videoEl);
             if(barcodes.length > 0){
               const code = barcodes[0].rawValue;
-              if(code){
+              if(code && code.length >= 3){
                 clearInterval(scannerInterval);
                 scannerInterval=null;
-                impostaBarcode(code);
                 fermaWebcam();
+                setTimeout(()=>impostaBarcode(code), 100);
               }
             }
           } catch(e){}
@@ -2722,8 +2745,9 @@ async function avviaWebcamScanner(){
       statusEl.textContent='📱 Inquadra il codice a barre… (ZXing)';
       pcCodeReader.decodeFromVideoElement(videoEl,(result,err)=>{
         if(result){
-          impostaBarcode(result.getText());
+          const code = result.getText();
           fermaWebcam();
+          setTimeout(()=>impostaBarcode(code), 100);
         }
       });
     } else {
@@ -2755,8 +2779,8 @@ function scanWithCanvas(videoEl, statusEl){
         if(barcodes.length>0){
           clearInterval(scannerInterval);
           scannerInterval=null;
-          impostaBarcode(barcodes[0].rawValue);
           fermaWebcam();
+          setTimeout(()=>impostaBarcode(barcodes[0].rawValue), 100);
         }
       }).catch(e=>{});
     }
@@ -2781,12 +2805,37 @@ function usaBarcodeDaInput(){
   if(v)impostaBarcode(v);
 }
 function impostaBarcode(code){
-  document.getElementById('barcode-input').value=code;
-  document.getElementById('scan-code-display').textContent=code;
-  document.getElementById('scan-result-bar').style.display='flex';
-  document.getElementById('m-lotto').value=code;
-  document.getElementById('barcode-banner-code').textContent=code;
-  document.getElementById('barcode-prefill-banner').style.display='block';
+  if(!code || code.length < 3) return;
+  code = code.trim();
+  
+  // Strong visual + audio feedback
+  try { navigator.vibrate && navigator.vibrate(200); } catch(e){}
+  showToast('📦 Codice letto: ' + code, '#2471a3');
+  
+  // Fill barcode input field
+  const barcodeInput = document.getElementById('barcode-input');
+  if(barcodeInput) barcodeInput.value = code;
+  
+  // Show code in result bar
+  const scanDisplay = document.getElementById('scan-code-display');
+  if(scanDisplay) scanDisplay.textContent = code;
+  const resultBar = document.getElementById('scan-result-bar');
+  if(resultBar) resultBar.style.display = 'flex';
+  
+  // Fill lotto field
+  const lottoField = document.getElementById('m-lotto');
+  if(lottoField) lottoField.value = code;
+  
+  // Show banner
+  const bannerCode = document.getElementById('barcode-banner-code');
+  if(bannerCode) bannerCode.textContent = code;
+  const banner = document.getElementById('barcode-prefill-banner');
+  if(banner) banner.style.display = 'block';
+  
+  // Scroll to the registration form so user can see the result
+  const formArea = document.getElementById('m-fornitore') || document.getElementById('m-lotto');
+  if(formArea) formArea.scrollIntoView({behavior:'smooth', block:'center'});
+  
   // Try to lookup product name from barcode via Open Food Facts API
   cercaProdottoDaBarcode(code);
 }
@@ -5162,13 +5211,22 @@ function salvaOrdine(){
   const fornitore = document.getElementById('ordine-fornitore').value || '—';
   const note = document.getElementById('ordine-note').value || '';
   const rec = {
-    id: Date.now(),
+    id: editOrdineId > 0 ? editOrdineId : Date.now(),
     data, fornitore, note,
     prodotti: ordineSelezionato.map(p=>({nome:p.nome,catLabel:p.catLabel,qta:p.qta,unita:p.unita})),
     stato: 'salvato',
     ts: new Date().toISOString()
   };
-  const list = load('ordini'); list.push(rec); save('ordini', list);
+  const list = load('ordini');
+  if(editOrdineId > 0){
+    const idx = list.findIndex(o=>o.id===editOrdineId);
+    if(idx >= 0){ list[idx] = rec; }
+    else { list.push(rec); }
+    editOrdineId = -1;
+  } else {
+    list.push(rec);
+  }
+  save('ordini', list);
   ordineSelezionato = [];
   document.getElementById('ordine-note').value = '';
   renderOrdineDB(); renderOrdineSelected(); renderStoricoOrdini();
@@ -5197,6 +5255,7 @@ function renderStoricoOrdini(){
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <span style="font-size:11px;font-weight:700;color:${statoColor};padding:2px 8px;border-radius:10px;background:${statoColor}18">${statoBadge}</span>
+          <button class="btn btn-sm" style="background:#fff3cd;color:#856404;font-size:11px" onclick="editOrdine(${ord.id})">✏️ Modifica</button>
           <button class="btn btn-sm" style="background:#e8f4fd;color:#1a5276;font-size:11px" onclick="stampaOrdine(${ord.id})">🖨️ Stampa</button>
           <button class="btn btn-sm" style="background:#e8f4fd;color:#1a5276;font-size:11px" onclick="inviaOrdine(${ord.id})">📧 Invia</button>
           <button class="btn btn-sm" style="background:#fdecea;color:#c0392b;font-size:11px" onclick="eliminaOrdine(${ord.id})">🗑</button>
@@ -5308,6 +5367,33 @@ function eliminaOrdine(id){
   save('ordini', load('ordini').filter(o=>o.id!==id));
   renderStoricoOrdini();
   showToast('Ordine eliminato.','#c0392b');
+}
+
+let editOrdineId = -1;
+
+function editOrdine(id){
+  const ord = load('ordini').find(o=>o.id===id);
+  if(!ord) return;
+  editOrdineId = id;
+  
+  // Fill the form with order data
+  document.getElementById('ordine-data').value = ord.data || '';
+  document.getElementById('ordine-fornitore').value = ord.fornitore || '';
+  document.getElementById('ordine-note').value = ord.note || '';
+  
+  // Load products into ordineSelezionato
+  ordineSelezionato = ord.prodotti.map(p=>({
+    nome: p.nome,
+    catLabel: p.catLabel,
+    qta: p.qta || '1',
+    unita: p.unita || 'kg'
+  }));
+  
+  renderOrdineSelected();
+  
+  // Scroll to top of ordine section
+  document.getElementById('sec-ordine').scrollIntoView({behavior:'smooth'});
+  showToast('✏️ Modifica l\'ordine e clicca Salva Ordine','#2471a3');
 }
 
 
@@ -6349,6 +6435,93 @@ function cpRimuoviKey(){
   showToast('API key rimossa.','#856404');
 }
 
+async function checkNormativa(tipo){
+  const statusEl = document.getElementById('normativa-status');
+  const resultEl = document.getElementById('normativa-result');
+  statusEl.style.display = 'block';
+  statusEl.style.background = '#e3f2fd';
+  statusEl.style.color = '#1565c0';
+  statusEl.innerHTML = '⏳ Consultazione normativa in corso...';
+  resultEl.style.display = 'none';
+
+  const groqKey = localStorage.getItem('tc_cp_groq_key');
+  if(!groqKey){
+    statusEl.style.background = '#ffebee';
+    statusEl.style.color = '#c62828';
+    statusEl.innerHTML = '❌ Configurare prima la Groq API Key.';
+    return;
+  }
+
+  const prompts = {
+    completo: 'Sei un esperto di normativa HACCP per la ristorazione italiana. Fornisci un RIEPILOGO COMPLETO e AGGIORNATO delle normative vigenti. Includi: 1) REGOLAMENTI EUROPEI principali (Reg. CE 852/2004, Reg. UE 1169/2011, Reg. CE 178/2002) con breve descrizione 2) DECRETI ITALIANI (D.Lgs 193/2007, norme regionali formazione) 3) NOVITÀ RECENTI degli ultimi anni (cambiamenti, nuovi obblighi) 4) PUNTI CRITICI più controllati dagli ispettori ASL 5) TEMPERATURE obbligatorie (conservazione, cottura, abbattimento) 6) FORMAZIONE personale e scadenze attestati 7) SANZIONI principali con importi 8) ETICHETTATURA e allergeni. Organizza con titoli chiari e punti numerati. In italiano.',
+    
+    sanzioni: 'Sei un esperto HACCP. Elenca TUTTE le sanzioni e multe previste per violazioni HACCP nei ristoranti italiani. Per ogni violazione indica: cosa viene contestato, importo minimo e massimo della multa, riferimento normativo (D.Lgs 193/2007, ecc.), e cosa fare per evitarla. Includi: mancanza piano autocontrollo, temperature non conformi, mancata registrazione, formazione mancante, allergeni non comunicati, tracciabilità assente, infestanti, pulizia inadeguata. In italiano.',
+    
+    temperature: 'Sei un esperto HACCP. Fornisci la TABELLA COMPLETA delle temperature obbligatorie per la ristorazione: conservazione frigo (+4°C max), congelatore (-18°C), cottura a cuore (75°C min), abbattimento (da +65°C a +3°C in max 2 ore), mantenimento caldo (+65°C min), mantenimento freddo (+4°C max), olio frittura (max 180°C), ricezione merci. Per ogni temperatura indica il riferimento normativo e le sanzioni se non rispettata. In italiano.',
+    
+    formazione: 'Sei un esperto HACCP. Spiega TUTTI gli obblighi di formazione per il personale della ristorazione in Italia: chi deve essere formato, tipologie di corsi (alimentarista base, avanzato, HACCP responsabile), durata corsi, scadenza attestati (generalmente 3 anni), obblighi regionali (variano per regione), cosa succede se un dipendente lavora senza attestato valido, sanzioni. Includi anche formazione su allergeni (Reg. UE 1169/2011) e primo soccorso. In italiano.',
+    
+    allergeni: 'Sei un esperto HACCP. Spiega TUTTI gli obblighi relativi alla comunicazione degli allergeni nella ristorazione italiana secondo il Reg. UE 1169/2011: i 14 allergeni obbligatori, come devono essere comunicati (menu, cartello, verbalmente), obblighi per il personale di sala, registro comunicazione al cliente, gestione cross-contamination in cucina, menu per celiaci/intolleranti, sanzioni per mancata comunicazione. In italiano.',
+    
+    tracciabilita: 'Sei un esperto HACCP. Spiega TUTTI gli obblighi di tracciabilità e rintracciabilità per i ristoranti italiani secondo il Reg. CE 178/2002: cosa registrare (fornitore, lotto, data, prodotto), per quanto tempo conservare i documenti (minimo 6 mesi oltre scadenza prodotto), DDT e fatture, etichettatura interna, cosa mostrare all\u2019ispettore, sistema FIFO (first in first out), sanzioni per mancata tracciabilità. In italiano.'
+  };
+
+  try {
+    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
+      body:JSON.stringify({
+        model:'meta-llama/llama-4-scout-17b-16e-instruct',
+        messages:[{
+          role:'system',
+          content:'Sei un consulente esperto di sicurezza alimentare e normativa HACCP per la ristorazione italiana. Rispondi sempre in italiano, in modo chiaro e professionale. Usa titoli, numeri e punti elenco per organizzare le informazioni. Cita sempre i riferimenti normativi specifici.'
+        },{
+          role:'user',
+          content: prompts[tipo] || prompts.completo
+        }],
+        max_tokens:3000,
+        temperature:0.3
+      })
+    });
+
+    const data = await resp.json();
+    if(data.error){
+      statusEl.style.background='#ffebee';
+      statusEl.style.color='#c62828';
+      statusEl.innerHTML='❌ Errore: '+(data.error.message||'Errore API');
+      return;
+    }
+
+    let txt = data.choices?.[0]?.message?.content || 'Nessuna risposta';
+    // Convert markdown to HTML
+    txt = txt.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+    txt = txt.replace(/^### (.+)$/gm,'<h4 style="color:#c62828;margin:12px 0 6px;font-size:14px">$1</h4>');
+    txt = txt.replace(/^## (.+)$/gm,'<h3 style="color:#1a5276;margin:14px 0 8px;font-size:15px;border-bottom:1px solid #ddd;padding-bottom:4px">$1</h3>');
+    txt = txt.replace(/^# (.+)$/gm,'<h2 style="color:#222;margin:16px 0 10px;font-size:16px">$1</h2>');
+    txt = txt.split('\n').join('<br>');
+
+    statusEl.style.display='none';
+    resultEl.style.display='block';
+    resultEl.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #c62828"><strong style="color:#c62828;font-size:14px">🔔 Riepilogo Normativa</strong><button class="btn btn-sm" style="background:#c62828;color:#fff;font-size:11px" onclick="stampaNormativa()">🖨️ Stampa</button></div>' + txt + '<div style="margin-top:16px;padding:10px;background:#fff3cd;border-radius:6px;font-size:11px;color:#7a5800"><strong>⚠️ Nota:</strong> Queste informazioni sono fornite dall\u2019AI come riferimento generale. Per decisioni legali, consulta sempre un consulente HACCP certificato o la tua ASL di riferimento. Le normative possono variare per regione.</div>';
+
+  } catch(err){
+    statusEl.style.background='#ffebee';
+    statusEl.style.color='#c62828';
+    statusEl.innerHTML='❌ Errore connessione: '+err.message;
+  }
+}
+
+function stampaNormativa(){
+  const content = document.getElementById('normativa-result');
+  if(!content) return;
+  const css = '@page{size:A4;margin:15mm}body{font-family:Arial,sans-serif;font-size:11pt;color:#222;line-height:1.6}h2,h3,h4{color:#c62828}strong{color:#1a5276}.btn{display:none}';
+  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Aggiornamento Normativa HACCP</title><style>'+css+'</style></head><body><h1 style="text-align:center;color:#c62828">AGGIORNAMENTO NORMATIVA HACCP</h1><div style="text-align:center;color:#555;margin-bottom:20px">Generato il '+new Date().toLocaleDateString('it-IT')+'</div>'+content.innerHTML+'<\/script></body></html>';
+  let iframe = document.getElementById('print-iframe-norm');
+  if(!iframe){iframe=document.createElement('iframe');iframe.id='print-iframe-norm';iframe.style.cssText='position:fixed;top:-9999px;left:-9999px;width:0;height:0;border:0';document.body.appendChild(iframe);}
+  const doc=iframe.contentWindow.document;doc.open();doc.write(html);doc.close();
+  setTimeout(()=>{iframe.contentWindow.focus();iframe.contentWindow.print();},400);
+}
+
 function cpPromptRapido(tipo){
   const prompts = {
     antispreco:'Ho degli avanzi in frigo e voglio evitare sprechi. Dimmi cosa hai rimasto e ti suggerisco 2-3 piatti da realizzare con quegli ingredienti.',
@@ -6356,7 +6529,8 @@ function cpPromptRapido(tipo){
     ricetta:'Voglio creare una nuova ricetta. Dimmi il piatto e ti aiuto con ingredienti, grammature, procedimento e allergeni.',
     foodcost:'Voglio calcolare il food cost di un piatto. Dimmi nome piatto e ingredienti con prezzi, calcolo costo, prezzo vendita e margine.',
     menu:'Ho bisogno di aiuto con il menu. Suggeriscimi abbinamenti, piatti stagionali o come bilanciare il menu.',
-    allergeni:'Ho clienti con intolleranze. Aiutami a gestire celiachia, intolleranza al lattosio, vegani e altri allergeni.'
+    allergeni:'Ho clienti con intolleranze. Aiutami a gestire celiachia, intolleranza al lattosio, vegani e altri allergeni.',
+    normativa:'AGGIORNAMENTO NORMATIVA HACCP — Fammi un riepilogo completo e aggiornato delle normative HACCP vigenti per la ristorazione in Italia. Includi: 1) Regolamenti europei principali (CE 852/2004, UE 1169/2011 allergeni, ecc.) 2) Decreti legislativi italiani (D.Lgs 193/2007 sanzioni, formazione alimentaristi) 3) Novità e aggiornamenti recenti degli ultimi 2 anni 4) Punti critici che vengono controllati più spesso dagli ispettori ASL 5) Temperature obbligatorie per conservazione, cottura e abbattimento 6) Obblighi sulla formazione del personale e scadenze attestati 7) Sanzioni principali e importi delle multe 8) Eventuali novità su etichettatura, allergeni, tracciabilità. Organizza tutto in modo chiaro con le sezioni numerate.'
   };
   const input = document.getElementById('cp-input');
   input.value = prompts[tipo] || '';
@@ -6589,6 +6763,24 @@ async function pcFbSincronizza(){
       temps:loadObj('temps',{}),pulizie_storico:load('pulizie_storico'),
       menu_storico:load('menu_storico'),ricette:load('ricette'),
       fornitori:JSON.parse(localStorage.getItem('tc_haccp_fornitori')||'[]'),
+      ordini:load('ordini'),
+      operatori:JSON.parse(localStorage.getItem('tc_operatori')||'[]'),
+      anagrafica:JSON.parse(localStorage.getItem('tc_haccp_anagrafica')||'{}'),
+      nc_list:load('nc_list'),
+      inf_list:load('inf_list'),
+      vc_list:load('vc_list'),
+      cs_list:load('cs_list'),
+      forn_scheda:load('forn_scheda'),
+      abb_list:load('abb_list'),
+      prod_list:load('prod_list'),
+      camp_list:load('camp_list'),
+      moca_list:load('moca_list'),
+      dises_list:load('dises_list'),
+      olio:JSON.parse(localStorage.getItem('tc_olio')||'[]'),
+      decong:JSON.parse(localStorage.getItem('tc_decong')||'[]'),
+      formaz:JSON.parse(localStorage.getItem('tc_formaz')||'[]'),
+      allergserv:JSON.parse(localStorage.getItem('tc_allergserv')||'[]'),
+      menu_fisso:JSON.parse(localStorage.getItem('tc_menu_fisso')||'{}'),
       uploaded:new Date().toISOString(),app:'TheChefs HACCP v7'
     };
     const res=await fetch(pcFbUrl('backup'),{
@@ -6619,9 +6811,27 @@ async function pcFbScarica(){
     if(d.pulizie_storico){const cur=load('pulizie_storico');const ex=new Set(cur.map(p=>p.data));const nuove=d.pulizie_storico.filter(p=>!ex.has(p.data));save('pulizie_storico',[...nuove,...cur]);}
     if(d.menu_storico){const cur=load('menu_storico');const ex=new Set(cur.map(m=>m.data));const nuove=d.menu_storico.filter(m=>!ex.has(m.data));save('menu_storico',[...nuove,...cur]);}
     if(d.fornitori){localStorage.setItem('tc_haccp_fornitori',JSON.stringify(d.fornitori));}
+    if(d.ordini){save('ordini',d.ordini);}
+    if(d.operatori){localStorage.setItem('tc_operatori',JSON.stringify(d.operatori));}
+    if(d.anagrafica){localStorage.setItem('tc_haccp_anagrafica',JSON.stringify(d.anagrafica));}
+    if(d.nc_list){save('nc_list',d.nc_list);}
+    if(d.inf_list){save('inf_list',d.inf_list);}
+    if(d.vc_list){save('vc_list',d.vc_list);}
+    if(d.cs_list){save('cs_list',d.cs_list);}
+    if(d.forn_scheda){save('forn_scheda',d.forn_scheda);}
+    if(d.abb_list){save('abb_list',d.abb_list);}
+    if(d.prod_list){save('prod_list',d.prod_list);}
+    if(d.camp_list){save('camp_list',d.camp_list);}
+    if(d.moca_list){save('moca_list',d.moca_list);}
+    if(d.dises_list){save('dises_list',d.dises_list);}
+    if(d.olio){localStorage.setItem('tc_olio',JSON.stringify(d.olio));}
+    if(d.decong){localStorage.setItem('tc_decong',JSON.stringify(d.decong));}
+    if(d.formaz){localStorage.setItem('tc_formaz',JSON.stringify(d.formaz));}
+    if(d.allergserv){localStorage.setItem('tc_allergserv',JSON.stringify(d.allergserv));}
+    if(d.menu_fisso){localStorage.setItem('tc_menu_fisso',JSON.stringify(d.menu_fisso));}
     localStorage.setItem('tc_fb_connected','1');
     aggiornaPcFbDot();
-    pcFbMostraStato('ok','Scaricati '+n+' nuovi record da Firebase');
+    pcFbMostraStato('ok','✅ Tutti i dati sincronizzati da Firebase!');
     renderDashboard();
   }catch(e){pcFbMostraStato('err','Errore download: '+e.message);}
 }
@@ -6643,6 +6853,116 @@ function renderFirebaseSection(){
     <tr><td style="padding:6px 12px 6px 0;color:#666">Firebase</td><td><strong style="color:${pcFbConfig.url?'#1f7a3e':'#c0392b'}">${pcFbConfig.url?'Configurato':'Non configurato'}</strong></td></tr>
     </tbody></table>`;
 }
+
+/* ===== AUTO-SYNC FIREBASE IN TEMPO REALE ===== */
+let fbSyncTimer = null;
+let fbSyncEnabled = false;
+
+function fbAutoSync(){
+  if(!fbSyncEnabled) return;
+  if(!pcFbConfig || !pcFbConfig.url) return;
+  // Debounce — aspetta 2 secondi dopo l'ultima modifica prima di sincronizzare
+  if(fbSyncTimer) clearTimeout(fbSyncTimer);
+  fbSyncTimer = setTimeout(async()=>{
+    try {
+      const payload={
+        merci:load('merci'),etichette:load('etichette'),
+        temps:loadObj('temps',{}),pulizie_storico:load('pulizie_storico'),
+        menu_storico:load('menu_storico'),ricette:load('ricette'),
+        fornitori:JSON.parse(localStorage.getItem('tc_haccp_fornitori')||'[]'),
+        ordini:load('ordini'),
+        operatori:JSON.parse(localStorage.getItem('tc_operatori')||'[]'),
+        anagrafica:JSON.parse(localStorage.getItem('tc_haccp_anagrafica')||'{}'),
+        nc_list:load('nc_list'),inf_list:load('inf_list'),vc_list:load('vc_list'),
+        cs_list:load('cs_list'),forn_scheda:load('forn_scheda'),
+        abb_list:load('abb_list'),prod_list:load('prod_list'),camp_list:load('camp_list'),
+        moca_list:load('moca_list'),dises_list:load('dises_list'),
+        olio:JSON.parse(localStorage.getItem('tc_olio')||'[]'),
+        decong:JSON.parse(localStorage.getItem('tc_decong')||'[]'),
+        formaz:JSON.parse(localStorage.getItem('tc_formaz')||'[]'),
+        allergserv:JSON.parse(localStorage.getItem('tc_allergserv')||'[]'),
+        menu_fisso:JSON.parse(localStorage.getItem('tc_menu_fisso')||'{}'),
+        uploaded:new Date().toISOString(),app:'TheChefs HACCP v7'
+      };
+      await fetch(pcFbUrl('backup'),{
+        method:'PUT',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(payload)
+      });
+    }catch(e){ console.log('Auto-sync error:',e); }
+  }, 2000);
+}
+
+// Hook into localStorage.setItem to trigger auto-sync
+const _origSetItem = localStorage.setItem.bind(localStorage);
+localStorage.setItem = function(key, value){
+  _origSetItem(key, value);
+  if(key.startsWith('tc_') && !key.includes('fb_') && !key.includes('groq')) fbAutoSync();
+};
+
+// Hook into save() function to trigger auto-sync
+const _origSave = save;
+save = function(key, val){
+  _origSave(key, val);
+  fbAutoSync();
+};
+
+// Enable auto-sync on startup if Firebase is configured
+function initAutoSync(){
+  caricaPcFbConfig();
+  if(pcFbConfig && pcFbConfig.url){
+    fbSyncEnabled = true;
+    console.log('Auto-sync Firebase attivato');
+  }
+}
+
+// Auto-refresh from Firebase every 30 seconds
+let fbRefreshTimer = null;
+function startFbAutoRefresh(){
+  if(fbRefreshTimer) clearInterval(fbRefreshTimer);
+  fbRefreshTimer = setInterval(async()=>{
+    if(!fbSyncEnabled || !pcFbConfig || !pcFbConfig.url) return;
+    try {
+      const res = await fetch(pcFbUrl('backup'));
+      if(!res.ok) return;
+      const d = await res.json();
+      if(!d) return;
+      const remoteTs = d.uploaded || '';
+      const localTs = localStorage.getItem('tc_fb_last_remote_ts') || '';
+      if(remoteTs && remoteTs !== localTs){
+        // New data available — update local
+        if(d.merci) save('merci', d.merci);
+        if(d.ordini) save('ordini', d.ordini);
+        if(d.operatori) localStorage.setItem('tc_operatori', JSON.stringify(d.operatori));
+        if(d.anagrafica) _origSetItem('tc_haccp_anagrafica', JSON.stringify(d.anagrafica));
+        if(d.fornitori) _origSetItem('tc_haccp_fornitori', JSON.stringify(d.fornitori));
+        if(d.etichette) save('etichette', d.etichette);
+        if(d.temps) save('temps', d.temps);
+        if(d.ricette) save('ricette', d.ricette);
+        if(d.nc_list) save('nc_list', d.nc_list);
+        if(d.inf_list) save('inf_list', d.inf_list);
+        if(d.vc_list) save('vc_list', d.vc_list);
+        if(d.cs_list) save('cs_list', d.cs_list);
+        if(d.forn_scheda) save('forn_scheda', d.forn_scheda);
+        if(d.abb_list) save('abb_list', d.abb_list);
+        if(d.prod_list) save('prod_list', d.prod_list);
+        if(d.camp_list) save('camp_list', d.camp_list);
+        if(d.moca_list) save('moca_list', d.moca_list);
+        if(d.dises_list) save('dises_list', d.dises_list);
+        if(d.olio) _origSetItem('tc_olio', JSON.stringify(d.olio));
+        if(d.decong) _origSetItem('tc_decong', JSON.stringify(d.decong));
+        if(d.formaz) _origSetItem('tc_formaz', JSON.stringify(d.formaz));
+        if(d.allergserv) _origSetItem('tc_allergserv', JSON.stringify(d.allergserv));
+        if(d.menu_fisso) _origSetItem('tc_menu_fisso', JSON.stringify(d.menu_fisso));
+        if(d.menu_storico) save('menu_storico', d.menu_storico);
+        if(d.pulizie_storico) save('pulizie_storico', d.pulizie_storico);
+        _origSetItem('tc_fb_last_remote_ts', remoteTs);
+        showToast('☁️ Dati aggiornati da un altro dispositivo','#2471a3');
+      }
+    } catch(e){}
+  }, 30000); // ogni 30 secondi
+}
+
+setTimeout(()=>{ initAutoSync(); startFbAutoRefresh(); }, 2000);
 
 /* ===== INIT FINALE ===== */
 if(!load('ricette').length){caricaRicetteDefault();}
