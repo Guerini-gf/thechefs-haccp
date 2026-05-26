@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SoftTheChefs — Pitch Deck 2026</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#0b0d10;--surface:#12161a;--text:#f3f1eb;--muted:#9b978d;--pale:#d9d4c7;--green:#2ECC71;--green-dark:#1f7a45;--gold:#c0a76e;--red:#E74C3C}
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{background:var(--bg);margin:0;overflow:hidden;height:100vh;width:100vw}
+    body{font-family:'DM Sans',sans-serif;color:var(--text)}
+
+    .deck{width:100vw;height:100vh;position:relative}
+    .slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transform:scale(.95);transition:opacity .6s,transform .6s;pointer-events:none;overflow:hidden}
+    .slide.active{opacity:1;transform:scale(1);pointer-events:all}
+    .slide>.ct{position:relative;z-index:2;width:100%;max-width:1140px;padding:clamp(1.5rem,4vw,3.5rem)}
+
+    /* Mesh blobs */
+    .mesh{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+    .bl{position:absolute;border-radius:50%;filter:blur(80px);animation:fl 16s ease-in-out infinite}
+    .bl:nth-child(2){animation-duration:20s}
+    @keyframes fl{0%{transform:translate(0,0) scale(1)}50%{transform:translate(35px,-25px) scale(1.06)}100%{transform:translate(0,0) scale(1)}}
+
+    /* Noise + vignette overlays */
+    .slide::before{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");background-repeat:repeat;background-size:256px;opacity:.03;mix-blend-mode:overlay}
+    .slide::after{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at center,transparent 52%,rgba(0,0,0,.4) 100%)}
+
+    /* Components */
+    .mini{font-size:.82rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+    .card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:1.3rem;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem}
+    .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem}
+    .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
+    .metric{font-family:'DM Serif Display',serif;font-size:clamp(2rem,4vw,3.2rem);line-height:1}
+    .quote{font-family:'DM Serif Display',serif;font-size:clamp(1.5rem,2.5vw,2.2rem);line-height:1.35}
+    .green{color:var(--green)}.gold{color:var(--gold)}.pale{color:var(--pale)}
+    .bar-track{height:16px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
+    .bar-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--gold));border-radius:99px;width:0%;transition:width .6s ease}
+    h2{font-family:'DM Serif Display',serif;font-size:clamp(1.9rem,3.8vw,2.8rem);margin-bottom:.6rem;line-height:1.15}
+    p{line-height:1.55}
+    .reveal{opacity:0;transform:translateY(18px)}
+
+    /* Comparison table */
+    .tbl{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:1px;background:rgba(255,255,255,.08);border-radius:16px;overflow:hidden;font-size:.9rem}
+    .tbl>div{background:#111418;padding:.85rem 1rem}
+
+    /* Nav */
+    .nav{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;z-index:100;background:rgba(10,10,10,.55);backdrop-filter:blur(10px);padding:8px 20px;border-radius:40px;border:1px solid rgba(255,255,255,.08)}
+    .nav button{width:36px;height:36px;border:none;background:rgba(255,255,255,.06);color:var(--green);border-radius:50%;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+    .dots{display:flex;gap:6px}
+    .dots .dot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.12);cursor:pointer;transition:all .3s}
+    .dots .dot.active{background:var(--green);transform:scale(1.25)}
+    .counter{font-size:.8rem;color:var(--muted);min-width:44px;text-align:center}
+
+    @media(max-width:900px){.grid3,.grid4{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.tbl{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div class="deck">
+
+<!-- 1 — COVER -->
+<div class="slide active" data-slide="1">
+  <div class="mesh"><div class="bl" style="width:460px;height:460px;top:-120px;right:-80px;background:var(--green);opacity:.12"></div><div class="bl" style="width:300px;height:300px;bottom:-80px;left:-40px;background:var(--gold);opacity:.1"></div></div>
+  <div class="ct" style="text-align:center">
+    <div class="reveal" style="display:inline-grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:1.2rem">
+      <div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#2ECC71,#1f7a45)"></div>
+      <div style="width:42px;height:42px;border-radius:12px;background:#f7f3ea;display:flex;align-items:center;justify-content:center;font-size:18px">👨‍🍳</div>
+      <div style="width:42px;height:42px;border-radius:12px;background:#f1efe8"></div>
+      <div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#E74C3C,#C0392B)"></div>
+    </div>
+    <p class="mini reveal">Pitch Deck — Giugno 2026</p>
+    <h1 class="reveal" style="font-family:'DM Serif Display',serif;font-size:clamp(2.8rem,6vw,5.4rem);margin:.4rem 0">SoftTheChefs</h1>
+    <p class="reveal" style="font-size:clamp(1.1rem,2vw,1.5rem);color:var(--pale);max-width:780px;margin:0 auto">Il sistema operativo per cucine professionali</p>
+    <p class="reveal" style="font-size:clamp(.9rem,1.3vw,1.1rem);color:var(--muted);max-width:780px;margin:.8rem auto 0">HACCP, eventi, ordini, menu, fornitori e controllo operativo in un'unica piattaforma.<br>Creato da uno chef, per gli chef.</p>
+  </div>
+</div>
+
+<!-- 2 — EXECUTIVE SUMMARY -->
+<div class="slide" data-slide="2">
+  <div class="mesh"><div class="bl" style="width:340px;height:340px;top:-80px;right:-40px;background:var(--green);opacity:.08"></div><div class="bl" style="width:240px;height:240px;bottom:-50px;left:-30px;background:var(--gold);opacity:.07"></div></div>
+  <div class="ct">
+    <p class="mini reveal">Executive summary</p>
+    <h2 class="reveal">Perché esiste SoftTheChefs</h2>
+    <div class="grid3" style="margin-top:1.2rem">
+      <div class="card reveal"><div class="metric green">19</div><p class="pale" style="margin-top:.6rem">Sezioni HACCP integrate in un unico ambiente operativo</p></div>
+      <div class="card reveal"><div class="metric gold">500+</div><p class="pale" style="margin-top:.6rem">Piatti nel catalogo e 1.177 vini con annata, formato e prezzo</p></div>
+      <div class="card reveal"><div class="metric green">0€</div><p class="pale" style="margin-top:.6rem">Costo di abbonamento. Dati locali, funziona offline, zero server obbligatori</p></div>
+    </div>
+    <div class="card reveal" style="margin-top:1rem">
+      <p style="font-size:1.15rem;color:var(--pale)">SoftTheChefs nasce per sostituire fogli sparsi, WhatsApp, Excel e software frammentati con un'unica piattaforma che riduce il caos documentale, i tempi morti e l'ansia da controllo ASL.</p>
+    </div>
+  </div>
+</div>
+
+<!-- 3 — PROBLEMA -->
+<div class="slide" data-slide="3">
+  <div class="mesh"><div class="bl" style="width:320px;height:320px;top:-100px;left:-60px;background:var(--gold);opacity:.08"></div><div class="bl" style="width:280px;height:280px;bottom:-60px;right:-60px;background:var(--green);opacity:.07"></div></div>
+  <div class="ct">
+    <p class="mini reveal">Problema</p>
+    <h2 class="reveal">Ogni giorno in cucina è una battaglia contro il caos documentale</h2>
+    <div class="grid2" style="margin-top:1.2rem;gap:1rem">
+      <div class="card reveal"><h3 class="green" style="margin-bottom:.4rem;font-size:1.1rem">📄 Carta ovunque</h3><p class="pale" style="font-size:.9rem">Temperature, pulizie, etichette e registri dispersi tra fogli, quaderni, foto e messaggi WhatsApp</p></div>
+      <div class="card reveal"><h3 class="green" style="margin-bottom:.4rem;font-size:1.1rem">⏱️ Tempo perso</h3><p class="pale" style="font-size:.9rem">Compilare registri, preparare documenti per i controlli e rifare ordini ripetitivi sottrae ore alla cucina vera</p></div>
+      <div class="card reveal"><h3 class="gold" style="margin-bottom:.4rem;font-size:1.1rem">💸 Software costosi e incompleti</h3><p class="pale" style="font-size:.9rem">Le soluzioni HACCP sul mercato costano 20-100€/mese ma coprono solo una parte del problema quotidiano</p></div>
+      <div class="card reveal"><h3 class="gold" style="margin-bottom:.4rem;font-size:1.1rem">😰 Ansia da controllo</h3><p class="pale" style="font-size:.9rem">Quando arrivano NAS o ASL, la differenza tra ordine e negligenza dipende da ciò che puoi dimostrare in pochi minuti</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- 4 — SOLUZIONE -->
+<div class="slide" data-slide="4">
+  <div class="mesh"><div class="bl" style="width:360px;height:360px;top:-100px;right:-50px;background:var(--green);opacity:.08"></div><div class="bl" style="width:240px;height:240px;bottom:-40px;left:-50px;background:var(--green-dark);opacity:.07"></div></div>
+  <div class="ct">
+    <p class="mini reveal">Soluzione</p>
+    <h2 class="reveal">Un'unica app per tutta la cucina</h2>
+    <div class="grid3" style="margin-top:1rem">
+      <div class="card reveal"><h3 class="green" style="margin-bottom:.5rem">🛡️ Compliance</h3><p class="pale" style="font-size:.9rem">Temperature, pulizie, sanificazione, merci in entrata, etichette intelligenti, non conformità, formazione e report mensili</p></div>
+      <div class="card reveal"><h3 class="green" style="margin-bottom:.5rem">⚡ Operatività</h3><p class="pale" style="font-size:.9rem">Ordini rapidi ai fornitori via WhatsApp, menu del giorno, eventi e catering, carta vini, food cost automatico</p></div>
+      <div class="card reveal"><h3 class="green" style="margin-bottom:.5rem">🤖 Intelligenza AI</h3><p class="pale" style="font-size:.9rem">Chef Plane AI per anti-spreco, scanner fatture con OCR, suggerimenti piatti e supporto operativo in tempo reale</p></div>
+    </div>
+    <div class="card reveal" style="margin-top:1rem">
+      <p class="quote" style="text-align:center">"Durante un controllo conta ciò che puoi dimostrare. Noi ti diamo tutto in 3 secondi."</p>
+    </div>
+  </div>
+</div>
+
+<!-- 5 — PRODOTTO -->
+<div class="slide" data-slide="5">
+  <div class="mesh"><div class="bl" style="width:320px;height:320px;top:-80px;right:-60px;background:var(--gold);opacity:.07"></div><div class="bl" style="width:260px;height:260px;bottom:-70px;left:-30px;background:var(--green);opacity:.07"></div></div>
+  <div class="ct">
+    <p class="mini reveal">Prodotto</p>
+    <h2 class="reveal">Funzionalità già operative</h2>
+    <div class="grid3" style="margin-top:1rem">
+      <div class="card reveal"><h3 class="green" style="margin-bottom:.4rem">HACCP Completo</h3><p class="pale" style="font-size:.85rem">Temperature, sanificazione, merci, etichette, NC, formazione, manutenzioni, DPI, disinfestazione, olio frittura, abbattitore, decongelamento</p></div>
+      <div class="card reveal"><h3 class="green" style="margin-bottom:.4rem">Business Cucina</h3><p class="pale" style="font-size:.85rem">Ordini rapidi, gestione eventi e catering completa, catalogo 500+ piatti, carta vini 1.177 etichette, menu fisso e giornaliero</p></div>
+      <div class="card reveal"><h3 class="green" style="margin-bottom:.4rem">Intelligenza Operativa</h3><p class="pale" style="font-size:.85rem">Scanner fatture AI con OCR, listino prezzi automatico, food cost calcolatore, Chef Plane AI anti-spreco, PDF dossier ispettivi</p></div>
+    </div>
+    <div class="grid4" style="margin-top:1rem">
+      <div class="card reveal" style="text-align:center"><div class="metric green">30s</div><p class="pale" style="margin-top:.4rem;font-size:.8rem">Ordine rapido via WhatsApp</p></div>
+      <div class="card reveal" style="text-align:center"><div class="metric gold">3s</div><p class="pale" style="margin-top:.4rem;font-size:.8rem">Modalità Controllo ASL</p></div>
+      <div class="card reveal" style="text-align:center"><div class="metric green">10min</div><p class="pale" style="margin-top:.4rem;font-size:.8rem">Setup completo cucina</p></div>
+      <div class="card reveal" style="text-align:center"><div class="metric gold">0€</div><p class="pale" style="margin-top:.4rem;font-size:.8rem">Costo licenza attuale</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- 6 — VANTAGGIO COMPETITIVO -->
+<div class="slide" data-slide="6">
+  <div class="mesh"><div class="bl" style="width:360px;height:360px;top:-90px;left:-50px;background:var(--green);opacity:.07"></div><div class="bl" style="width:260px;height:260px;bottom:-50px;right:-30px;background:var(--gold);opacity:.07"></div></div>
+  <div class="ct">
+    <p class="mini reveal">Vantaggio competitivo</p>
+    <h2 class="reveal">Non è solo un software HACCP</h2>
+    <div class="tbl reveal" style="margin-top:1.2rem">
+      <div class="mini">Criterio</div><div class="mini">Software HACCP tipici</div><div class="mini" style="color:var(--green)">SoftTheChefs</div>
+      <div class="pale">Ambito</div><div class="pale">Solo compliance parziale</div><div style="color:var(--green)">Compliance + operatività + catering + AI</div>
+      <div class="pale">Scanner AI</div><div class="pale">Non disponibile</div><div style="color:var(--green)">OCR fatture → prodotti + lotti + prezzi automatici</div>
+      <div class="pale">Food Cost</div><div class="pale">Manuale o assente</div><div style="color:var(--green)">Automatico: fattura → listino → ricetta → margine</div>
+      <div class="pale">Costo</div><div class="pale">20-100€/mese per sede</div><div style="color:var(--green)">Zero in fase beta, SaaS competitivo a regime</div>
+      <div class="pale">Dati</div><div class="pale">Su server terzi</div><div style="color:var(--green)">Nel browser dell'utente + Firebase opzionale</div>
+      <div class="pale">Controllo ASL</div><div class="pale">Report da assemblare</div><div style="color:var(--green)">Dossier completo in 3 secondi con un click</div>
+    </div>
+  </div>
+</div>
+
+<!-- 7 — MERCATO -->
+<div class="slide" data-slide="7">
+  <div class="mesh"><div class="bl" style="width:320px;height:320px;top:-80px;right:-40px;background:var(--green);opacity:.07"></div><div class="bl" style="width:230px;height:230px;bottom:-50px;left:-40px;background:var(--gold);opacity:.07"></div></div>
+  <div class="ct">
+    <p class="mini reveal">Mercato</p>
+    <h2 class="reveal">Un obbligo di legge per 340.000 attività in Italia</h2>
+    <div class="grid3" style="margin-top:1rem">
+      <div class="card reveal"><div class="metric green">340K</div><p class="pale" style="margin-top:.5rem">Operatori del Settore Alimentare (OSA) obbligati all'autocontrollo HACCP in Italia</p></div>
+      <div class="card reveal"><div class="metric gold">2,8M</div><p class="pale" style="margin-top:.5rem">Ristoranti in Europa soggetti ai Regolamenti CE 852/2004 e 853/2004</p></div>
+      <div class="card reveal"><div class="metric green">€1.5-6K</div><p class="pale" style="margin-top:.5rem">Sanzione per documentazione HACCP non conforme durante ispezione ASL o NAS</p></div>
+    </div>
+    <div class="grid3" style="margin-top:1rem">
+      <div class="card reveal"><h3 class="green" style="margin-bottom:.4rem">Ristoranti indipendenti</h3><p class="pale" style="font-size:.85rem">Bisogno immediato di digitalizzazione, controllo documentale e ordini semplificati. Primo target.</p></div>
+      <div class="card reveal"><h3 class="green" style="margin-bottom:.4rem">Gruppi e hospitality</h3><p class="pale" style="font-size:.85rem">Valore su standardizzazione, multi-utente con ruoli e gestione multi-sede</p></div>
+      <div class="card reveal"><h3 class="green" style="margin-bottom:.4rem">Consulenti HACCP</h3><p class="pale" style="font-size:.85rem">Canale naturale: uno strumento che rende verificabile e tracciabile la documentazione dei loro clienti</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- 8 — BUSINESS MODEL -->
+<div class="slide" data-slide="8">
+  <div class="mesh"><div class="bl" style="width:300px;height:300px;top:-80px;left:-30px;background:var(--gold);opacity:.07"></div><div class="bl" style="width:260px;height:260px;bottom:-60px;right:-40px;background:var(--green);opacity:.07"></div></div>
+  <div class="ct">
+    <p class="mini reveal">Business model</p>
+    <h2 class="reveal">Monetizzazione modulare e scalabile</h2>
+    <div class="grid3" style="margin-top:1rem">
+      <div class="card reveal"><h3 class="green" style="margin-bottom:.4rem">SaaS per sede</h3><p class="pale" style="font-size:.85rem">Canone mensile €19-49/mese per ristorante. Prezzo competitivo rispetto ai €50-100 dei concorrenti.</p></div>
+      <div class="card reveal"><h3 class="green" style="margin-bottom:.4rem">Piani modulari</h3><p class="pale" style="font-size:.85rem">Base (HACCP core), Pro (operatività + AI), Premium (multi-sede + analytics) per aumentare l'ARPU</p></div>
+      <div class="card reveal"><h3 class="green" style="margin-bottom:.4rem">Licenza partner</h3><p class="pale" style="font-size:.85rem">White-label per consulenti HACCP, distributori horeca e operatori foodservice</p></div>
+    </div>
+    <div class="reveal" style="margin-top:1.2rem">
+      <div style="display:grid;grid-template-columns:160px 1fr 60px;gap:.8rem;align-items:center;margin-bottom:.6rem"><span class="pale">Target anno 1</span><div class="bar-track"><div class="bar-fill" data-width="25"></div></div><span class="pale">50 sedi</span></div>
+      <div style="display:grid;grid-template-columns:160px 1fr 60px;gap:.8rem;align-items:center;margin-bottom:.6rem"><span class="pale">MRR obiettivo</span><div class="bar-track"><div class="bar-fill" data-width="40"></div></div><span class="pale">€1.950</span></div>
+      <div style="display:grid;grid-template-columns:160px 1fr 60px;gap:.8rem;align-items:center"><span class="pale">ARR anno 2</span><div class="bar-track"><div class="bar-fill" data-width="70"></div></div><span class="pale">€120K</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- 9 — GO TO MARKET -->
+<div class="slide" data-slide="9">
+  <div class="mesh"><div class="bl" style="width:340px;height:340px;top:-90px;right:-40px;background:var(--green);opacity:.07"></div><div class="bl" style="width:260px;height:260px;bottom:-60px;left:-30px;background:var(--green-dark);opacity:.07"></div></div>
+  <div class="ct">
+    <p class="mini reveal">Go-to-market</p>
+    <h2 class="reveal">Come entra sul mercato</h2>
+    <div class="grid2" style="margin-top:1rem">
+      <div class="card reveal"><h3 class="green" style="margin-bottom:.4rem">Canali diretti</h3><p class="pale" style="font-size:.9rem">Demo live in cucina, vendita founder-led, case study dalla trattoria del fondatore, onboarding in 10 minuti</p></div>
+      <div class="card reveal"><h3 class="green" style="margin-bottom:.4rem">Canali indiretti</h3><p class="pale" style="font-size:.9rem">Consulenti HACCP come rivenditori naturali, reti commerciali horeca, distributori foodservice</p></div>
+      <div class="card reveal"><h3 class="gold" style="margin-bottom:.4rem">Argomento vendita</h3><p class="pale" style="font-size:.9rem">Zero carta, meno panico ai controlli, ordini in 30 secondi, food cost automatico. Valore tangibile dal primo giorno.</p></div>
+      <div class="card reveal"><h3 class="gold" style="margin-bottom:.4rem">Argomento partner</h3><p class="pale" style="font-size:.9rem">Prodotto verticale, dimostrabile in 3 minuti, alta frequenza d'uso quotidiana, genera ricavi ricorrenti</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- 10 — TRACTION -->
+<div class="slide" data-slide="10">
+  <div class="mesh"><div class="bl" style="width:320px;height:320px;top:-80px;right:-40px;background:var(--green);opacity:.07"></div><div class="bl" style="width:260px;height:260px;bottom:-50px;left:-40px;background:var(--gold);opacity:.07"></div></div>
+  <div class="ct">
+    <p class="mini reveal">Traction</p>
+    <h2 class="reveal">Validazione sul campo, non sulla carta</h2>
+    <div class="grid4" style="margin-top:1rem">
+      <div class="card reveal" style="text-align:center"><div class="metric green">1</div><p class="pale" style="margin-top:.4rem;font-size:.85rem">Trattoria attiva da 6+ mesi con uso quotidiano</p></div>
+      <div class="card reveal" style="text-align:center"><div class="metric gold">9</div><p class="pale" style="margin-top:.4rem;font-size:.85rem">Versioni iterative sviluppate (da v1 a v9)</p></div>
+      <div class="card reveal" style="text-align:center"><div class="metric green">11K+</div><p class="pale" style="margin-top:.4rem;font-size:.85rem">Righe di codice in un singolo file HTML funzionante</p></div>
+      <div class="card reveal" style="text-align:center"><div class="metric gold">100%</div><p class="pale" style="margin-top:.4rem;font-size:.85rem">Controlli ASL superati con documentazione generata dall'app</p></div>
+    </div>
+    <div class="grid3" style="margin-top:1rem">
+      <div class="card reveal"><h3 class="green" style="margin-bottom:.3rem">Prodotto usato in produzione</h3><p class="pale" style="font-size:.85rem">Non è un MVP teorico. Registra temperature, merci, pulizie e genera dossier ispettivi ogni giorno in una cucina vera.</p></div>
+      <div class="card reveal"><h3 class="green" style="margin-bottom:.3rem">Architettura unica</h3><p class="pale" style="font-size:.85rem">Un file HTML, offline-first, con sync Firebase opzionale. Nessun concorrente offre questo livello di semplicità e indipendenza.</p></div>
+      <div class="card reveal"><h3 class="green" style="margin-bottom:.3rem">Feature che nessuno ha</h3><p class="pale" style="font-size:.85rem">Scanner fatture AI, food cost automatico da listino, Chef Plane AI integrato. Funzionalità non presenti nei concorrenti analizzati.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- 11 — ROADMAP -->
+<div class="slide" data-slide="11">
+  <div class="mesh"><div class="bl" style="width:330px;height:330px;top:-70px;right:-40px;background:var(--gold);opacity:.07"></div><div class="bl" style="width:250px;height:250px;bottom:-60px;left:-40px;background:var(--green);opacity:.07"></div></div>
+  <div class="ct">
+    <p class="mini reveal">Roadmap</p>
+    <h2 class="reveal">Dal prototipo funzionante al prodotto di mercato</h2>
+    <div class="grid4" style="margin-top:1.2rem">
+      <div class="card reveal"><p class="mini" style="margin-bottom:.4rem">Q3 2026</p><h3 class="green" style="font-size:1rem;margin-bottom:.3rem">Chiusura prodotto</h3><p class="pale" style="font-size:.82rem">Stabilizzazione, UX refinement, versione nativa (PWA/React Native), onboarding guidato</p></div>
+      <div class="card reveal"><p class="mini" style="margin-bottom:.4rem">Q4 2026</p><h3 class="green" style="font-size:1rem;margin-bottom:.3rem">Beta controllata</h3><p class="pale" style="font-size:.82rem">10-20 cucine pilota nel Veneto e Triveneto, raccolta feedback, affinamento pricing</p></div>
+      <div class="card reveal"><p class="mini" style="margin-bottom:.4rem">Q1 2027</p><h3 class="green" style="font-size:1rem;margin-bottom:.3rem">Primi partner</h3><p class="pale" style="font-size:.82rem">Attivazione consulenti HACCP come rivenditori, primi canali horeca, landing commerciale</p></div>
+      <div class="card reveal"><p class="mini" style="margin-bottom:.4rem">Q2 2027</p><h3 class="green" style="font-size:1rem;margin-bottom:.3rem">Scala commerciale</h3><p class="pale" style="font-size:.82rem">50 sedi attive, multi-sede, analytics avanzati, distribuzione strutturata</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- 12 — TEAM -->
+<div class="slide" data-slide="12">
+  <div class="mesh"><div class="bl" style="width:340px;height:340px;top:-100px;left:-40px;background:var(--green-dark);opacity:.07"></div><div class="bl" style="width:260px;height:260px;bottom:-40px;right:-40px;background:var(--gold);opacity:.07"></div></div>
+  <div class="ct">
+    <p class="mini reveal">Team</p>
+    <h2 class="reveal">Fondatore con esperienza diretta nel problema</h2>
+    <div class="grid2" style="margin-top:1rem">
+      <div class="card reveal">
+        <p class="quote" style="margin-bottom:.8rem">"Ho costruito il sistema che avrei voluto trovare sul mercato."</p>
+        <p class="pale" style="font-size:.9rem"><strong style="color:var(--green)">Gianfelice Guerini</strong> — Chef e imprenditore, gestisce Antica Trattoria al Piave (Tezze di Vazzola, TV) e un contratto di catering per ristorazione aziendale. Ha sviluppato SoftTheChefs partendo dal proprio bisogno reale di digitalizzazione.</p>
+      </div>
+      <div class="card reveal">
+        <h3 class="green" style="margin-bottom:.5rem">Per il prossimo passo cerchiamo</h3>
+        <p class="pale" style="font-size:.9rem;margin-bottom:.5rem"><strong>CTO / Co-founder tecnico</strong> — per la versione nativa, architettura scalabile e sicurezza</p>
+        <p class="pale" style="font-size:.9rem;margin-bottom:.5rem"><strong>Responsabile commerciale</strong> — per go-to-market, partnership e distribuzione horeca</p>
+        <p class="pale" style="font-size:.9rem"><strong>Advisor foodtech</strong> — per strategia, fundraising e network settoriale</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 13 — USE OF FUNDS -->
+<div class="slide" data-slide="13">
+  <div class="mesh"><div class="bl" style="width:330px;height:330px;top:-90px;left:-50px;background:var(--green);opacity:.07"></div><div class="bl" style="width:250px;height:250px;bottom:-50px;right:-30px;background:var(--gold);opacity:.07"></div></div>
+  <div class="ct">
+    <p class="mini reveal">Use of funds</p>
+    <h2 class="reveal">Come utilizzeremo il capitale</h2>
+    <div class="reveal" style="margin-top:1.2rem">
+      <div style="display:grid;grid-template-columns:200px 1fr 80px;gap:.8rem;align-items:center;margin-bottom:.7rem"><span class="pale">Prodotto e sviluppo</span><div class="bar-track"><div class="bar-fill" data-width="45"></div></div><span class="pale">45%</span></div>
+      <div style="display:grid;grid-template-columns:200px 1fr 80px;gap:.8rem;align-items:center;margin-bottom:.7rem"><span class="pale">Commerciale e marketing</span><div class="bar-track"><div class="bar-fill" data-width="25"></div></div><span class="pale">25%</span></div>
+      <div style="display:grid;grid-template-columns:200px 1fr 80px;gap:.8rem;align-items:center;margin-bottom:.7rem"><span class="pale">Onboarding e supporto</span><div class="bar-track"><div class="bar-fill" data-width="15"></div></div><span class="pale">15%</span></div>
+      <div style="display:grid;grid-template-columns:200px 1fr 80px;gap:.8rem;align-items:center;margin-bottom:.7rem"><span class="pale">Operations</span><div class="bar-track"><div class="bar-fill" data-width="10"></div></div><span class="pale">10%</span></div>
+      <div style="display:grid;grid-template-columns:200px 1fr 80px;gap:.8rem;align-items:center"><span class="pale">Buffer imprevisti</span><div class="bar-track"><div class="bar-fill" data-width="5"></div></div><span class="pale">5%</span></div>
+    </div>
+    <div class="card reveal" style="margin-top:1.2rem">
+      <p class="pale" style="font-size:.95rem">Obiettivo del round: finanziare 12-18 mesi di runway per completare la versione nativa, validare il pricing con 50 cucine pilota e strutturare i primi canali di distribuzione.</p>
+    </div>
+  </div>
+</div>
+
+<!-- 14 — ASK -->
+<div class="slide" data-slide="14">
+  <div class="mesh"><div class="bl" style="width:380px;height:380px;top:-100px;right:-60px;background:var(--green);opacity:.1"></div><div class="bl" style="width:280px;height:280px;bottom:-60px;left:-40px;background:var(--gold);opacity:.1"></div><div class="bl" style="width:200px;height:200px;top:45%;left:15%;background:var(--green-dark);opacity:.07"></div></div>
+  <div class="ct" style="text-align:center">
+    <p class="mini reveal">La nostra richiesta</p>
+    <h2 class="reveal" style="font-size:clamp(2.2rem,4.5vw,3.6rem)">Cerchiamo capitale, distribuzione<br>e partner operativi</h2>
+    <div class="card reveal" style="max-width:860px;margin:1.2rem auto 0">
+      <p style="font-size:1.15rem;color:var(--pale)">SoftTheChefs cerca investitori e partner commerciali per completare la versione nativa, strutturare il lancio e portare sul mercato una piattaforma verticale già validata in produzione.</p>
+    </div>
+    <p class="reveal" style="margin-top:1.2rem;color:var(--muted)">Obiettivo: trasformare il caos documentale della cucina italiana in controllo, velocità e dimostrabilità.</p>
+    <p class="reveal" style="margin-top:1.5rem;font-size:1.1rem;color:var(--green);font-weight:700">info@softthechefs.com</p>
+  </div>
+</div>
+
+</div><!-- /deck -->
+
+<!-- NAV -->
+<div class="nav">
+  <button onclick="go(-1)">&#8249;</button>
+  <div class="dots" id="dots"></div>
+  <button onclick="go(1)">&#8250;</button>
+  <span class="counter" id="cnt">1 / 14</span>
+</div>
+
+<script>
+let cur=1;const tot=document.querySelectorAll('.slide').length,dots=document.getElementById('dots'),cnt=document.getElementById('cnt');
+for(let i=1;i<=tot;i++){const d=document.createElement('div');d.className='dot'+(i===1?' active':'');d.onclick=()=>show(i);dots.appendChild(d)}
+function show(n){document.querySelector('.slide.active')?.classList.remove('active');const s=document.querySelector('[data-slide="'+n+'"]');if(s){s.classList.add('active');anim(s)}cur=n;upd()}
+function go(d){let n=cur+d;if(n<1)n=tot;if(n>tot)n=1;show(n)}
+function upd(){document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i+1===cur));cnt.textContent=cur+' / '+tot}
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();go(1)}if(e.key==='ArrowLeft'){e.preventDefault();go(-1)}});
+let tx=0;document.addEventListener('touchstart',e=>tx=e.touches[0].clientX);document.addEventListener('touchend',e=>{const d=tx-e.changedTouches[0].clientX;if(Math.abs(d)>50)go(d>0?1:-1)});
+function anim(s){s.querySelectorAll('.reveal').forEach((el,i)=>{el.style.transition='none';el.style.opacity='0';el.style.transform='translateY(18px)';el.offsetHeight;el.style.transition='opacity .3s ease '+(i*.07)+'s,transform .3s ease '+(i*.07)+'s';el.style.opacity='1';el.style.transform='translateY(0)'});s.querySelectorAll('.bar-fill').forEach((b,i)=>{b.style.width='0%';b.style.transition='width .5s ease '+(i*.08)+'s';b.offsetHeight;b.style.width=b.dataset.width+'%'})}
+try{anim(document.querySelector('.slide.active'))}catch(e){}
+</script>
+</body>
+</html>
