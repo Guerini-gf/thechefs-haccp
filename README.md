@@ -1,3 +1,4 @@
+
 # 🍳 THE CHEFS — HACCP Software
 
 **Applicazione web completa per la gestione dell'autocontrollo alimentare HACCP in ristoranti e trattorie.**
