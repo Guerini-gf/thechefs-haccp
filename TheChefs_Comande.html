@@ -212,7 +212,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--green)}
     </div>
     <!-- Aggiungi piatto rapido -->
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
-      <input type="text" id="c-nuovo-nome" placeholder="Nome piatto..." style="flex:2;min-width:150px;font-size:13px;padding:8px 10px">
+      <input type="text" id="c-nuovo-nome" placeholder="Nome piatto..." style="flex:2;min-width:150px;font-size:13px;padding:8px 10px" onkeydown="if(event.key==='Enter'){event.preventDefault();cucinaAddPiatto();}">
       <select id="c-nuovo-cat" style="flex:1;min-width:90px;font-size:12px;padding:8px">
         <option value="primo">🍝 Primo</option>
         <option value="secondo">🥩 Secondo</option>
@@ -237,7 +237,19 @@ input:focus,select:focus,textarea:focus{border-color:var(--green)}
         <div style="font-size:15px;font-weight:700">📚 Libreria Piatti Salvati</div>
         <button class="btn btn-sm" style="background:#eee" onclick="cucinaHideLibreria()">✕</button>
       </div>
-      <div style="padding:10px"><input type="text" id="lib-search" placeholder="Cerca piatto..." oninput="renderLibreria()" style="font-size:13px;padding:8px 12px"></div>
+      <div style="padding:10px;display:flex;gap:6px">
+        <input type="text" id="lib-search" placeholder="Cerca piatto..." oninput="renderLibreria()" style="font-size:13px;padding:8px 12px;flex:1">
+        <select id="lib-cat-filter" onchange="renderLibreria()" style="font-size:12px;padding:8px;width:auto;min-width:100px">
+          <option value="tutti">Tutti</option>
+          <option value="primo">🍝 Primi</option>
+          <option value="secondo">🥩 Secondi</option>
+          <option value="contorno">🥗 Contorni</option>
+          <option value="pizza">🍕 Pizze</option>
+          <option value="pesce">🐟 Pesce</option>
+          <option value="dolce">🍰 Dolci</option>
+          <option value="bevanda">🍷 Bevande</option>
+        </select>
+      </div>
       <div id="libreria-lista" style="overflow-y:auto;flex:1;padding:0 10px 10px"></div>
     </div>
   </div>
@@ -264,6 +276,30 @@ input:focus,select:focus,textarea:focus{border-color:var(--green)}
 /* ═══ STATE ═══ */
 let CFG = JSON.parse(localStorage.getItem('tc_comande_cfg2')||'{}');
 let LIB = JSON.parse(localStorage.getItem('tc_comande_libreria')||'[]');
+
+/* Database piatti pre-caricato dal catalogo SOFTTHECHEFS */
+const PIATTI_DB = [
+// PRIMI - PASTA
+{nome:"Spaghetti al Pomodoro e Basilico",cat:"primo"},{nome:"Penne all'Arrabbiata",cat:"primo"},{nome:"Lasagne alla Bolognese",cat:"primo"},{nome:"Orecchiette con Cime di Rapa",cat:"primo"},{nome:"Fusilli al Pesto",cat:"primo"},{nome:"Ravioli Burro e Salvia",cat:"primo"},{nome:"Gnocchi di Patate al Ragù",cat:"primo"},{nome:"Tagliatelle ai Funghi Porcini",cat:"primo"},{nome:"Cannelloni Ricotta e Spinaci",cat:"primo"},{nome:"Paccheri Amatriciana",cat:"primo"},{nome:"Strozzapreti Salsiccia e Zafferano",cat:"primo"},{nome:"Rigatoni Cacio e Pepe",cat:"primo"},{nome:"Linguine allo Scoglio",cat:"primo"},{nome:"Pasta e Patate",cat:"primo"},{nome:"Tortellini in Brodo",cat:"primo"},{nome:"Garganelli con Speck e Piselli",cat:"primo"},{nome:"Spaghetti Aglio Olio e Peperoncino",cat:"primo"},{nome:"Trofie al Ragù Bianco",cat:"primo"},{nome:"Fettuccine all'Uovo",cat:"primo"},{nome:"Casarecce al Tonno e Capperi",cat:"primo"},{nome:"Spaghetti alla Carbonara",cat:"primo"},{nome:"Penne alla Boscaiola",cat:"primo"},{nome:"Bucatini Cacio e Pepe",cat:"primo"},{nome:"Fettuccine al Salmone",cat:"primo"},{nome:"Conchiglie al Ragù di Salsiccia",cat:"primo"},{nome:"Paccheri con Gamberi e Asparagi",cat:"primo"},{nome:"Spaghetti alle Vongole",cat:"primo"},{nome:"Pasta Ragout",cat:"primo"},
+// PRIMI - ZUPPE E RISOTTI
+{nome:"Risotto alla Milanese",cat:"primo"},{nome:"Minestrone di Verdure",cat:"primo"},{nome:"Pasta e Fagioli",cat:"primo"},{nome:"Crema di Zucca e Zenzero",cat:"primo"},{nome:"Zuppa di Lenticchie",cat:"primo"},{nome:"Risotto ai Gamberi e Zucchine",cat:"primo"},{nome:"Risotto alla Zucca",cat:"primo"},{nome:"Risotto ai Quattro Formaggi",cat:"primo"},{nome:"Risotto alle Verdure Miste",cat:"primo"},{nome:"Risotto ai Fiori di Zucca",cat:"primo"},{nome:"Risotto ai Carciofi",cat:"primo"},{nome:"Risotto ai Funghi Misti",cat:"primo"},{nome:"Passato di Verdure",cat:"primo"},{nome:"Zuppa del Giorno",cat:"primo"},{nome:"Vellutata di Asparagi",cat:"primo"},
+// SECONDI - CARNE
+{nome:"Pollo al Curry",cat:"secondo"},{nome:"Cotoletta di Pollo Impanata",cat:"secondo"},{nome:"Scaloppine ai Funghi",cat:"secondo"},{nome:"Arrosto di Vitello",cat:"secondo"},{nome:"Salsiccia alla Griglia",cat:"secondo"},{nome:"Polpette al Sugo",cat:"secondo"},{nome:"Petto di Tacchino alla Piastra",cat:"secondo"},{nome:"Tagliata di Manzo",cat:"secondo"},{nome:"Brasato al Vino Rosso",cat:"secondo"},{nome:"Stinco di Maiale al Forno",cat:"secondo"},{nome:"Polpettone Ripieno",cat:"secondo"},{nome:"Spezzatino di Manzo",cat:"secondo"},{nome:"Lonza di Maiale al Latte",cat:"secondo"},{nome:"Fegato alla Veneziana",cat:"secondo"},{nome:"Ossobuco alla Milanese",cat:"secondo"},{nome:"Coniglio in Umido",cat:"secondo"},{nome:"Guancialetto di Maiale",cat:"secondo"},{nome:"Hamburger",cat:"secondo"},{nome:"Polpette al Pomodoro",cat:"secondo"},{nome:"Bresaola",cat:"secondo"},{nome:"Tacchino Freddo",cat:"secondo"},
+// PESCE
+{nome:"Filetto di Merluzzo al Limone",cat:"pesce"},{nome:"Alici Fritte",cat:"pesce"},{nome:"Trancio di Salmone alla Piastra",cat:"pesce"},{nome:"Calamari Fritti",cat:"pesce"},{nome:"Orata al Forno con Patate",cat:"pesce"},{nome:"Spiedini di Gamberi",cat:"pesce"},{nome:"Seppie in Umido",cat:"pesce"},{nome:"Baccalà alla Livornese",cat:"pesce"},{nome:"Coda di Rospo in Guazzetto",cat:"pesce"},{nome:"Frittura di Paranza",cat:"pesce"},{nome:"Filetti di Platessa Impanati",cat:"pesce"},{nome:"Tonno alla Piastra",cat:"pesce"},{nome:"Polpo con Patate",cat:"pesce"},{nome:"Crocchette di Pesce",cat:"pesce"},
+// CONTORNI
+{nome:"Patate al Rosmarino",cat:"contorno"},{nome:"Spinaci Saltati al Burro",cat:"contorno"},{nome:"Melanzane a Funghetto",cat:"contorno"},{nome:"Peperoni al Forno",cat:"contorno"},{nome:"Cavolfiore Gratinato",cat:"contorno"},{nome:"Zucchine Trifolate",cat:"contorno"},{nome:"Broccoli al Vapore",cat:"contorno"},{nome:"Zucca al Forno",cat:"contorno"},{nome:"Patate Fritte",cat:"contorno"},{nome:"Asparagi Grigliati",cat:"contorno"},{nome:"Purea di Patate",cat:"contorno"},{nome:"Insalata Mista",cat:"contorno"},{nome:"Fagioli Borlotti al Pomodoro",cat:"contorno"},{nome:"Piselli Stufati",cat:"contorno"},{nome:"Funghi Champignon in Padella",cat:"contorno"},{nome:"Verdure Grigliate",cat:"contorno"},{nome:"Contorno a Buffet",cat:"contorno"},{nome:"Ratatouille",cat:"contorno"},{nome:"Caponata",cat:"contorno"},{nome:"Polenta Morbida",cat:"contorno"},
+// DOLCI
+{nome:"Yogurt",cat:"dolce"},{nome:"Frutta Fresca",cat:"dolce"},{nome:"Budino",cat:"dolce"},{nome:"Formaggi Misti",cat:"dolce"},{nome:"Tiramisù",cat:"dolce"},{nome:"Panna Cotta",cat:"dolce"},{nome:"Torta del Giorno",cat:"dolce"},
+// BEVANDE
+{nome:"Acqua Naturale",cat:"bevanda"},{nome:"Acqua Frizzante",cat:"bevanda"},{nome:"Vino Rosso della Casa",cat:"bevanda"},{nome:"Vino Bianco della Casa",cat:"bevanda"},{nome:"Birra alla Spina",cat:"bevanda"},{nome:"Caffè",cat:"bevanda"},{nome:"Succo di Frutta",cat:"bevanda"}
+];
+
+// Auto-carica libreria dal database se vuota
+if(!LIB.length){
+  LIB = PIATTI_DB.map((p,i)=>({id:'db'+i,nome:p.nome,cat:p.cat,prezzo:'0'}));
+  saveLib();
+}
 let ruolo='', servizio='pranzo', menuOggi=[], comande=[], selTavolo=0, selPiatti=[], coperti=2, lastNewCount=-1, refreshTimer=null;
 
 const CATS = {primo:'🍝 Primi',secondo:'🥩 Secondi',contorno:'🥗 Contorni',pizza:'🍕 Pizze',pesce:'🐟 Pesce',dolce:'🍰 Dolci',bevanda:'🍷 Bevande',altro:'📌 Altro'};
@@ -344,15 +380,25 @@ function tornaATavoli(){salaTab('tavoli');}
 function modCoperti(d){coperti=Math.max(1,Math.min(30,coperti+d));document.getElementById('comanda-coperti').textContent=coperti;}
 
 async function caricaMenuSala(){
+  const chiave='tc_menu_'+servizio+'_'+oggi();
   const url=fbUrl('menu_'+servizio+'_'+oggi());
-  if(!url) return;
-  try{const r=await fetch(url);const d=await r.json();menuOggi=d?Object.values(d):[];}catch(e){menuOggi=[];}
+  // Prova Firebase
+  if(url){
+    try{
+      const r=await fetch(url);
+      const d=await r.json();
+      if(d){menuOggi=Object.values(d);localStorage.setItem(chiave,JSON.stringify(menuOggi));}
+      else{menuOggi=JSON.parse(localStorage.getItem(chiave)||'[]');}
+    }catch(e){menuOggi=JSON.parse(localStorage.getItem(chiave)||'[]');}
+  } else {
+    menuOggi=JSON.parse(localStorage.getItem(chiave)||'[]');
+  }
   renderPiattiSala();
 }
 
 function renderPiattiSala(){
   const div=document.getElementById('sala-piatti-lista');
-  if(!menuOggi.length){div.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted)">Lo chef non ha ancora inserito il menu.<br>Attendi o riprova.</div>';return;}
+  if(!menuOggi.length){div.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted)">Lo chef non ha ancora inserito il menu.<br>Attendi o riprova.<br><button class="btn btn-outline btn-sm" style="margin-top:10px" onclick="caricaMenuSala()">🔄 Ricarica</button></div>';return;}
   const ordCat=['primo','secondo','contorno','pizza','pesce','dolce','bevanda','altro'];
   let html='';
   ordCat.forEach(cat=>{
@@ -362,19 +408,40 @@ function renderPiattiSala(){
     piatti.forEach(p=>{
       const sel=selPiatti.find(s=>s.id===p.id);
       const isSel=!!sel;
-      html+='<div class="piatto-item'+(isSel?' selected':'')+'" onclick="togglePiatto(\''+p.id+'\')">';
-      html+='<div class="info"><div class="nome">'+p.nome+'</div>';
-      if(p.prezzo) html+='<div class="dettaglio">€ '+parseFloat(p.prezzo).toFixed(2)+'</div>';
+      html+='<div class="piatto-item'+(isSel?' selected':'')+'">';
+      // Tap zone per selezionare
+      html+='<div style="flex:1;min-width:0;cursor:pointer" onclick="togglePiatto(\''+p.id+'\')">';
+      html+='<div class="nome">'+p.nome+'</div>';
+      if(p.prezzo&&parseFloat(p.prezzo)>0) html+='<div class="dettaglio">€ '+parseFloat(p.prezzo).toFixed(2)+'</div>';
       html+='</div>';
+      // Quantità — sempre visibile quando selezionato, grande e chiara
       if(isSel){
-        html+='<div class="qty-row" onclick="event.stopPropagation()">';
-        html+='<button class="qty-btn" onclick="modQty(\''+p.id+'\',-1)">−</button>';
-        html+='<span class="qty-val">'+sel.qty+'</span>';
-        html+='<button class="qty-btn" onclick="modQty(\''+p.id+'\',1)">+</button></div>';
+        html+='<div style="display:flex;align-items:center;gap:4px;background:var(--green);border-radius:8px;padding:4px 8px" onclick="event.stopPropagation()">';
+        html+='<button style="width:36px;height:36px;border-radius:50%;border:none;background:rgba(255,255,255,.3);color:#fff;font-size:20px;font-weight:700;cursor:pointer" onclick="modQty(\''+p.id+'\',-1)">−</button>';
+        html+='<span style="font-size:22px;font-weight:800;color:#fff;min-width:32px;text-align:center">'+sel.qty+'</span>';
+        html+='<button style="width:36px;height:36px;border-radius:50%;border:none;background:rgba(255,255,255,.3);color:#fff;font-size:20px;font-weight:700;cursor:pointer" onclick="modQty(\''+p.id+'\',1)">+</button>';
+        html+='</div>';
       }
-      html+='<div class="check">'+(isSel?'✓':'')+'</div></div>';
+      // Check non selezionato
+      if(!isSel){
+        html+='<div class="check" onclick="togglePiatto(\''+p.id+'\')"></div>';
+      } else {
+        html+='<div style="width:28px;height:28px;border-radius:50%;background:var(--red);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;flex-shrink:0;margin-left:4px" onclick="togglePiatto(\''+p.id+'\')">✕</div>';
+      }
+      html+='</div>';
     });
   });
+  // Riepilogo in basso
+  if(selPiatti.length){
+    html+='<div style="padding:12px;background:var(--green-light);border-top:2px solid var(--green)">';
+    html+='<div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:6px">RIEPILOGO COMANDA — Tavolo '+selTavolo+'</div>';
+    selPiatti.forEach(p=>{
+      html+='<div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0"><span><strong>'+p.qty+'x</strong> '+p.nome+'</span><span style="color:var(--muted)">'+(CAT_ICONS[p.cat]||'')+'</span></div>';
+    });
+    const totPiatti=selPiatti.reduce((s,p)=>s+p.qty,0);
+    html+='<div style="font-size:12px;font-weight:700;color:var(--green);margin-top:6px;padding-top:6px;border-top:1px solid var(--green)">Totale: '+totPiatti+' piatti per '+coperti+' coperti</div>';
+    html+='</div>';
+  }
   div.innerHTML=html;
 }
 
@@ -448,21 +515,36 @@ function cucinaServizio(s){
 function cucinaToggleMenu(){document.getElementById('cucina-menu-panel').classList.toggle('hidden');}
 
 async function caricaMenuCucina(){
+  const chiave='tc_menu_'+servizio+'_'+oggi();
   const url=fbUrl('menu_'+servizio+'_'+oggi());
-  if(!url) return;
-  try{const r=await fetch(url);const d=await r.json();menuOggi=d?Object.values(d):[];}catch(e){menuOggi=[];}
+  if(url){
+    try{const r=await fetch(url);const d=await r.json();
+      if(d){menuOggi=Object.values(d);localStorage.setItem(chiave,JSON.stringify(menuOggi));}
+      else{menuOggi=JSON.parse(localStorage.getItem(chiave)||'[]');}
+    }catch(e){menuOggi=JSON.parse(localStorage.getItem(chiave)||'[]');}
+  } else {menuOggi=JSON.parse(localStorage.getItem(chiave)||'[]');}
   renderMenuCucina();
 }
 
 function renderMenuCucina(){
   const div=document.getElementById('cucina-menu-lista');
-  if(!menuOggi.length){div.innerHTML='<div style="color:var(--muted);font-style:italic">Nessun piatto. Aggiungi dal form o dalla Libreria.</div>';return;}
-  div.innerHTML=menuOggi.map(p=>
-    '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #f5f5f5">'+
-    '<span>'+(CAT_ICONS[p.cat]||'')+ ' <strong>'+p.nome+'</strong></span>'+
-    '<span style="display:flex;gap:4px;align-items:center">'+(p.prezzo?'<span style="color:var(--gold);font-size:11px">€'+parseFloat(p.prezzo).toFixed(2)+'</span>':'')+
-    '<button class="btn btn-sm" style="color:red;padding:2px 6px" onclick="cucinaRmPiatto(\''+p.id+'\')">✕</button></span></div>'
-  ).join('');
+  if(!menuOggi.length){div.innerHTML='<div style="color:var(--muted);font-style:italic;padding:8px">Nessun piatto. Usa la 📚 Libreria per comporre il menu del giorno.</div>';return;}
+  const ordCat=['primo','secondo','contorno','pizza','pesce','dolce','bevanda','altro'];
+  let html='';
+  ordCat.forEach(cat=>{
+    const piatti=menuOggi.filter(p=>p.cat===cat);
+    if(!piatti.length) return;
+    html+='<div style="font-size:10px;font-weight:800;color:var(--green);text-transform:uppercase;letter-spacing:1px;padding:8px 0 2px;border-bottom:1px solid #eee">'+(CATS[cat]||cat)+'</div>';
+    piatti.forEach(p=>{
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f8f8f8">'+
+        '<span style="font-size:13px">'+(CAT_ICONS[p.cat]||'📌')+' <strong>'+p.nome+'</strong></span>'+
+        '<span style="display:flex;gap:4px;align-items:center">'+
+        (p.prezzo&&parseFloat(p.prezzo)>0?'<span style="color:var(--gold);font-size:11px">€'+parseFloat(p.prezzo).toFixed(2)+'</span>':'')+
+        '<button class="btn btn-sm" style="color:red;padding:2px 6px" onclick="cucinaRmPiatto(\''+p.id+'\')">✕</button></span></div>';
+    });
+  });
+  html+='<div style="font-size:12px;color:var(--muted);padding:8px 0;text-align:center">'+menuOggi.length+' piatti nel menu</div>';
+  div.innerHTML=html;
 }
 
 async function cucinaAddPiatto(){
@@ -491,10 +573,15 @@ async function cucinaRmPiatto(id){
 }
 
 async function salvaMenuFb(){
+  const chiave='tc_menu_'+servizio+'_'+oggi();
+  // Salva sempre in locale
+  localStorage.setItem(chiave,JSON.stringify(menuOggi));
+  // Salva su Firebase
   const url=fbUrl('menu_'+servizio+'_'+oggi());
   if(!url) return;
   const obj={};menuOggi.forEach(p=>{obj[p.id]=p;});
-  await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj)});
+  try{await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj)});}
+  catch(e){console.log('Firebase save error:',e);}
 }
 
 /* Libreria piatti salvati */
@@ -503,19 +590,33 @@ function cucinaHideLibreria(){document.getElementById('cucina-libreria').classLi
 
 function renderLibreria(){
   const q=(document.getElementById('lib-search')?.value||'').toLowerCase();
+  const catFiltro=document.getElementById('lib-cat-filter')?.value||'tutti';
   let filtered=LIB;
-  if(q) filtered=LIB.filter(p=>p.nome.toLowerCase().includes(q));
+  if(q) filtered=filtered.filter(p=>p.nome.toLowerCase().includes(q));
+  if(catFiltro!=='tutti') filtered=filtered.filter(p=>p.cat===catFiltro);
+  // Ordina per categoria e nome
+  const ordCat=['primo','secondo','contorno','pizza','pesce','dolce','bevanda','altro'];
+  filtered.sort((a,b)=>{const ai=ordCat.indexOf(a.cat),bi=ordCat.indexOf(b.cat);return ai!==bi?ai-bi:a.nome.localeCompare(b.nome);});
   const div=document.getElementById('libreria-lista');
-  if(!filtered.length){div.innerHTML='<div style="color:var(--muted);padding:20px;text-align:center">'+(q?'Nessun risultato':'Libreria vuota. I piatti si salvano automaticamente quando li aggiungi al menu.')+'</div>';return;}
+  if(!filtered.length){div.innerHTML='<div style="color:var(--muted);padding:20px;text-align:center">'+(q||catFiltro!=='tutti'?'Nessun risultato':'Libreria vuota')+'</div>';return;}
   const inMenu=new Set(menuOggi.map(m=>m.nome.toLowerCase()));
-  div.innerHTML=filtered.map(p=>{
+  let lastCat='';
+  let html='';
+  filtered.forEach(p=>{
+    if(p.cat!==lastCat){
+      lastCat=p.cat;
+      html+='<div style="font-size:10px;font-weight:800;color:var(--green);text-transform:uppercase;letter-spacing:1px;padding:10px 0 4px;border-bottom:1px solid #eee;margin-top:6px">'+(CATS[p.cat]||p.cat)+' ('+filtered.filter(x=>x.cat===p.cat).length+')</div>';
+    }
     const gia=inMenu.has(p.nome.toLowerCase());
-    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f0f0f0">'+
-      '<div><div style="font-weight:600">'+p.nome+'</div><div style="font-size:11px;color:var(--muted)">'+(CAT_ICONS[p.cat]||'')+' '+p.cat+(p.prezzo?' · €'+parseFloat(p.prezzo).toFixed(2):'')+'</div></div>'+
-      (gia?'<span style="font-size:11px;color:var(--green);font-weight:700">✓ Nel menu</span>':
-      '<button class="btn btn-sm btn-green" onclick="libAggiungiAlMenu(\''+p.id+'\')">+ Menu</button>')+
-      ' <button class="btn btn-sm" style="color:red;padding:2px 6px" onclick="libElimina(\''+p.id+'\')">✕</button></div>';
-  }).join('');
+    html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 4px;border-bottom:1px solid #f5f5f5">'+
+      '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(CAT_ICONS[p.cat]||'📌')+' '+p.nome+'</div></div>'+
+      '<div style="display:flex;gap:4px;flex-shrink:0">'+
+      (gia?'<span style="font-size:10px;color:var(--green);font-weight:700;padding:4px 8px">✓ Aggiunto</span>':
+      '<button class="btn btn-sm btn-green" style="font-size:11px;padding:4px 10px" onclick="libAggiungiAlMenu(\''+p.id+'\')">+ Menu</button>')+
+      '</div></div>';
+  });
+  html+='<div style="text-align:center;padding:10px;font-size:11px;color:var(--muted)">'+filtered.length+' piatti in libreria</div>';
+  div.innerHTML=html;
 }
 
 async function libAggiungiAlMenu(id){
