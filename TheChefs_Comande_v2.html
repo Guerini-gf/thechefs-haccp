@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Comande">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a2a1e">
+<title>TheChefs — Comande v2</title>
+<style>
+:root{--green:#1f7a3e;--green-light:#e4f5ec;--green-dark:#145229;--red:#c62828;--gold:#c0a76e;--blue:#1565c0;--bg:#f5f6f8;--card:#fff;--text:#222;--muted:#888;--radius:10px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-tap-highlight-color:transparent}
+.topbar{background:linear-gradient(135deg,var(--green-dark),var(--green));color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar h1{font-size:16px;font-weight:800;letter-spacing:1px}
+.topbar-sub{font-size:11px;opacity:.7}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border:none;border-radius:var(--radius);font-size:14px;font-weight:700;cursor:pointer;transition:all .15s}
+.btn:active{transform:scale(.96)}
+.btn-green{background:var(--green);color:#fff}
+.btn-red{background:var(--red);color:#fff}
+.btn-gold{background:var(--gold);color:#fff}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-outline{background:transparent;border:2px solid var(--green);color:var(--green)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-lg{padding:14px 24px;font-size:16px;width:100%}
+.btn-white{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:0 1px 4px rgba(0,0,0,.08);margin:8px 10px;padding:14px}
+input,select,textarea{font-family:inherit;font-size:14px;padding:10px 12px;border:1.5px solid #ddd;border-radius:var(--radius);width:100%;outline:none;transition:border .2s;background:#fff}
+input:focus,select:focus,textarea:focus{border-color:var(--green)}
+.hidden{display:none!important}
+
+/* Servizio toggle */
+.servizio-toggle{display:flex;background:rgba(255,255,255,.12);border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.2)}
+.servizio-btn{flex:1;padding:8px 12px;text-align:center;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;color:rgba(255,255,255,.6)}
+.servizio-btn.active{background:rgba(255,255,255,.25);color:#fff}
+
+/* Tavoli grid */
+.tavolo-btn{display:flex;align-items:center;justify-content:center;aspect-ratio:1;border-radius:12px;background:var(--green);color:#fff;font-size:20px;font-weight:800;cursor:pointer;transition:all .15s;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.tavolo-btn:active{transform:scale(.92)}
+.tavolo-btn.occupato{background:var(--red)}
+
+/* Piatti lista - colonna mobile */
+.piatto-item{display:flex;align-items:center;padding:12px;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:background .15s;gap:12px}
+.piatto-item:active,.piatto-item.selected{background:var(--green-light)}
+.piatto-item .info{flex:1;min-width:0}
+.piatto-item .nome{font-size:15px;font-weight:600;line-height:1.2}
+.piatto-item .dettaglio{font-size:11px;color:var(--muted);margin-top:2px}
+.piatto-item .prezzo{font-size:13px;color:var(--gold);font-weight:700;white-space:nowrap}
+.piatto-item .check{width:28px;height:28px;border-radius:50%;border:2px solid #ccc;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;transition:all .2s}
+.piatto-item.selected .check{background:var(--green);border-color:var(--green);color:#fff}
+.cat-header{font-size:11px;font-weight:800;color:var(--green);text-transform:uppercase;letter-spacing:1px;padding:10px 12px 4px;background:#fafbfc}
+.qty-row{display:flex;align-items:center;gap:6px;margin-top:4px}
+.qty-btn{width:28px;height:28px;border-radius:50%;border:1.5px solid #ccc;background:#fff;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.qty-val{font-size:15px;font-weight:700;min-width:20px;text-align:center}
+
+/* Cucina comande */
+.comanda-card{background:#fff;border-left:5px solid var(--green);border-radius:var(--radius);padding:14px;margin:8px 10px;box-shadow:0 2px 8px rgba(0,0,0,.08);animation:slideIn .3s}
+.comanda-card.urgente{border-left-color:var(--red);background:#fff5f5}
+.comanda-card.inCorso{border-left-color:var(--gold)}
+@keyframes slideIn{from{transform:translateX(-20px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* Setup */
+.setup-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px;text-align:center;background:linear-gradient(135deg,#0b1a0f,#1a3a22)}
+.setup-card{background:#fff;border-radius:16px;padding:24px;width:100%;max-width:420px;text-align:left}
+.setup-card label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin:12px 0 4px}
+.role-btn{display:flex;align-items:center;gap:14px;padding:16px;border:2px solid #eee;border-radius:12px;cursor:pointer;margin-bottom:8px;transition:all .2s}
+.role-btn:active{border-color:var(--green);background:var(--green-light)}
+
+/* Toast */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:opacity .3s;max-width:90%}
+.toast.show{opacity:1}
+
+/* Tab bar sala */
+.tab-bar{display:flex;background:#fff;border-top:1px solid #eee;position:fixed;bottom:0;left:0;right:0;z-index:100}
+.tab-bar-btn{flex:1;padding:10px 0 8px;text-align:center;font-size:10px;font-weight:700;color:var(--muted);cursor:pointer;transition:color .2s}
+.tab-bar-btn.active{color:var(--green)}
+.tab-bar-btn .tab-icon{font-size:20px;display:block;margin-bottom:2px}
+
+/* Print 80mm thermal */
+@media print{
+  body *{visibility:hidden}
+  #print-area,#print-area *{visibility:visible}
+  #print-area{position:fixed;top:0;left:0;width:72mm;font-family:'Courier New',monospace;font-size:11px;line-height:1.4;padding:2mm}
+  .no-print,.topbar,.tab-bar,.toast{display:none!important}
+  @page{size:80mm auto;margin:0}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ SETUP ═══ -->
+<div id="screen-setup" class="setup-screen">
+  <div style="font-size:42px;margin-bottom:10px">🍽️</div>
+  <h1 style="color:#fff;font-size:24px;margin-bottom:4px">TheChefs Comande</h1>
+  <p style="color:rgba(255,255,255,.6);margin-bottom:20px;font-size:13px">Comande digitali · Sala e Cucina sincronizzate</p>
+  <div class="setup-card">
+    <label>Nome Ristorante</label>
+    <input type="text" id="setup-nome" placeholder="es. Antica Trattoria al Piave">
+    <label>Firebase URL</label>
+    <input type="text" id="setup-firebase" placeholder="https://xxxxx.firebaseio.com">
+    <div style="font-size:10px;color:var(--muted);margin:3px 0 8px">Stesso URL di TheChefs HACCP</div>
+    <label>Tavoli</label>
+    <input type="number" id="setup-tavoli" value="15" min="1" max="60">
+    <label>Il tuo nome</label>
+    <input type="text" id="setup-user" placeholder="es. Maria">
+    <div style="margin-top:18px">
+      <div class="role-btn" onclick="avvia('sala')">
+        <div style="font-size:28px">📝</div>
+        <div><div style="font-size:15px;font-weight:700">Sala / Cameriere</div><div style="font-size:11px;color:var(--muted)">Prendi comande dal telefono</div></div>
+      </div>
+      <div class="role-btn" onclick="avvia('cucina')">
+        <div style="font-size:28px">👨‍🍳</div>
+        <div><div style="font-size:15px;font-weight:700">Cucina / Chef</div><div style="font-size:11px;color:var(--muted)">Ricevi comande · Stampa termica</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SALA ═══ -->
+<div id="screen-sala" class="hidden">
+  <div class="topbar">
+    <div>
+      <h1 id="sala-titolo">📝 COMANDE</h1>
+      <div class="topbar-sub" id="sala-info"></div>
+    </div>
+    <div class="servizio-toggle">
+      <div class="servizio-btn active" data-serv="pranzo" onclick="salaServizio('pranzo')">☀️ Pranzo</div>
+      <div class="servizio-btn" data-serv="cena" onclick="salaServizio('cena')">🌙 Cena</div>
+    </div>
+  </div>
+
+  <!-- Tab: Tavoli -->
+  <div id="sala-tab-tavoli">
+    <div class="card">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:8px">Scegli tavolo</div>
+      <div id="tavoli-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px"></div>
+    </div>
+  </div>
+
+  <!-- Tab: Comanda (composizione) -->
+  <div id="sala-tab-comanda" class="hidden">
+    <div class="card" style="background:var(--green);color:#fff;border-radius:var(--radius) var(--radius) 0 0;margin-bottom:0">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:11px;opacity:.7">TAVOLO</div>
+          <div style="font-size:32px;font-weight:800" id="comanda-tavolo"></div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:11px;opacity:.7" id="comanda-servizio-label"></div>
+          <div style="display:flex;gap:6px;margin-top:4px">
+            <div class="qty-row" style="margin:0">
+              <span style="font-size:11px;opacity:.7;margin-right:4px">Coperti</span>
+              <button class="qty-btn" style="border-color:rgba(255,255,255,.4);color:#fff;background:transparent" onclick="modCoperti(-1)">−</button>
+              <span class="qty-val" id="comanda-coperti" style="color:#fff">2</span>
+              <button class="qty-btn" style="border-color:rgba(255,255,255,.4);color:#fff;background:transparent" onclick="modCoperti(1)">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="border-radius:0 0 var(--radius) var(--radius);margin-top:0;padding:0">
+      <div id="sala-piatti-lista" style="max-height:55vh;overflow-y:auto"></div>
+      <div style="padding:12px">
+        <textarea id="comanda-note" rows="2" placeholder="Note: senza glutine, allergie, cottura..." style="font-size:13px"></textarea>
+        <button class="btn btn-green btn-lg" style="margin-top:8px" onclick="inviaComanda()">📤 Invia Comanda in Cucina</button>
+        <button class="btn btn-outline btn-lg" style="margin-top:6px" onclick="tornaATavoli()">← Torna ai tavoli</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Stato -->
+  <div id="sala-tab-stato" class="hidden">
+    <div class="card">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:8px">Comande attive</div>
+      <div id="sala-stato-lista"></div>
+    </div>
+  </div>
+
+  <!-- Bottom tab bar -->
+  <div class="tab-bar">
+    <div class="tab-bar-btn active" onclick="salaTab('tavoli')"><span class="tab-icon">🪑</span>Tavoli</div>
+    <div class="tab-bar-btn" onclick="salaTab('stato')"><span class="tab-icon">📋</span>Stato</div>
+    <div class="tab-bar-btn" onclick="location.reload()"><span class="tab-icon">⚙️</span>Setup</div>
+  </div>
+  <div style="height:60px"></div><!-- spacer per tab bar -->
+</div>
+
+<!-- ═══ CUCINA ═══ -->
+<div id="screen-cucina" class="hidden">
+  <div class="topbar">
+    <div>
+      <h1>👨‍🍳 MONITOR CUCINA</h1>
+      <div class="topbar-sub" id="cucina-info"></div>
+    </div>
+    <div style="display:flex;gap:6px">
+      <div class="servizio-toggle">
+        <div class="servizio-btn active" data-serv="pranzo" onclick="cucinaServizio('pranzo')">☀️ Pranzo</div>
+        <div class="servizio-btn" data-serv="cena" onclick="cucinaServizio('cena')">🌙 Cena</div>
+      </div>
+      <button class="btn-white btn btn-sm" onclick="cucinaToggleMenu()">📋</button>
+      <button class="btn-white btn btn-sm" onclick="location.reload()">⚙️</button>
+    </div>
+  </div>
+
+  <!-- Gestione Menu con Libreria -->
+  <div id="cucina-menu-panel" class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-size:14px;font-weight:700;color:var(--green)">📋 Menu <span id="cucina-menu-label">Pranzo</span> — <span id="cucina-data"></span></div>
+      <button class="btn btn-sm btn-outline" onclick="cucinaShowLibreria()">📚 Libreria</button>
+    </div>
+    <!-- Aggiungi piatto rapido -->
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+      <input type="text" id="c-nuovo-nome" placeholder="Nome piatto..." style="flex:2;min-width:150px;font-size:13px;padding:8px 10px">
+      <select id="c-nuovo-cat" style="flex:1;min-width:90px;font-size:12px;padding:8px">
+        <option value="primo">🍝 Primo</option>
+        <option value="secondo">🥩 Secondo</option>
+        <option value="contorno">🥗 Contorno</option>
+        <option value="pizza">🍕 Pizza</option>
+        <option value="pesce">🐟 Pesce</option>
+        <option value="dolce">🍰 Dolce</option>
+        <option value="bevanda">🍷 Bevanda</option>
+        <option value="altro">📌 Altro</option>
+      </select>
+      <input type="number" id="c-nuovo-prezzo" placeholder="€" style="width:65px;font-size:13px;padding:8px" step="0.50" min="0">
+      <button class="btn btn-green btn-sm" onclick="cucinaAddPiatto()">+</button>
+    </div>
+    <!-- Menu corrente -->
+    <div id="cucina-menu-lista" style="font-size:13px"></div>
+  </div>
+
+  <!-- Libreria piatti (popup overlay) -->
+  <div id="cucina-libreria" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:10px">
+    <div style="background:#fff;border-radius:16px;width:100%;max-width:500px;max-height:80vh;overflow:hidden;display:flex;flex-direction:column">
+      <div style="padding:14px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:15px;font-weight:700">📚 Libreria Piatti Salvati</div>
+        <button class="btn btn-sm" style="background:#eee" onclick="cucinaHideLibreria()">✕</button>
+      </div>
+      <div style="padding:10px"><input type="text" id="lib-search" placeholder="Cerca piatto..." oninput="renderLibreria()" style="font-size:13px;padding:8px 12px"></div>
+      <div id="libreria-lista" style="overflow-y:auto;flex:1;padding:0 10px 10px"></div>
+    </div>
+  </div>
+
+  <!-- Monitor comande -->
+  <div style="padding:0 2px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 10px 4px">
+      <div style="font-size:14px;font-weight:700">🔥 Comande</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span id="cucina-count" style="background:var(--red);color:#fff;padding:2px 10px;border-radius:20px;font-size:13px;font-weight:700">0</span>
+        <button class="btn btn-sm btn-outline" onclick="cucinaRefresh()">🔄</button>
+      </div>
+    </div>
+    <div id="cucina-comande"></div>
+  </div>
+</div>
+
+<!-- Print area -->
+<div id="print-area" class="hidden"></div>
+<div class="toast" id="toast"></div>
+<audio id="audio-bell" preload="auto"><source src="data:audio/wav;base64,UklGRl4FAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YToFAAB/f39/f39/f4B/g3+If49/l3+gf6p/tH+/f8p/1X/gf+t/9n8BgAyAF4AigCyANoA/gEiAToBUgFiAWoBbgFqAWIBUgE+ASIBAgDaAK4AfgBKABID2f+d/2H/If7h/qH+Yf4h/eX9qf1x/T39Df/9/AYADgAWAB4AJgAuADYAPgBGAE4AUgBWAFoAWgBaAFoAVgBSAEoAQgA6AC4AIgAWAAYD9f/l/9H/vf+p/5X/gf9t/1n/Rf8x/yH/Ef8B/vX+6f7d/tX+zf7F/sH+vf69/r3+vf7B/sX+yf7R/tn+4f7t/vn/Bf8R/yH/Mf9B/1H/Yf91/4X/mf+t/8H/1f/p/AIA=" type="audio/wav"></audio>
+
+<script>
+/* ═══ STATE ═══ */
+let CFG = JSON.parse(localStorage.getItem('tc_comande_cfg2')||'{}');
+let LIB = JSON.parse(localStorage.getItem('tc_comande_libreria')||'[]');
+let ruolo='', servizio='pranzo', menuOggi=[], comande=[], selTavolo=0, selPiatti=[], coperti=2, lastNewCount=-1, refreshTimer=null;
+
+const CATS = {primo:'🍝 Primi',secondo:'🥩 Secondi',contorno:'🥗 Contorni',pizza:'🍕 Pizze',pesce:'🐟 Pesce',dolce:'🍰 Dolci',bevanda:'🍷 Bevande',altro:'📌 Altro'};
+const CAT_ICONS = {primo:'🍝',secondo:'🥩',contorno:'🥗',pizza:'🍕',pesce:'🐟',dolce:'🍰',bevanda:'🍷',altro:'📌'};
+
+function oggi(){return new Date().toISOString().slice(0,10);}
+function ora(){return new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});}
+function fbUrl(p){return CFG.firebase ? CFG.firebase.replace(/\/$/,'')+'/comande/'+p+'.json' : null;}
+function toast(m,c){const t=document.getElementById('toast');t.textContent=m;t.style.background=c||'#333';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+function saveLib(){localStorage.setItem('tc_comande_libreria',JSON.stringify(LIB));}
+
+/* ═══ AVVIO ═══ */
+if(CFG.firebase){
+  document.getElementById('setup-nome').value=CFG.nome||'';
+  document.getElementById('setup-firebase').value=CFG.firebase||'';
+  document.getElementById('setup-tavoli').value=CFG.tavoli||15;
+  document.getElementById('setup-user').value=CFG.user||'';
+}
+
+function avvia(r){
+  const nome=document.getElementById('setup-nome').value.trim();
+  const fb=document.getElementById('setup-firebase').value.trim();
+  const tav=parseInt(document.getElementById('setup-tavoli').value)||15;
+  const user=document.getElementById('setup-user').value.trim();
+  if(!fb){alert('Inserisci URL Firebase');return;}
+  CFG={nome:nome||'Ristorante',firebase:fb,tavoli:tav,user:user||'Cameriere'};
+  localStorage.setItem('tc_comande_cfg2',JSON.stringify(CFG));
+  ruolo=r;
+  document.getElementById('screen-setup').classList.add('hidden');
+  if(r==='sala') initSala(); else initCucina();
+}
+
+/* ═══════════════════════════════════════════════
+   SALA
+   ═══════════════════════════════════════════════ */
+function initSala(){
+  document.getElementById('screen-sala').classList.remove('hidden');
+  document.getElementById('sala-info').textContent=CFG.nome+' · '+CFG.user;
+  renderTavoli();
+  refreshSalaStato();
+  refreshTimer=setInterval(refreshSalaStato,5000);
+}
+
+function salaServizio(s){
+  servizio=s;
+  document.querySelectorAll('#screen-sala .servizio-btn').forEach(b=>b.classList.toggle('active',b.dataset.serv===s));
+  if(!document.getElementById('sala-tab-comanda').classList.contains('hidden')) caricaMenuSala();
+}
+
+function salaTab(tab){
+  document.getElementById('sala-tab-tavoli').classList.toggle('hidden',tab!=='tavoli');
+  document.getElementById('sala-tab-comanda').classList.add('hidden');
+  document.getElementById('sala-tab-stato').classList.toggle('hidden',tab!=='stato');
+  document.querySelectorAll('.tab-bar-btn').forEach((b,i)=>b.classList.toggle('active',i===(tab==='tavoli'?0:tab==='stato'?1:2)));
+  if(tab==='stato') refreshSalaStato();
+}
+
+function renderTavoli(){
+  let html='';
+  for(let i=1;i<=CFG.tavoli;i++) html+='<div class="tavolo-btn" onclick="selezionaTavolo('+i+')">'+i+'</div>';
+  document.getElementById('tavoli-grid').innerHTML=html;
+}
+
+function selezionaTavolo(n){
+  selTavolo=n; selPiatti=[]; coperti=2;
+  document.getElementById('sala-tab-tavoli').classList.add('hidden');
+  document.getElementById('sala-tab-stato').classList.add('hidden');
+  document.getElementById('sala-tab-comanda').classList.remove('hidden');
+  document.getElementById('comanda-tavolo').textContent=n;
+  document.getElementById('comanda-coperti').textContent='2';
+  document.getElementById('comanda-note').value='';
+  document.getElementById('comanda-servizio-label').textContent=servizio==='pranzo'?'☀️ Pranzo':'🌙 Cena';
+  caricaMenuSala();
+}
+
+function tornaATavoli(){salaTab('tavoli');}
+
+function modCoperti(d){coperti=Math.max(1,Math.min(30,coperti+d));document.getElementById('comanda-coperti').textContent=coperti;}
+
+async function caricaMenuSala(){
+  const url=fbUrl('menu_'+servizio+'_'+oggi());
+  if(!url) return;
+  try{const r=await fetch(url);const d=await r.json();menuOggi=d?Object.values(d):[];}catch(e){menuOggi=[];}
+  renderPiattiSala();
+}
+
+function renderPiattiSala(){
+  const div=document.getElementById('sala-piatti-lista');
+  if(!menuOggi.length){div.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted)">Lo chef non ha ancora inserito il menu.<br>Attendi o riprova.</div>';return;}
+  const ordCat=['primo','secondo','contorno','pizza','pesce','dolce','bevanda','altro'];
+  let html='';
+  ordCat.forEach(cat=>{
+    const piatti=menuOggi.filter(p=>p.cat===cat);
+    if(!piatti.length) return;
+    html+='<div class="cat-header">'+(CATS[cat]||cat)+'</div>';
+    piatti.forEach(p=>{
+      const sel=selPiatti.find(s=>s.id===p.id);
+      const isSel=!!sel;
+      html+='<div class="piatto-item'+(isSel?' selected':'')+'" onclick="togglePiatto(\''+p.id+'\')">';
+      html+='<div class="info"><div class="nome">'+p.nome+'</div>';
+      if(p.prezzo) html+='<div class="dettaglio">€ '+parseFloat(p.prezzo).toFixed(2)+'</div>';
+      html+='</div>';
+      if(isSel){
+        html+='<div class="qty-row" onclick="event.stopPropagation()">';
+        html+='<button class="qty-btn" onclick="modQty(\''+p.id+'\',-1)">−</button>';
+        html+='<span class="qty-val">'+sel.qty+'</span>';
+        html+='<button class="qty-btn" onclick="modQty(\''+p.id+'\',1)">+</button></div>';
+      }
+      html+='<div class="check">'+(isSel?'✓':'')+'</div></div>';
+    });
+  });
+  div.innerHTML=html;
+}
+
+function togglePiatto(id){
+  const i=selPiatti.findIndex(s=>s.id===id);
+  if(i>=0) selPiatti.splice(i,1);
+  else{const p=menuOggi.find(m=>m.id===id);if(p)selPiatti.push({id:p.id,nome:p.nome,cat:p.cat,prezzo:p.prezzo||0,qty:1});}
+  renderPiattiSala();
+}
+
+function modQty(id,d){
+  const item=selPiatti.find(s=>s.id===id);
+  if(item){item.qty=Math.max(1,item.qty+d);renderPiattiSala();}
+}
+
+async function inviaComanda(){
+  if(!selPiatti.length){alert('Seleziona almeno un piatto!');return;}
+  const c={id:Date.now(),tavolo:selTavolo,piatti:selPiatti.map(p=>({nome:p.nome,cat:p.cat,prezzo:p.prezzo,qty:p.qty})),
+    note:document.getElementById('comanda-note').value.trim(),coperti:coperti,
+    ora:ora(),data:oggi(),servizio:servizio,cameriere:CFG.user,stato:'nuova',ts:Date.now()};
+  const url=fbUrl('ordini_'+servizio+'_'+oggi()+'/'+c.id);
+  if(!url){alert('Firebase non configurato');return;}
+  try{
+    await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)});
+    toast('✅ Comanda Tavolo '+selTavolo+' inviata!','var(--green)');
+    tornaATavoli();refreshSalaStato();
+  }catch(e){alert('Errore: '+e.message);}
+}
+
+async function refreshSalaStato(){
+  const url=fbUrl('ordini_'+servizio+'_'+oggi());
+  if(!url) return;
+  try{
+    const r=await fetch(url);const d=await r.json();
+    const list=d?Object.values(d).filter(c=>c.stato!=='completato').sort((a,b)=>b.ts-a.ts):[];
+    const div=document.getElementById('sala-stato-lista');
+    if(!list.length){div.innerHTML='<div style="color:var(--muted);font-size:13px;padding:10px">Nessuna comanda attiva</div>';return;}
+    div.innerHTML=list.map(c=>{
+      const col=c.stato==='nuova'?'var(--red)':c.stato==='inCorso'?'var(--gold)':'var(--green)';
+      const lab=c.stato==='nuova'?'⏳ In attesa':c.stato==='inCorso'?'🔥 In preparazione':'✅ Pronto!';
+      return '<div style="padding:10px 0;border-bottom:1px solid #f0f0f0">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center">'+
+        '<div><span style="font-weight:800;font-size:16px">Tavolo '+c.tavolo+'</span> <span style="font-size:11px;color:var(--muted)">'+c.ora+'</span></div>'+
+        '<span style="font-size:12px;font-weight:700;color:'+col+'">'+lab+'</span></div>'+
+        '<div style="font-size:12px;color:var(--muted);margin-top:4px">'+c.piatti.map(p=>p.qty+'x '+p.nome).join(' · ')+'</div>'+
+        (c.note?'<div style="font-size:11px;color:var(--red);margin-top:2px">⚠️ '+c.note+'</div>':'')+'</div>';
+    }).join('');
+  }catch(e){}
+}
+
+/* ═══════════════════════════════════════════════
+   CUCINA
+   ═══════════════════════════════════════════════ */
+function initCucina(){
+  document.getElementById('screen-cucina').classList.remove('hidden');
+  document.getElementById('cucina-info').textContent=CFG.nome;
+  document.getElementById('cucina-data').textContent=new Date().toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'});
+  caricaMenuCucina();
+  cucinaRefresh();
+  refreshTimer=setInterval(cucinaRefresh,3000);
+}
+
+function cucinaServizio(s){
+  servizio=s;
+  document.querySelectorAll('#screen-cucina .servizio-btn').forEach(b=>b.classList.toggle('active',b.dataset.serv===s));
+  document.getElementById('cucina-menu-label').textContent=s==='pranzo'?'Pranzo':'Cena';
+  caricaMenuCucina();
+  cucinaRefresh();
+}
+
+function cucinaToggleMenu(){document.getElementById('cucina-menu-panel').classList.toggle('hidden');}
+
+async function caricaMenuCucina(){
+  const url=fbUrl('menu_'+servizio+'_'+oggi());
+  if(!url) return;
+  try{const r=await fetch(url);const d=await r.json();menuOggi=d?Object.values(d):[];}catch(e){menuOggi=[];}
+  renderMenuCucina();
+}
+
+function renderMenuCucina(){
+  const div=document.getElementById('cucina-menu-lista');
+  if(!menuOggi.length){div.innerHTML='<div style="color:var(--muted);font-style:italic">Nessun piatto. Aggiungi dal form o dalla Libreria.</div>';return;}
+  div.innerHTML=menuOggi.map(p=>
+    '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #f5f5f5">'+
+    '<span>'+(CAT_ICONS[p.cat]||'')+ ' <strong>'+p.nome+'</strong></span>'+
+    '<span style="display:flex;gap:4px;align-items:center">'+(p.prezzo?'<span style="color:var(--gold);font-size:11px">€'+parseFloat(p.prezzo).toFixed(2)+'</span>':'')+
+    '<button class="btn btn-sm" style="color:red;padding:2px 6px" onclick="cucinaRmPiatto(\''+p.id+'\')">✕</button></span></div>'
+  ).join('');
+}
+
+async function cucinaAddPiatto(){
+  const nome=document.getElementById('c-nuovo-nome').value.trim();
+  const cat=document.getElementById('c-nuovo-cat').value;
+  const prezzo=document.getElementById('c-nuovo-prezzo').value;
+  if(!nome){toast('Inserisci il nome del piatto','var(--red)');return;}
+  const piatto={id:'p'+Date.now(),nome:nome,cat:cat,prezzo:prezzo||'0'};
+  menuOggi.push(piatto);
+  // Salva anche in libreria per riuso futuro
+  if(!LIB.find(l=>l.nome.toLowerCase()===nome.toLowerCase())){
+    LIB.push({id:piatto.id,nome:nome,cat:cat,prezzo:prezzo||'0'});
+    saveLib();
+  }
+  await salvaMenuFb();
+  document.getElementById('c-nuovo-nome').value='';
+  document.getElementById('c-nuovo-prezzo').value='';
+  renderMenuCucina();
+  toast('✅ '+nome+' aggiunto','var(--green)');
+}
+
+async function cucinaRmPiatto(id){
+  menuOggi=menuOggi.filter(p=>p.id!==id);
+  await salvaMenuFb();
+  renderMenuCucina();
+}
+
+async function salvaMenuFb(){
+  const url=fbUrl('menu_'+servizio+'_'+oggi());
+  if(!url) return;
+  const obj={};menuOggi.forEach(p=>{obj[p.id]=p;});
+  await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj)});
+}
+
+/* Libreria piatti salvati */
+function cucinaShowLibreria(){document.getElementById('cucina-libreria').classList.remove('hidden');renderLibreria();}
+function cucinaHideLibreria(){document.getElementById('cucina-libreria').classList.add('hidden');}
+
+function renderLibreria(){
+  const q=(document.getElementById('lib-search')?.value||'').toLowerCase();
+  let filtered=LIB;
+  if(q) filtered=LIB.filter(p=>p.nome.toLowerCase().includes(q));
+  const div=document.getElementById('libreria-lista');
+  if(!filtered.length){div.innerHTML='<div style="color:var(--muted);padding:20px;text-align:center">'+(q?'Nessun risultato':'Libreria vuota. I piatti si salvano automaticamente quando li aggiungi al menu.')+'</div>';return;}
+  const inMenu=new Set(menuOggi.map(m=>m.nome.toLowerCase()));
+  div.innerHTML=filtered.map(p=>{
+    const gia=inMenu.has(p.nome.toLowerCase());
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f0f0f0">'+
+      '<div><div style="font-weight:600">'+p.nome+'</div><div style="font-size:11px;color:var(--muted)">'+(CAT_ICONS[p.cat]||'')+' '+p.cat+(p.prezzo?' · €'+parseFloat(p.prezzo).toFixed(2):'')+'</div></div>'+
+      (gia?'<span style="font-size:11px;color:var(--green);font-weight:700">✓ Nel menu</span>':
+      '<button class="btn btn-sm btn-green" onclick="libAggiungiAlMenu(\''+p.id+'\')">+ Menu</button>')+
+      ' <button class="btn btn-sm" style="color:red;padding:2px 6px" onclick="libElimina(\''+p.id+'\')">✕</button></div>';
+  }).join('');
+}
+
+async function libAggiungiAlMenu(id){
+  const p=LIB.find(l=>l.id===id);
+  if(!p) return;
+  const piatto={id:'p'+Date.now(),nome:p.nome,cat:p.cat,prezzo:p.prezzo||'0'};
+  menuOggi.push(piatto);
+  await salvaMenuFb();
+  renderMenuCucina();renderLibreria();
+  toast('✅ '+p.nome+' aggiunto al menu','var(--green)');
+}
+
+function libElimina(id){
+  if(!confirm('Rimuovere dalla libreria?')) return;
+  LIB=LIB.filter(p=>p.id!==id);saveLib();renderLibreria();
+}
+
+/* Comande cucina */
+async function cucinaRefresh(){
+  const url=fbUrl('ordini_'+servizio+'_'+oggi());
+  if(!url) return;
+  try{
+    const r=await fetch(url);const d=await r.json();
+    comande=d?Object.values(d).sort((a,b)=>b.ts-a.ts):[];
+    const nuove=comande.filter(c=>c.stato==='nuova').length;
+    if(nuove>lastNewCount&&lastNewCount>=0){try{document.getElementById('audio-bell').play();}catch(e){}}
+    lastNewCount=nuove;
+    renderComandeCucina();
+  }catch(e){}
+}
+
+function renderComandeCucina(){
+  const attive=comande.filter(c=>c.stato!=='completato');
+  const completate=comande.filter(c=>c.stato==='completato').slice(0,8);
+  document.getElementById('cucina-count').textContent=attive.length;
+  const div=document.getElementById('cucina-comande');
+  if(!attive.length&&!completate.length){
+    div.innerHTML='<div style="text-align:center;padding:50px;color:var(--muted)"><div style="font-size:48px;margin-bottom:8px">🍳</div>In attesa di comande...</div>';return;
+  }
+  let html='';
+  attive.forEach(c=>{
+    const min=Math.floor((Date.now()-c.ts)/60000);
+    const urg=min>15;
+    html+='<div class="comanda-card'+(urg?' urgente':'')+(c.stato==='inCorso'?' inCorso':'')+'">';
+    html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">';
+    html+='<div><div style="font-size:26px;font-weight:800">Tavolo '+c.tavolo+'</div>';
+    html+='<div style="font-size:11px;color:var(--muted)">'+c.coperti+' cop. · '+c.ora+' · '+c.cameriere+(urg?' · ⚠️ '+min+'min':'')+'</div></div>';
+    html+='<div style="display:flex;gap:4px;flex-wrap:wrap">';
+    if(c.stato==='nuova') html+='<button class="btn btn-sm btn-gold" onclick="cucinaStato('+c.id+',\'inCorso\')">🔥 Preparo</button>';
+    if(c.stato==='inCorso') html+='<button class="btn btn-sm btn-green" onclick="cucinaStato('+c.id+',\'pronto\')">✅ Pronto</button>';
+    html+='<button class="btn btn-sm" style="background:#eee" onclick="cucinaStampa('+c.id+')">🖨️</button>';
+    html+='<button class="btn btn-sm" style="background:#eee;color:var(--red)" onclick="cucinaStato('+c.id+',\'completato\')">✓ Fatto</button>';
+    html+='</div></div>';
+    html+='<div style="margin-top:8px">';
+    c.piatti.forEach(p=>{
+      html+='<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f5f5f5"><span style="font-size:14px"><strong>'+p.qty+'x</strong> '+p.nome+'</span><span style="font-size:11px;color:var(--muted)">'+(CAT_ICONS[p.cat]||'')+'</span></div>';
+    });
+    html+='</div>';
+    if(c.note) html+='<div style="margin-top:6px;padding:6px 10px;background:#fff8e1;border-radius:6px;font-size:13px;color:#e65100;font-weight:600">⚠️ '+c.note+'</div>';
+    html+='</div>';
+  });
+  if(completate.length){
+    html+='<div style="font-size:12px;font-weight:700;color:var(--muted);margin:14px 10px 4px">Completate</div>';
+    completate.forEach(c=>{
+      html+='<div style="padding:5px 10px;border-bottom:1px solid #f0f0f0;opacity:.4;font-size:11px">'+
+        'T'+c.tavolo+' · '+c.ora+' · '+c.piatti.map(p=>p.qty+'x '+p.nome).join(', ')+'</div>';
+    });
+  }
+  div.innerHTML=html;
+}
+
+async function cucinaStato(id,stato){
+  const url=fbUrl('ordini_'+servizio+'_'+oggi()+'/'+id+'/stato');
+  if(!url) return;
+  await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(stato)});
+  cucinaRefresh();
+  if(stato==='pronto') toast('✅ Tavolo pronto!','var(--green)');
+}
+
+function cucinaStampa(id){
+  const c=comande.find(x=>x.id===id);if(!c) return;
+  const area=document.getElementById('print-area');
+  let h='<div style="font-family:Courier New,monospace;font-size:11px;width:72mm">';
+  h+='<div style="text-align:center;font-weight:700;font-size:13px;border-bottom:2px solid #000;padding-bottom:3px;margin-bottom:4px">'+(CFG.nome||'RISTORANTE')+'</div>';
+  h+='<div style="text-align:center;font-size:10px;margin-bottom:6px">'+c.data+' · '+c.ora+' · '+(c.servizio==='pranzo'?'PRANZO':'CENA')+'</div>';
+  h+='<div style="text-align:center;font-size:24px;font-weight:700;border:2px solid #000;padding:4px;margin-bottom:6px">TAVOLO '+c.tavolo+'</div>';
+  h+='<div style="font-size:10px;margin-bottom:4px">Coperti: '+c.coperti+' · Cameriere: '+c.cameriere+'</div>';
+  h+='<div style="border-top:1px dashed #000;margin:3px 0"></div>';
+  c.piatti.forEach(p=>{h+='<div style="padding:2px 0;font-size:12px"><strong>'+p.qty+'x</strong> '+p.nome.toUpperCase()+'</div>';});
+  h+='<div style="border-top:1px dashed #000;margin:3px 0"></div>';
+  if(c.note) h+='<div style="font-size:11px;font-weight:700;padding:3px 0">*** '+c.note.toUpperCase()+' ***</div>';
+  h+='<div style="text-align:center;font-size:8px;margin-top:6px;border-top:1px dashed #000;padding-top:3px">TheChefs Comande</div></div>';
+  area.innerHTML=h;area.classList.remove('hidden');
+  setTimeout(()=>{window.print();area.classList.add('hidden');},200);
+}
+</script>
+</body>
+</html>
