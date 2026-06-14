@@ -126,8 +126,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--green)}
       <div class="topbar-sub" id="sala-info"></div>
     </div>
     <div class="servizio-toggle">
-      <div class="servizio-btn active" data-serv="pranzo" onclick="salaServizio('pranzo')">☀️ Pranzo</div>
-      <div class="servizio-btn" data-serv="cena" onclick="salaServizio('cena')">🌙 Cena</div>
+      <div class="servizio-btn active" data-serv="pranzo" onclick="salaServizio('pranzo')">☀️ Menu Pranzo</div>
+      <div class="servizio-btn" data-serv="osteria" onclick="salaServizio('osteria')">🌙 Menu Osteria</div>
     </div>
   </div>
 
@@ -141,17 +141,29 @@ input:focus,select:focus,textarea:focus{border-color:var(--green)}
 
   <!-- Tab: Comanda (composizione) -->
   <div id="sala-tab-comanda" class="hidden">
-    <div class="card" style="background:var(--green);color:#fff;border-radius:var(--radius) var(--radius) 0 0;margin-bottom:0">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-size:11px;opacity:.7">TAVOLO</div>
-          <div style="font-size:32px;font-weight:800" id="comanda-tavolo"></div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:11px;opacity:.7" id="comanda-servizio-label"></div>
-          <div style="display:flex;gap:6px;margin-top:4px">
-            <div class="qty-row" style="margin:0">
-              <span style="font-size:11px;opacity:.7;margin-right:4px">Coperti</span>
+    <!-- Step A: Scelta menu -->
+    <div id="comanda-scelta-menu">
+      <div class="card" style="text-align:center;padding:30px 20px">
+        <div style="font-size:14px;font-weight:700;color:var(--muted);margin-bottom:4px">TAVOLO</div>
+        <div style="font-size:36px;font-weight:800;color:var(--green);margin-bottom:16px" id="comanda-tavolo-scelta"></div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:20px">Scegli il menu</div>
+        <button class="btn btn-green btn-lg" style="font-size:18px;padding:20px;margin-bottom:12px" onclick="scegliMenu('pranzo')">☀️ MENU PRANZO</button>
+        <button class="btn btn-lg" style="font-size:18px;padding:20px;background:var(--green-dark);color:#fff;margin-bottom:16px" onclick="scegliMenu('osteria')">🌙 MENU OSTERIA</button>
+        <button class="btn btn-outline btn-lg" onclick="tornaATavoli()">← Torna ai tavoli</button>
+      </div>
+    </div>
+    <!-- Step B: Composizione comanda con piatti -->
+    <div id="comanda-piatti" class="hidden">
+      <div class="card" style="background:var(--green);color:#fff;border-radius:var(--radius) var(--radius) 0 0;margin-bottom:0">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:11px;opacity:.7">TAVOLO</div>
+            <div style="font-size:32px;font-weight:800" id="comanda-tavolo"></div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:12px;font-weight:700;opacity:.9" id="comanda-servizio-label"></div>
+            <div style="display:flex;gap:6px;margin-top:4px;align-items:center">
+              <span style="font-size:11px;opacity:.7">Coperti</span>
               <button class="qty-btn" style="border-color:rgba(255,255,255,.4);color:#fff;background:transparent" onclick="modCoperti(-1)">−</button>
               <span class="qty-val" id="comanda-coperti" style="color:#fff">2</span>
               <button class="qty-btn" style="border-color:rgba(255,255,255,.4);color:#fff;background:transparent" onclick="modCoperti(1)">+</button>
@@ -159,13 +171,13 @@ input:focus,select:focus,textarea:focus{border-color:var(--green)}
           </div>
         </div>
       </div>
-    </div>
-    <div class="card" style="border-radius:0 0 var(--radius) var(--radius);margin-top:0;padding:0">
-      <div id="sala-piatti-lista" style="max-height:55vh;overflow-y:auto"></div>
-      <div style="padding:12px">
-        <textarea id="comanda-note" rows="2" placeholder="Note: senza glutine, allergie, cottura..." style="font-size:13px"></textarea>
-        <button class="btn btn-green btn-lg" style="margin-top:8px" onclick="inviaComanda()">📤 Invia Comanda in Cucina</button>
-        <button class="btn btn-outline btn-lg" style="margin-top:6px" onclick="tornaATavoli()">← Torna ai tavoli</button>
+      <div class="card" style="border-radius:0 0 var(--radius) var(--radius);margin-top:0;padding:0">
+        <div id="sala-piatti-lista" style="max-height:55vh;overflow-y:auto"></div>
+        <div style="padding:12px">
+          <textarea id="comanda-note" rows="2" placeholder="Note: senza glutine, allergie, cottura..." style="font-size:13px"></textarea>
+          <button class="btn btn-green btn-lg" style="margin-top:8px" onclick="inviaComanda()">📤 Invia Comanda in Cucina</button>
+          <button class="btn btn-outline btn-lg" style="margin-top:6px" onclick="tornaASceltaMenu()">← Cambia menu</button>
+        </div>
       </div>
     </div>
   </div>
@@ -196,8 +208,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--green)}
     </div>
     <div style="display:flex;gap:6px">
       <div class="servizio-toggle">
-        <div class="servizio-btn active" data-serv="pranzo" onclick="cucinaServizio('pranzo')">☀️ Pranzo</div>
-        <div class="servizio-btn" data-serv="cena" onclick="cucinaServizio('cena')">🌙 Cena</div>
+        <div class="servizio-btn active" data-serv="pranzo" onclick="cucinaServizio('pranzo')">☀️ Menu Pranzo</div>
+        <div class="servizio-btn" data-serv="osteria" onclick="cucinaServizio('osteria')">🌙 Menu Osteria</div>
       </div>
       <button class="btn-white btn btn-sm" onclick="cucinaToggleMenu()">📋</button>
       <button class="btn-white btn btn-sm" onclick="location.reload()">⚙️</button>
@@ -368,11 +380,27 @@ function selezionaTavolo(n){
   document.getElementById('sala-tab-tavoli').classList.add('hidden');
   document.getElementById('sala-tab-stato').classList.add('hidden');
   document.getElementById('sala-tab-comanda').classList.remove('hidden');
-  document.getElementById('comanda-tavolo').textContent=n;
+  // Mostra scelta menu, nascondi piatti
+  document.getElementById('comanda-scelta-menu').classList.remove('hidden');
+  document.getElementById('comanda-piatti').classList.add('hidden');
+  document.getElementById('comanda-tavolo-scelta').textContent=n;
+}
+
+function scegliMenu(tipo){
+  servizio=tipo;
+  document.getElementById('comanda-scelta-menu').classList.add('hidden');
+  document.getElementById('comanda-piatti').classList.remove('hidden');
+  document.getElementById('comanda-tavolo').textContent=selTavolo;
   document.getElementById('comanda-coperti').textContent='2';
   document.getElementById('comanda-note').value='';
-  document.getElementById('comanda-servizio-label').textContent=servizio==='pranzo'?'☀️ Pranzo':'🌙 Cena';
+  document.getElementById('comanda-servizio-label').textContent=servizio==='pranzo'?'☀️ Menu Pranzo':'🌙 Menu Osteria';
   caricaMenuSala();
+}
+
+function tornaASceltaMenu(){
+  selPiatti=[];
+  document.getElementById('comanda-piatti').classList.add('hidden');
+  document.getElementById('comanda-scelta-menu').classList.remove('hidden');
 }
 
 function tornaATavoli(){salaTab('tavoli');}
@@ -398,7 +426,7 @@ async function caricaMenuSala(){
 
 function renderPiattiSala(){
   const div=document.getElementById('sala-piatti-lista');
-  if(!menuOggi.length){div.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted)">Lo chef non ha ancora inserito il menu.<br>Attendi o riprova.<br><button class="btn btn-outline btn-sm" style="margin-top:10px" onclick="caricaMenuSala()">🔄 Ricarica</button></div>';return;}
+  if(!menuOggi.length){div.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted)">Menu non ancora inserito.<br><button class="btn btn-outline btn-sm" style="margin-top:10px" onclick="caricaMenuSala()">🔄 Ricarica</button></div>';return;}
   const ordCat=['primo','secondo','contorno','pizza','pesce','dolce','bevanda','altro'];
   let html='';
   ordCat.forEach(cat=>{
@@ -407,54 +435,49 @@ function renderPiattiSala(){
     html+='<div class="cat-header">'+(CATS[cat]||cat)+'</div>';
     piatti.forEach(p=>{
       const sel=selPiatti.find(s=>s.id===p.id);
-      const isSel=!!sel;
-      html+='<div class="piatto-item'+(isSel?' selected':'')+'">';
-      // Tap zone per selezionare
-      html+='<div style="flex:1;min-width:0;cursor:pointer" onclick="togglePiatto(\''+p.id+'\')">';
-      html+='<div class="nome">'+p.nome+'</div>';
-      if(p.prezzo&&parseFloat(p.prezzo)>0) html+='<div class="dettaglio">€ '+parseFloat(p.prezzo).toFixed(2)+'</div>';
+      const qty=sel?sel.qty:0;
+      html+='<div style="display:flex;align-items:center;padding:10px 12px;border-bottom:1px solid #f0f0f0;gap:10px'+(qty>0?';background:var(--green-light)':'')+'">';
+      html+='<div style="flex:1;min-width:0;cursor:pointer" onclick="setQty(\''+p.id+'\','+(qty+1)+')">';
+      html+='<div style="font-size:14px;font-weight:600">'+p.nome+'</div>';
+      if(p.prezzo&&parseFloat(p.prezzo)>0) html+='<div style="font-size:11px;color:var(--gold)">€ '+parseFloat(p.prezzo).toFixed(2)+'</div>';
       html+='</div>';
-      // Quantità — sempre visibile quando selezionato, grande e chiara
-      if(isSel){
-        html+='<div style="display:flex;align-items:center;gap:4px;background:var(--green);border-radius:8px;padding:4px 8px" onclick="event.stopPropagation()">';
-        html+='<button style="width:36px;height:36px;border-radius:50%;border:none;background:rgba(255,255,255,.3);color:#fff;font-size:20px;font-weight:700;cursor:pointer" onclick="modQty(\''+p.id+'\',-1)">−</button>';
-        html+='<span style="font-size:22px;font-weight:800;color:#fff;min-width:32px;text-align:center">'+sel.qty+'</span>';
-        html+='<button style="width:36px;height:36px;border-radius:50%;border:none;background:rgba(255,255,255,.3);color:#fff;font-size:20px;font-weight:700;cursor:pointer" onclick="modQty(\''+p.id+'\',1)">+</button>';
-        html+='</div>';
-      }
-      // Check non selezionato
-      if(!isSel){
-        html+='<div class="check" onclick="togglePiatto(\''+p.id+'\')"></div>';
-      } else {
-        html+='<div style="width:28px;height:28px;border-radius:50%;background:var(--red);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;flex-shrink:0;margin-left:4px" onclick="togglePiatto(\''+p.id+'\')">✕</div>';
-      }
+      html+='<input type="number" min="0" max="30" value="'+qty+'" style="width:52px;height:40px;text-align:center;font-size:18px;font-weight:700;border:2px solid '+(qty>0?'var(--green)':'#ddd')+';border-radius:8px;color:'+(qty>0?'var(--green)':'#333')+'" onchange="setQty(\''+p.id+'\',parseInt(this.value)||0)" onclick="this.select()">';
       html+='</div>';
     });
   });
-  // Riepilogo in basso
+  html+='<div style="padding:10px 12px;background:var(--gold);color:#fff;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px">🍷 Bibite / Vino</div>';
+  ['Acqua Naturale','Acqua Frizzante','Vino Rosso Casa','Vino Bianco Casa','Birra alla Spina','Coca Cola','Succo di Frutta','Vino Bottiglia'].forEach(b=>{
+    const id='bev_'+b.replace(/\s/g,'_');const sel=selPiatti.find(s=>s.id===id);const qty=sel?sel.qty:0;
+    html+='<div style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid #f0f0f0;gap:10px'+(qty>0?';background:#fff8e1':'')+'">';
+    html+='<div style="flex:1;font-size:13px;font-weight:600;cursor:pointer" onclick="setQty(\''+id+'\','+(qty+1)+',\''+b+'\',\'bevanda\')">🍷 '+b+'</div>';
+    html+='<input type="number" min="0" max="30" value="'+qty+'" style="width:52px;height:36px;text-align:center;font-size:16px;font-weight:700;border:2px solid '+(qty>0?'var(--gold)':'#ddd')+';border-radius:8px" onchange="setQty(\''+id+'\',parseInt(this.value)||0,\''+b+'\',\'bevanda\')" onclick="this.select()">';
+    html+='</div>';
+  });
+  html+='<div style="padding:10px 12px;background:#795548;color:#fff;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px">☕ Caffè / Alcolici</div>';
+  ['Caffè','Caffè Decaffeinato','Caffè Corretto','Amaro','Grappa','Limoncello','Digestivo'].forEach(b=>{
+    const id='caf_'+b.replace(/\s/g,'_');const sel=selPiatti.find(s=>s.id===id);const qty=sel?sel.qty:0;
+    html+='<div style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid #f0f0f0;gap:10px'+(qty>0?';background:#efebe9':'')+'">';
+    html+='<div style="flex:1;font-size:13px;font-weight:600;cursor:pointer" onclick="setQty(\''+id+'\','+(qty+1)+',\''+b+'\',\'bevanda\')">☕ '+b+'</div>';
+    html+='<input type="number" min="0" max="30" value="'+qty+'" style="width:52px;height:36px;text-align:center;font-size:16px;font-weight:700;border:2px solid '+(qty>0?'#795548':'#ddd')+';border-radius:8px" onchange="setQty(\''+id+'\',parseInt(this.value)||0,\''+b+'\',\'bevanda\')" onclick="this.select()">';
+    html+='</div>';
+  });
   if(selPiatti.length){
     html+='<div style="padding:12px;background:var(--green-light);border-top:2px solid var(--green)">';
-    html+='<div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:6px">RIEPILOGO COMANDA — Tavolo '+selTavolo+'</div>';
-    selPiatti.forEach(p=>{
-      html+='<div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0"><span><strong>'+p.qty+'x</strong> '+p.nome+'</span><span style="color:var(--muted)">'+(CAT_ICONS[p.cat]||'')+'</span></div>';
-    });
-    const totPiatti=selPiatti.reduce((s,p)=>s+p.qty,0);
-    html+='<div style="font-size:12px;font-weight:700;color:var(--green);margin-top:6px;padding-top:6px;border-top:1px solid var(--green)">Totale: '+totPiatti+' piatti per '+coperti+' coperti</div>';
-    html+='</div>';
+    html+='<div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:6px">RIEPILOGO — Tavolo '+selTavolo+'</div>';
+    selPiatti.forEach(p=>{html+='<div style="font-size:13px;padding:2px 0"><strong>'+p.qty+'x</strong> '+p.nome+'</div>';});
+    html+='<div style="font-size:12px;font-weight:700;color:var(--green);margin-top:6px;padding-top:6px;border-top:1px solid var(--green)">Totale: '+selPiatti.reduce((s,p)=>s+p.qty,0)+' voci</div></div>';
   }
   div.innerHTML=html;
 }
 
-function togglePiatto(id){
-  const i=selPiatti.findIndex(s=>s.id===id);
-  if(i>=0) selPiatti.splice(i,1);
-  else{const p=menuOggi.find(m=>m.id===id);if(p)selPiatti.push({id:p.id,nome:p.nome,cat:p.cat,prezzo:p.prezzo||0,qty:1});}
+function setQty(id,qty,nome,cat){
+  if(qty<=0){selPiatti=selPiatti.filter(s=>s.id!==id);}
+  else{
+    const ex=selPiatti.find(s=>s.id===id);
+    if(ex){ex.qty=qty;}
+    else{const p=menuOggi.find(m=>m.id===id);selPiatti.push({id:id,nome:nome||(p?p.nome:id),cat:cat||(p?p.cat:'altro'),prezzo:p?p.prezzo:'0',qty:qty});}
+  }
   renderPiattiSala();
-}
-
-function modQty(id,d){
-  const item=selPiatti.find(s=>s.id===id);
-  if(item){item.qty=Math.max(1,item.qty+d);renderPiattiSala();}
 }
 
 async function inviaComanda(){
@@ -507,7 +530,7 @@ function initCucina(){
 function cucinaServizio(s){
   servizio=s;
   document.querySelectorAll('#screen-cucina .servizio-btn').forEach(b=>b.classList.toggle('active',b.dataset.serv===s));
-  document.getElementById('cucina-menu-label').textContent=s==='pranzo'?'Pranzo':'Cena';
+  document.getElementById('cucina-menu-label').textContent=s==='pranzo'?'Pranzo':'Osteria';
   caricaMenuCucina();
   cucinaRefresh();
 }
@@ -701,7 +724,7 @@ function cucinaStampa(id){
   const area=document.getElementById('print-area');
   let h='<div style="font-family:Courier New,monospace;font-size:11px;width:72mm">';
   h+='<div style="text-align:center;font-weight:700;font-size:13px;border-bottom:2px solid #000;padding-bottom:3px;margin-bottom:4px">'+(CFG.nome||'RISTORANTE')+'</div>';
-  h+='<div style="text-align:center;font-size:10px;margin-bottom:6px">'+c.data+' · '+c.ora+' · '+(c.servizio==='pranzo'?'PRANZO':'CENA')+'</div>';
+  h+='<div style="text-align:center;font-size:10px;margin-bottom:6px">'+c.data+' · '+c.ora+' · '+(c.servizio==='pranzo'?'PRANZO':'OSTERIA')+'</div>';
   h+='<div style="text-align:center;font-size:24px;font-weight:700;border:2px solid #000;padding:4px;margin-bottom:6px">TAVOLO '+c.tavolo+'</div>';
   h+='<div style="font-size:10px;margin-bottom:4px">Coperti: '+c.coperti+' · Cameriere: '+c.cameriere+'</div>';
   h+='<div style="border-top:1px dashed #000;margin:3px 0"></div>';
