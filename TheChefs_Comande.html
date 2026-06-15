@@ -201,81 +201,111 @@ input:focus,select:focus,textarea:focus{border-color:var(--green)}
 
 <!-- ═══ CUCINA ═══ -->
 <div id="screen-cucina" class="hidden">
-  <div class="topbar">
-    <div>
-      <h1>👨‍🍳 MONITOR CUCINA</h1>
+  <div class="topbar" style="justify-content:center;position:relative">
+    <div style="position:absolute;left:16px;top:50%;transform:translateY(-50%)">
+      <div style="font-size:13px;font-weight:700">👨‍🍳 MONITOR CUCINA</div>
       <div class="topbar-sub" id="cucina-info"></div>
     </div>
-    <div style="display:flex;gap:6px">
+    <div style="background:rgba(0,0,0,.2);padding:8px 24px;border-radius:8px;font-size:18px;font-weight:800;letter-spacing:2px">TheChefs Comande</div>
+    <div style="position:absolute;right:16px;top:50%;transform:translateY(-50%);display:flex;gap:6px;align-items:center">
       <div class="servizio-toggle">
-        <div class="servizio-btn active" data-serv="pranzo" onclick="cucinaServizio('pranzo')">☀️ Menu Pranzo</div>
-        <div class="servizio-btn" data-serv="osteria" onclick="cucinaServizio('osteria')">🌙 Menu Osteria</div>
+        <div class="servizio-btn active" data-serv="pranzo" onclick="cucinaServizio('pranzo')">☀️ Pranzo</div>
+        <div class="servizio-btn" data-serv="osteria" onclick="cucinaServizio('osteria')">🌙 Osteria</div>
       </div>
-      <button class="btn-white btn btn-sm" onclick="cucinaToggleMenu()">📋</button>
       <button class="btn-white btn btn-sm" onclick="location.reload()">⚙️</button>
     </div>
   </div>
 
-  <!-- Gestione Menu con Libreria -->
-  <div id="cucina-menu-panel" class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <div style="font-size:14px;font-weight:700;color:var(--green)">📋 Menu <span id="cucina-menu-label">Pranzo</span> — <span id="cucina-data"></span></div>
-      <button class="btn btn-sm btn-outline" onclick="cucinaShowLibreria()">📚 Libreria</button>
-    </div>
-    <!-- Aggiungi piatto rapido -->
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
-      <input type="text" id="c-nuovo-nome" placeholder="Nome piatto..." style="flex:2;min-width:150px;font-size:13px;padding:8px 10px" onkeydown="if(event.key==='Enter'){event.preventDefault();cucinaAddPiatto();}">
-      <select id="c-nuovo-cat" style="flex:1;min-width:90px;font-size:12px;padding:8px">
-        <option value="primo">🍝 Primo</option>
-        <option value="secondo">🥩 Secondo</option>
-        <option value="contorno">🥗 Contorno</option>
-        <option value="pizza">🍕 Pizza</option>
-        <option value="pesce">🐟 Pesce</option>
-        <option value="dolce">🍰 Dolce</option>
-        <option value="bevanda">🍷 Bevanda</option>
-        <option value="altro">📌 Altro</option>
-      </select>
-      <input type="number" id="c-nuovo-prezzo" placeholder="€" style="width:65px;font-size:13px;padding:8px" step="0.50" min="0">
-      <button class="btn btn-green btn-sm" onclick="cucinaAddPiatto()">+</button>
-    </div>
-    <!-- Menu corrente -->
-    <div id="cucina-menu-lista" style="font-size:13px"></div>
-  </div>
-
-  <!-- Libreria piatti (popup overlay) -->
-  <div id="cucina-libreria" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:10px">
-    <div style="background:#fff;border-radius:16px;width:100%;max-width:500px;max-height:80vh;overflow:hidden;display:flex;flex-direction:column">
-      <div style="padding:14px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center">
-        <div style="font-size:15px;font-weight:700">📚 Libreria Piatti Salvati</div>
-        <button class="btn btn-sm" style="background:#eee" onclick="cucinaHideLibreria()">✕</button>
-      </div>
-      <div style="padding:10px;display:flex;gap:6px">
-        <input type="text" id="lib-search" placeholder="Cerca piatto..." oninput="renderLibreria()" style="font-size:13px;padding:8px 12px;flex:1">
-        <select id="lib-cat-filter" onchange="renderLibreria()" style="font-size:12px;padding:8px;width:auto;min-width:100px">
-          <option value="tutti">Tutti</option>
-          <option value="primo">🍝 Primi</option>
-          <option value="secondo">🥩 Secondi</option>
-          <option value="contorno">🥗 Contorni</option>
-          <option value="pizza">🍕 Pizze</option>
-          <option value="pesce">🐟 Pesce</option>
-          <option value="dolce">🍰 Dolci</option>
-          <option value="bevanda">🍷 Bevande</option>
+  <!-- VISTA PRINCIPALE: Due menu affiancati -->
+  <div id="cucina-vista-menu" style="display:flex;gap:10px;padding:10px;height:calc(100vh - 130px);overflow:hidden">
+    <!-- MENU PRANZO (sinistra) -->
+    <div style="flex:1;display:flex;flex-direction:column;background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);overflow:hidden">
+      <div style="background:var(--green);color:#fff;padding:10px 16px;font-size:15px;font-weight:700;text-align:center">📋 Menu Pranzo — <span id="cucina-data-pranzo"></span></div>
+      <div id="cucina-pranzo-lista" style="flex:1;overflow-y:auto;padding:8px 12px;font-size:13px"></div>
+      <div style="padding:10px;border-top:1px solid #eee;display:flex;gap:8px">
+        <input type="text" id="pranzo-nuovo" placeholder="Nuovo piatto..." style="flex:1;font-size:13px;padding:8px" onkeydown="if(event.key==='Enter'){event.preventDefault();cucinaAddPiattoA('pranzo');}">
+        <select id="pranzo-cat" style="width:auto;font-size:11px;padding:6px">
+          <option value="primo">🍝 Primo</option><option value="secondo">🥩 Secondo</option><option value="contorno">🥗 Contorno</option><option value="pesce">🐟 Pesce</option><option value="dolce">🍰 Dolce</option><option value="altro">📌 Altro</option>
         </select>
       </div>
-      <div id="libreria-lista" style="overflow-y:auto;flex:1;padding:0 10px 10px"></div>
+      <div style="display:flex;gap:0;border-top:1px solid #eee">
+        <button style="flex:1;padding:12px;border:none;background:var(--green);color:#fff;font-size:14px;font-weight:700;cursor:pointer" onclick="cucinaAddPiattoA('pranzo')">INSERISCI</button>
+        <button style="flex:1;padding:12px;border:none;background:var(--gold);color:#fff;font-size:14px;font-weight:700;cursor:pointer" onclick="cucinaSalvaMenu('pranzo')">SALVA</button>
+      </div>
+    </div>
+    <!-- MENU OSTERIA (destra) -->
+    <div style="flex:1;display:flex;flex-direction:column;background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);overflow:hidden">
+      <div style="background:var(--green-dark);color:#fff;padding:10px 16px;font-size:15px;font-weight:700;text-align:center">📋 Menu Osteria</div>
+      <div id="cucina-osteria-lista" style="flex:1;overflow-y:auto;padding:8px 12px;font-size:13px"></div>
+      <div style="padding:10px;border-top:1px solid #eee;display:flex;gap:8px">
+        <input type="text" id="osteria-nuovo" placeholder="Nuovo piatto..." style="flex:1;font-size:13px;padding:8px" onkeydown="if(event.key==='Enter'){event.preventDefault();cucinaAddPiattoA('osteria');}">
+        <select id="osteria-cat" style="width:auto;font-size:11px;padding:6px">
+          <option value="primo">🍝 Primo</option><option value="secondo">🥩 Secondo</option><option value="contorno">🥗 Contorno</option><option value="pesce">🐟 Pesce</option><option value="dolce">🍰 Dolce</option><option value="altro">📌 Altro</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:0;border-top:1px solid #eee">
+        <button style="flex:1;padding:12px;border:none;background:var(--green);color:#fff;font-size:14px;font-weight:700;cursor:pointer" onclick="cucinaAddPiattoA('osteria')">INSERISCI</button>
+        <button style="flex:1;padding:12px;border:none;background:var(--gold);color:#fff;font-size:14px;font-weight:700;cursor:pointer" onclick="cucinaSalvaMenu('osteria')">SALVA</button>
+      </div>
     </div>
   </div>
 
-  <!-- Monitor comande -->
-  <div style="padding:0 2px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 10px 4px">
-      <div style="font-size:14px;font-weight:700">🔥 Comande</div>
-      <div style="display:flex;gap:6px;align-items:center">
-        <span id="cucina-count" style="background:var(--red);color:#fff;padding:2px 10px;border-radius:20px;font-size:13px;font-weight:700">0</span>
+  <!-- BOTTOM BAR: Comande e Libreria -->
+  <div style="display:flex;gap:10px;padding:0 10px 10px;position:fixed;bottom:0;left:0;right:0;background:var(--bg)">
+    <button style="flex:1;padding:14px;border:none;border-radius:10px;background:var(--green);color:#fff;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" onclick="cucinaShowComande()">
+      🔥 Comande <span id="cucina-count" style="background:var(--red);padding:2px 10px;border-radius:20px;font-size:13px">0</span>
+    </button>
+    <button style="flex:1;padding:14px;border:none;border-radius:10px;background:#fff;color:var(--green);font-size:16px;font-weight:700;cursor:pointer;border:2px solid var(--green);display:flex;align-items:center;justify-content:center;gap:8px" onclick="cucinaShowLibreria()">
+      📚 Libreria
+    </button>
+  </div>
+
+  <!-- VISTA COMANDE (nascosta, si apre con pulsante) -->
+  <div id="cucina-vista-comande" class="hidden" style="padding:10px;height:calc(100vh - 60px);overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-size:18px;font-weight:700">🔥 Comande in Arrivo</div>
+      <div style="display:flex;gap:6px">
         <button class="btn btn-sm btn-outline" onclick="cucinaRefresh()">🔄</button>
+        <button class="btn btn-sm btn-green" onclick="cucinaHideComande()">← Menu</button>
       </div>
     </div>
     <div id="cucina-comande"></div>
+  </div>
+
+  <!-- LIBRERIA (overlay fullscreen con colonne per categoria) -->
+  <div id="cucina-libreria" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;overflow-y:auto;padding:10px">
+    <div style="background:#fff;border-radius:16px;max-width:1200px;margin:0 auto;overflow:hidden">
+      <div style="padding:14px 20px;background:var(--green);color:#fff;display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:18px;font-weight:700">📚 Libreria Piatti — Database Completo</div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="lib-search" placeholder="Cerca piatto..." oninput="renderLibreria()" style="font-size:13px;padding:6px 12px;border-radius:6px;border:none;width:200px">
+          <button style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:6px 14px;border-radius:6px;font-weight:700;cursor:pointer" onclick="cucinaHideLibreria()">✕ Chiudi</button>
+        </div>
+      </div>
+      <div style="padding:10px;display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid #eee">
+        <button class="btn btn-sm" style="background:var(--green);color:#fff" onclick="libAddAllCat('primo','pranzo')">+ Tutti Primi → Pranzo</button>
+        <button class="btn btn-sm" style="background:var(--green-dark);color:#fff" onclick="libAddAllCat('primo','osteria')">+ Tutti Primi → Osteria</button>
+      </div>
+      <!-- 4 colonne per categoria -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;min-height:60vh">
+        <div style="border-right:1px solid #eee">
+          <div style="background:#e8f5e9;padding:8px 12px;font-size:12px;font-weight:800;text-transform:uppercase;color:var(--green)">🍝 Primi Piatti</div>
+          <div id="lib-col-primo" style="padding:4px;font-size:12px;max-height:60vh;overflow-y:auto"></div>
+        </div>
+        <div style="border-right:1px solid #eee">
+          <div style="background:#fce4ec;padding:8px 12px;font-size:12px;font-weight:800;text-transform:uppercase;color:#c62828">🥩 Secondi / Pesce</div>
+          <div id="lib-col-secondo" style="padding:4px;font-size:12px;max-height:60vh;overflow-y:auto"></div>
+        </div>
+        <div style="border-right:1px solid #eee">
+          <div style="background:#e3f2fd;padding:8px 12px;font-size:12px;font-weight:800;text-transform:uppercase;color:var(--blue)">🥗 Contorni / Verdure</div>
+          <div id="lib-col-contorno" style="padding:4px;font-size:12px;max-height:60vh;overflow-y:auto"></div>
+        </div>
+        <div>
+          <div style="background:#fff3e0;padding:8px 12px;font-size:12px;font-weight:800;text-transform:uppercase;color:#e65100">🍰 Dolci / Bevande / Altro</div>
+          <div id="lib-col-dolce" style="padding:4px;font-size:12px;max-height:60vh;overflow-y:auto"></div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -518,146 +548,168 @@ async function refreshSalaStato(){
 /* ═══════════════════════════════════════════════
    CUCINA
    ═══════════════════════════════════════════════ */
+/* ═══ CUCINA: Due menu affiancati ═══ */
+let menuPranzo=[], menuOsteria=[];
+
 function initCucina(){
   document.getElementById('screen-cucina').classList.remove('hidden');
   document.getElementById('cucina-info').textContent=CFG.nome;
-  document.getElementById('cucina-data').textContent=new Date().toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'});
-  caricaMenuCucina();
+  const dataStr=new Date().toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'});
+  document.getElementById('cucina-data-pranzo').textContent=dataStr;
+  caricaDueMenu();
   cucinaRefresh();
   refreshTimer=setInterval(cucinaRefresh,3000);
+}
+
+async function caricaDueMenu(){
+  // Carica menu pranzo
+  const kp='tc_menu_pranzo_'+oggi();
+  const urlP=fbUrl('menu_pranzo_'+oggi());
+  if(urlP){try{const r=await fetch(urlP);const d=await r.json();if(d){menuPranzo=Object.values(d);localStorage.setItem(kp,JSON.stringify(menuPranzo));}else{menuPranzo=JSON.parse(localStorage.getItem(kp)||'[]');}}catch(e){menuPranzo=JSON.parse(localStorage.getItem(kp)||'[]');}}
+  else{menuPranzo=JSON.parse(localStorage.getItem(kp)||'[]');}
+  // Carica menu osteria
+  const ko='tc_menu_osteria_'+oggi();
+  const urlO=fbUrl('menu_osteria_'+oggi());
+  if(urlO){try{const r=await fetch(urlO);const d=await r.json();if(d){menuOsteria=Object.values(d);localStorage.setItem(ko,JSON.stringify(menuOsteria));}else{menuOsteria=JSON.parse(localStorage.getItem(ko)||'[]');}}catch(e){menuOsteria=JSON.parse(localStorage.getItem(ko)||'[]');}}
+  else{menuOsteria=JSON.parse(localStorage.getItem(ko)||'[]');}
+  renderMenuColonna('pranzo');
+  renderMenuColonna('osteria');
+}
+
+function renderMenuColonna(tipo){
+  const lista=tipo==='pranzo'?menuPranzo:menuOsteria;
+  const div=document.getElementById('cucina-'+tipo+'-lista');
+  if(!lista.length){div.innerHTML='<div style="color:var(--muted);font-style:italic;padding:16px;text-align:center">Nessun piatto. Usa INSERISCI o la 📚 Libreria.</div>';return;}
+  const ordCat=['primo','secondo','contorno','pesce','dolce','bevanda','altro'];
+  let html='';let num=1;
+  ordCat.forEach(cat=>{
+    const piatti=lista.filter(p=>p.cat===cat);
+    if(!piatti.length)return;
+    html+='<div style="font-size:10px;font-weight:800;color:var(--green);text-transform:uppercase;padding:8px 0 3px;border-bottom:1px solid #eee">'+(CATS[cat]||cat)+'</div>';
+    piatti.forEach(p=>{
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #f8f8f8">';
+      html+='<span style="font-size:13px">'+num+' '+(CAT_ICONS[p.cat]||'')+' <strong>'+p.nome+'</strong></span>';
+      html+='<button style="background:none;border:none;color:red;cursor:pointer;font-size:14px;padding:2px 6px" onclick="cucinaRmPiattoA(\''+tipo+'\',\''+p.id+'\')">✕</button>';
+      html+='</div>';
+      num++;
+    });
+  });
+  html+='<div style="text-align:center;padding:6px;font-size:11px;color:var(--muted)">'+lista.length+' piatti</div>';
+  div.innerHTML=html;
+}
+
+function cucinaAddPiattoA(tipo){
+  const input=document.getElementById(tipo+'-nuovo');
+  const catSel=document.getElementById(tipo+'-cat');
+  const nome=input.value.trim();
+  if(!nome){toast('Inserisci il nome del piatto','var(--red)');return;}
+  const cat=catSel.value;
+  const piatto={id:'p'+Date.now(),nome:nome,cat:cat,prezzo:'0'};
+  if(tipo==='pranzo'){menuPranzo.push(piatto);}else{menuOsteria.push(piatto);}
+  // Salva in libreria
+  if(!LIB.find(l=>l.nome.toLowerCase()===nome.toLowerCase())){
+    LIB.push({id:piatto.id,nome:nome,cat:cat,prezzo:'0'});saveLib();
+  }
+  salvaDueMenu(tipo);
+  input.value='';input.focus();
+  renderMenuColonna(tipo);
+  toast('✅ '+nome+' aggiunto al menu '+tipo,'var(--green)');
+}
+
+function cucinaRmPiattoA(tipo,id){
+  if(tipo==='pranzo'){menuPranzo=menuPranzo.filter(p=>p.id!==id);}
+  else{menuOsteria=menuOsteria.filter(p=>p.id!==id);}
+  salvaDueMenu(tipo);
+  renderMenuColonna(tipo);
+}
+
+async function cucinaSalvaMenu(tipo){
+  await salvaDueMenu(tipo);
+  toast('💾 Menu '+tipo+' salvato!','var(--green)');
+}
+
+async function salvaDueMenu(tipo){
+  const lista=tipo==='pranzo'?menuPranzo:menuOsteria;
+  const chiave='tc_menu_'+tipo+'_'+oggi();
+  localStorage.setItem(chiave,JSON.stringify(lista));
+  const url=fbUrl('menu_'+tipo+'_'+oggi());
+  if(!url)return;
+  const obj={};lista.forEach(p=>{obj[p.id]=p;});
+  try{await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj)});}
+  catch(e){console.log('Save error:',e);}
 }
 
 function cucinaServizio(s){
   servizio=s;
   document.querySelectorAll('#screen-cucina .servizio-btn').forEach(b=>b.classList.toggle('active',b.dataset.serv===s));
-  document.getElementById('cucina-menu-label').textContent=s==='pranzo'?'Pranzo':'Osteria';
-  caricaMenuCucina();
   cucinaRefresh();
 }
 
-function cucinaToggleMenu(){document.getElementById('cucina-menu-panel').classList.toggle('hidden');}
-
-async function caricaMenuCucina(){
-  const chiave='tc_menu_'+servizio+'_'+oggi();
-  const url=fbUrl('menu_'+servizio+'_'+oggi());
-  if(url){
-    try{const r=await fetch(url);const d=await r.json();
-      if(d){menuOggi=Object.values(d);localStorage.setItem(chiave,JSON.stringify(menuOggi));}
-      else{menuOggi=JSON.parse(localStorage.getItem(chiave)||'[]');}
-    }catch(e){menuOggi=JSON.parse(localStorage.getItem(chiave)||'[]');}
-  } else {menuOggi=JSON.parse(localStorage.getItem(chiave)||'[]');}
-  renderMenuCucina();
+/* Vista Comande */
+function cucinaShowComande(){
+  document.getElementById('cucina-vista-menu').classList.add('hidden');
+  document.getElementById('cucina-vista-comande').classList.remove('hidden');
+  cucinaRefresh();
+}
+function cucinaHideComande(){
+  document.getElementById('cucina-vista-comande').classList.add('hidden');
+  document.getElementById('cucina-vista-menu').classList.remove('hidden');
 }
 
-function renderMenuCucina(){
-  const div=document.getElementById('cucina-menu-lista');
-  if(!menuOggi.length){div.innerHTML='<div style="color:var(--muted);font-style:italic;padding:8px">Nessun piatto. Usa la 📚 Libreria per comporre il menu del giorno.</div>';return;}
-  const ordCat=['primo','secondo','contorno','pizza','pesce','dolce','bevanda','altro'];
-  let html='';
-  ordCat.forEach(cat=>{
-    const piatti=menuOggi.filter(p=>p.cat===cat);
-    if(!piatti.length) return;
-    html+='<div style="font-size:10px;font-weight:800;color:var(--green);text-transform:uppercase;letter-spacing:1px;padding:8px 0 2px;border-bottom:1px solid #eee">'+(CATS[cat]||cat)+'</div>';
-    piatti.forEach(p=>{
-      html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f8f8f8">'+
-        '<span style="font-size:13px">'+(CAT_ICONS[p.cat]||'📌')+' <strong>'+p.nome+'</strong></span>'+
-        '<span style="display:flex;gap:4px;align-items:center">'+
-        (p.prezzo&&parseFloat(p.prezzo)>0?'<span style="color:var(--gold);font-size:11px">€'+parseFloat(p.prezzo).toFixed(2)+'</span>':'')+
-        '<button class="btn btn-sm" style="color:red;padding:2px 6px" onclick="cucinaRmPiatto(\''+p.id+'\')">✕</button></span></div>';
-    });
-  });
-  html+='<div style="font-size:12px;color:var(--muted);padding:8px 0;text-align:center">'+menuOggi.length+' piatti nel menu</div>';
-  div.innerHTML=html;
-}
-
-async function cucinaAddPiatto(){
-  const nome=document.getElementById('c-nuovo-nome').value.trim();
-  const cat=document.getElementById('c-nuovo-cat').value;
-  const prezzo=document.getElementById('c-nuovo-prezzo').value;
-  if(!nome){toast('Inserisci il nome del piatto','var(--red)');return;}
-  const piatto={id:'p'+Date.now(),nome:nome,cat:cat,prezzo:prezzo||'0'};
-  menuOggi.push(piatto);
-  // Salva anche in libreria per riuso futuro
-  if(!LIB.find(l=>l.nome.toLowerCase()===nome.toLowerCase())){
-    LIB.push({id:piatto.id,nome:nome,cat:cat,prezzo:prezzo||'0'});
-    saveLib();
-  }
-  await salvaMenuFb();
-  document.getElementById('c-nuovo-nome').value='';
-  document.getElementById('c-nuovo-prezzo').value='';
-  renderMenuCucina();
-  toast('✅ '+nome+' aggiunto','var(--green)');
-}
-
-async function cucinaRmPiatto(id){
-  menuOggi=menuOggi.filter(p=>p.id!==id);
-  await salvaMenuFb();
-  renderMenuCucina();
-}
-
-async function salvaMenuFb(){
-  const chiave='tc_menu_'+servizio+'_'+oggi();
-  // Salva sempre in locale
-  localStorage.setItem(chiave,JSON.stringify(menuOggi));
-  // Salva su Firebase
-  const url=fbUrl('menu_'+servizio+'_'+oggi());
-  if(!url) return;
-  const obj={};menuOggi.forEach(p=>{obj[p.id]=p;});
-  try{await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj)});}
-  catch(e){console.log('Firebase save error:',e);}
-}
-
-/* Libreria piatti salvati */
+/* Libreria a 4 colonne */
 function cucinaShowLibreria(){document.getElementById('cucina-libreria').classList.remove('hidden');renderLibreria();}
 function cucinaHideLibreria(){document.getElementById('cucina-libreria').classList.add('hidden');}
 
 function renderLibreria(){
   const q=(document.getElementById('lib-search')?.value||'').toLowerCase();
-  const catFiltro=document.getElementById('lib-cat-filter')?.value||'tutti';
-  let filtered=LIB;
-  if(q) filtered=filtered.filter(p=>p.nome.toLowerCase().includes(q));
-  if(catFiltro!=='tutti') filtered=filtered.filter(p=>p.cat===catFiltro);
-  // Ordina per categoria e nome
-  const ordCat=['primo','secondo','contorno','pizza','pesce','dolce','bevanda','altro'];
-  filtered.sort((a,b)=>{const ai=ordCat.indexOf(a.cat),bi=ordCat.indexOf(b.cat);return ai!==bi?ai-bi:a.nome.localeCompare(b.nome);});
-  const div=document.getElementById('libreria-lista');
-  if(!filtered.length){div.innerHTML='<div style="color:var(--muted);padding:20px;text-align:center">'+(q||catFiltro!=='tutti'?'Nessun risultato':'Libreria vuota')+'</div>';return;}
-  const inMenu=new Set(menuOggi.map(m=>m.nome.toLowerCase()));
-  let lastCat='';
-  let html='';
-  filtered.forEach(p=>{
-    if(p.cat!==lastCat){
-      lastCat=p.cat;
-      html+='<div style="font-size:10px;font-weight:800;color:var(--green);text-transform:uppercase;letter-spacing:1px;padding:10px 0 4px;border-bottom:1px solid #eee;margin-top:6px">'+(CATS[p.cat]||p.cat)+' ('+filtered.filter(x=>x.cat===p.cat).length+')</div>';
-    }
-    const gia=inMenu.has(p.nome.toLowerCase());
-    html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 4px;border-bottom:1px solid #f5f5f5">'+
-      '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(CAT_ICONS[p.cat]||'📌')+' '+p.nome+'</div></div>'+
-      '<div style="display:flex;gap:4px;flex-shrink:0">'+
-      (gia?'<span style="font-size:10px;color:var(--green);font-weight:700;padding:4px 8px">✓ Aggiunto</span>':
-      '<button class="btn btn-sm btn-green" style="font-size:11px;padding:4px 10px" onclick="libAggiungiAlMenu(\''+p.id+'\')">+ Menu</button>')+
-      '</div></div>';
-  });
-  html+='<div style="text-align:center;padding:10px;font-size:11px;color:var(--muted)">'+filtered.length+' piatti in libreria</div>';
-  div.innerHTML=html;
+  const pranzoNomi=new Set(menuPranzo.map(m=>m.nome.toLowerCase()));
+  const osteriaNomi=new Set(menuOsteria.map(m=>m.nome.toLowerCase()));
+  function renderCol(cat,divId){
+    let items=LIB.filter(p=>cat.includes(p.cat));
+    if(q) items=items.filter(p=>p.nome.toLowerCase().includes(q));
+    items.sort((a,b)=>a.nome.localeCompare(b.nome));
+    const div=document.getElementById(divId);
+    if(!items.length){div.innerHTML='<div style="color:var(--muted);padding:8px;font-size:11px">Nessun piatto</div>';return;}
+    div.innerHTML=items.map(p=>{
+      const inP=pranzoNomi.has(p.nome.toLowerCase());
+      const inO=osteriaNomi.has(p.nome.toLowerCase());
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 2px;border-bottom:1px solid #f5f5f5;gap:4px">'+
+        '<span style="font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+p.nome+'">'+p.nome+'</span>'+
+        '<div style="display:flex;gap:2px;flex-shrink:0">'+
+        (inP?'<span style="font-size:9px;color:var(--green);padding:1px 4px">✓P</span>':'<button style="font-size:9px;padding:1px 4px;border:1px solid var(--green);border-radius:4px;background:#fff;color:var(--green);cursor:pointer" onclick="libAddTo(\''+p.id+'\',\'pranzo\')">+P</button>')+
+        (inO?'<span style="font-size:9px;color:var(--gold);padding:1px 4px">✓O</span>':'<button style="font-size:9px;padding:1px 4px;border:1px solid var(--gold);border-radius:4px;background:#fff;color:var(--gold);cursor:pointer" onclick="libAddTo(\''+p.id+'\',\'osteria\')">+O</button>')+
+        '</div></div>';
+    }).join('');
+  }
+  renderCol(['primo'],'lib-col-primo');
+  renderCol(['secondo','pesce'],'lib-col-secondo');
+  renderCol(['contorno'],'lib-col-contorno');
+  renderCol(['dolce','bevanda','altro','pizza'],'lib-col-dolce');
 }
 
-async function libAggiungiAlMenu(id){
-  const p=LIB.find(l=>l.id===id);
-  if(!p) return;
+async function libAddTo(id,tipo){
+  const p=LIB.find(l=>l.id===id);if(!p)return;
   const piatto={id:'p'+Date.now(),nome:p.nome,cat:p.cat,prezzo:p.prezzo||'0'};
-  menuOggi.push(piatto);
-  await salvaMenuFb();
-  renderMenuCucina();renderLibreria();
-  toast('✅ '+p.nome+' aggiunto al menu','var(--green)');
+  if(tipo==='pranzo'){menuPranzo.push(piatto);}else{menuOsteria.push(piatto);}
+  await salvaDueMenu(tipo);
+  renderMenuColonna(tipo);renderLibreria();
+  toast('✅ '+p.nome+' → '+tipo,'var(--green)');
 }
 
-function libElimina(id){
-  if(!confirm('Rimuovere dalla libreria?')) return;
-  LIB=LIB.filter(p=>p.id!==id);saveLib();renderLibreria();
+function libAddAllCat(cat,tipo){
+  const items=LIB.filter(p=>p.cat===cat);
+  const esistenti=tipo==='pranzo'?new Set(menuPranzo.map(m=>m.nome.toLowerCase())):new Set(menuOsteria.map(m=>m.nome.toLowerCase()));
+  let count=0;
+  items.forEach(p=>{
+    if(esistenti.has(p.nome.toLowerCase()))return;
+    const piatto={id:'p'+Date.now()+'_'+count,nome:p.nome,cat:p.cat,prezzo:p.prezzo||'0'};
+    if(tipo==='pranzo'){menuPranzo.push(piatto);}else{menuOsteria.push(piatto);}
+    count++;
+  });
+  if(count>0){salvaDueMenu(tipo);renderMenuColonna(tipo);renderLibreria();}
+  toast('✅ '+count+' piatti aggiunti a '+tipo,'var(--green)');
 }
 
-/* Comande cucina */
 async function cucinaRefresh(){
   const url=fbUrl('ordini_'+servizio+'_'+oggi());
   if(!url) return;
