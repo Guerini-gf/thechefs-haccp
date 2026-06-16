@@ -89,8 +89,8 @@ input,select,textarea{font-family:inherit;font-size:13px;padding:9px 11px;border
 <div style="background:rgba(0,0,0,.2);padding:6px 20px;border-radius:8px;font-size:16px;font-weight:800;letter-spacing:2px">TheChefs Comande</div>
 <div style="position:absolute;right:14px"><button class="btn bs bw" onclick="location.reload()">⚙️</button></div></div>
 <div id="S2M" class="duo">
-<div class="col-menu"><div class="col-h" style="background:var(--g)">📋 Menu Pranzo — <span id="s2-data"></span></div><div class="col-body" id="s2-pl"></div><div class="col-foot"><div style="display:flex;gap:5px;padding:8px"><input id="p-new" placeholder="Nuovo piatto..." style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();addP('pranzo')}"><select id="p-cat" style="width:auto;min-width:80px;font-size:11px"><option value="antipasto">🍽️ Antipasto</option><option value="primo">🍝 Primo</option><option value="secondo">🥩 Secondo</option><option value="contorno">🥗 Contorno</option><option value="pesce">🐟 Pesce</option><option value="dolce">🍰 Dolce</option></select></div><div class="col-btns"><button style="background:var(--g)" onclick="addP('pranzo')">INSERISCI</button><button style="background:var(--go)" onclick="saveM('pranzo')">SALVA</button></div></div></div>
-<div class="col-menu"><div class="col-h" style="background:var(--gd)">📋 Menu Osteria</div><div class="col-body" id="s2-ol"></div><div class="col-foot"><div style="display:flex;gap:5px;padding:8px"><input id="o-new" placeholder="Nuovo piatto..." style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();addP('osteria')}"><select id="o-cat" style="width:auto;min-width:80px;font-size:11px"><option value="antipasto">🍽️ Antipasto</option><option value="primo">🍝 Primo</option><option value="secondo">🥩 Secondo</option><option value="contorno">🥗 Contorno</option><option value="pesce">🐟 Pesce</option><option value="dolce">🍰 Dolce</option></select></div><div class="col-btns"><button style="background:var(--g)" onclick="addP('osteria')">INSERISCI</button><button style="background:var(--go)" onclick="saveM('osteria')">SALVA</button></div></div></div>
+<div class="col-menu"><div class="col-h" style="background:var(--g)">📋 Menu Pranzo — <span id="s2-data"></span></div><div class="col-body" id="s2-pl"></div><div class="col-foot"><div style="display:flex;gap:5px;padding:8px"><input id="p-new" placeholder="Nuovo piatto..." style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();addP('pranzo')}"><select id="p-cat" style="width:auto;min-width:80px;font-size:11px"><option value="antipasto">🍽️ Antipasto</option><option value="primo">🍝 Primo</option><option value="secondo">🥩 Secondo</option><option value="contorno">🥗 Contorno</option><option value="pesce">🐟 Pesce</option><option value="dolce">🍰 Dolce</option></select></div><div class="col-btns"><button style="background:var(--g)" onclick="addP('pranzo')">INSERISCI</button><button style="background:var(--go)" onclick="saveM('pranzo')">SALVA</button><button style="background:#e53935;font-size:11px" onclick="resetMenu('pranzo')">🗑️</button></div></div></div>
+<div class="col-menu"><div class="col-h" style="background:var(--gd)">📋 Menu Osteria</div><div class="col-body" id="s2-ol"></div><div class="col-foot"><div style="display:flex;gap:5px;padding:8px"><input id="o-new" placeholder="Nuovo piatto..." style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();addP('osteria')}"><select id="o-cat" style="width:auto;min-width:80px;font-size:11px"><option value="antipasto">🍽️ Antipasto</option><option value="primo">🍝 Primo</option><option value="secondo">🥩 Secondo</option><option value="contorno">🥗 Contorno</option><option value="pesce">🐟 Pesce</option><option value="dolce">🍰 Dolce</option></select></div><div class="col-btns"><button style="background:var(--g)" onclick="addP('osteria')">INSERISCI</button><button style="background:var(--go)" onclick="saveM('osteria')">SALVA</button><button style="background:#e53935;font-size:11px" onclick="resetMenu('osteria')">🗑️</button></div></div></div>
 </div>
 <div style="display:flex;gap:8px;padding:0 8px 8px;position:fixed;bottom:0;left:0;right:0;background:var(--bg)">
 <button style="flex:1;padding:12px;border:none;border-radius:10px;background:var(--g);color:#fff;font-size:15px;font-weight:700;cursor:pointer" onclick="showCmd()">🔥 Comande <span id="s2-cnt" style="background:var(--r);padding:1px 8px;border-radius:16px;font-size:12px">0</span></button>
@@ -643,10 +643,15 @@ const DB=[
 
 // Auto-load library — forza sempre la ricostruzione da DB se LIB è incompleta
 function initLib(){
-  DB.forEach((p,i)=>{if(!LIB.find(l=>l.nome.toLowerCase()===p.nome.toLowerCase()))LIB.push({id:'d'+i,nome:p.nome,cat:p.cat})});
+  // Ricostruisce sempre da DB per evitare dati corrotti in localStorage
+  LIB=[];
+  DB.forEach((p,i)=>{LIB.push({id:'d'+i,nome:p.nome,cat:p.cat})});
   sLib();
+  console.log('LIB inizializzata:',LIB.length,'piatti');
 }
-if(LIB.length<100)initLib();
+// Valida LIB: se ha voci senza nome o cat corrette, rifa da DB
+const catValid=['antipasto','primo','secondo','contorno','pesce','dolce','bevanda','altro'];
+if(LIB.length<100||LIB.some(p=>!p.nome||!p.cat||!catValid.includes(p.cat))){initLib()}
 
 async function testFb(){
   const f=$('s-fb').value.trim();const d=$('fb-test');
@@ -680,17 +685,24 @@ function cop(d){cov=Math.max(1,Math.min(30,cov+d));$('s1c-cop').textContent=cov}
 async function loadSala(){
   const k='tc_m_'+srv+'_'+oggi(),u=fb('menu_'+srv+'_'+oggi());let menu=[];
   const div=$('s1-piatti');
-  // mostra loading
   if(div)div.innerHTML='<div style="text-align:center;padding:24px;color:var(--m)">⏳ Caricamento menu...</div>';
+  function validaMenu(raw){
+    // raw può essere array o object (da Firebase). Filtra voci valide.
+    const arr=Array.isArray(raw)?raw:Object.values(raw);
+    return arr.filter(p=>p&&typeof p==='object'&&typeof p.nome==='string'&&p.nome.trim()&&p.cat);
+  }
   if(u){
     try{
-      const r=await fetch(u+'?t='+Date.now()); // cache-bust
+      const r=await fetch(u+'?t='+Date.now());
       if(!r.ok)throw new Error('HTTP '+r.status);
       const d=await r.json();
-      if(d&&Object.keys(d).length>0){menu=Object.values(d);localStorage.setItem(k,JSON.stringify(menu));console.log('Menu caricato da Firebase:',menu.length,'piatti')}
-      else{menu=JSON.parse(localStorage.getItem(k)||'[]');console.log('Firebase vuoto, uso locale:',menu.length,'piatti')}
-    }catch(e){console.error('loadSala fetch error:',e);menu=JSON.parse(localStorage.getItem(k)||'[]')}
-  } else menu=JSON.parse(localStorage.getItem(k)||'[]');
+      if(d&&typeof d==='object'&&Object.keys(d).length>0){
+        menu=validaMenu(d);
+        if(menu.length>0){localStorage.setItem(k,JSON.stringify(menu));console.log('Menu da Firebase:',menu.length,'piatti')}
+        else{menu=validaMenu(JSON.parse(localStorage.getItem(k)||'[]'));console.log('Firebase invalido, uso locale:',menu.length)}
+      }else{menu=validaMenu(JSON.parse(localStorage.getItem(k)||'[]'));console.log('Firebase vuoto, uso locale:',menu.length)}
+    }catch(e){console.error('loadSala:',e);menu=validaMenu(JSON.parse(localStorage.getItem(k)||'[]'))}
+  } else menu=validaMenu(JSON.parse(localStorage.getItem(k)||'[]'));
   if(srv==='pranzo')mP=menu;else mO=menu;
   if(!menu.length)toast('⚠️ Menu '+srv+' non ancora inserito dalla cucina','#e65100');
   rSala()}
@@ -751,10 +763,11 @@ async function rfSt(){
 function initCuc(){$('S2').classList.remove('hid');$('s2-info').textContent=C.nome;$('s2-data').textContent=new Date().toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'});loadCuc();refresh();rtm=setInterval(refresh,3000)}
 
 async function loadCuc(){
+  function validaMenu(raw){const arr=Array.isArray(raw)?raw:Object.values(raw);return arr.filter(p=>p&&typeof p==='object'&&typeof p.nome==='string'&&p.nome.trim()&&p.cat)}
   for(const t of['pranzo','osteria']){
     const k='tc_m_'+t+'_'+oggi(),u=fb('menu_'+t+'_'+oggi());let m=[];
-    if(u){try{const r=await fetch(u);const d=await r.json();if(d){m=Object.values(d);localStorage.setItem(k,JSON.stringify(m))}else m=JSON.parse(localStorage.getItem(k)||'[]')}catch(e){m=JSON.parse(localStorage.getItem(k)||'[]')}}
-    else m=JSON.parse(localStorage.getItem(k)||'[]');
+    if(u){try{const r=await fetch(u+'?t='+Date.now());const d=await r.json();if(d&&typeof d==='object'&&Object.keys(d).length>0){m=validaMenu(d);if(m.length>0)localStorage.setItem(k,JSON.stringify(m));else m=validaMenu(JSON.parse(localStorage.getItem(k)||'[]'))}else m=validaMenu(JSON.parse(localStorage.getItem(k)||'[]'))}catch(e){m=validaMenu(JSON.parse(localStorage.getItem(k)||'[]'))}}
+    else m=validaMenu(JSON.parse(localStorage.getItem(k)||'[]'));
     if(t==='pranzo')mP=m;else mO=m}
   rCol('pranzo');rCol('osteria')}
 
@@ -791,13 +804,16 @@ function editP(t,id){
 
 async function saveM(t){
   const m=t==='pranzo'?mP:mO,k='tc_m_'+t+'_'+oggi();
+  // Garantisce ID unici prima di salvare
+  const seen=new Set();
+  m.forEach((p,i)=>{if(!p.id||seen.has(p.id)){p.id='p'+(Date.now()+i)+'_'+Math.random().toString(36).slice(2,6)};seen.add(p.id)});
   localStorage.setItem(k,JSON.stringify(m));
   const u=fb('menu_'+t+'_'+oggi());if(!u){toast('⚠️ Firebase non configurato — salvato in locale','#e65100');return}
   try{
-    const r=await fetch(u,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({})}); // reset
-    const o={};m.forEach((p,i)=>{o[p.id||'p'+i]=p});
-    await fetch(u,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(o)});
-    toast('💾 Menu '+t+' salvato su Firebase','var(--g)')
+    const o={};m.forEach(p=>{o[p.id]=p}); // un solo PUT atomico
+    const r=await fetch(u,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(o)});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    toast('💾 Menu '+t+' salvato ('+m.length+' piatti)','var(--g)')
   }catch(e){console.error('saveM error',e);toast('⚠️ Errore Firebase — salvato solo in locale','#e65100')}}
 
 function showCmd(){$('S2M').classList.add('hid');$('S2C').classList.remove('hid');refresh()}
@@ -822,6 +838,14 @@ function rLib(){
         (iO?'<span style="font-size:8px;color:var(--go);padding:1px 3px">✓O</span>':'<button style="font-size:8px;padding:1px 4px;border:1px solid var(--go);border-radius:3px;background:#fff;color:var(--go);cursor:pointer" onclick="lAdd(\''+p.id+'\',\'osteria\')">+O</button>')+
         '</span></div>'}).join('')}
   rc(['antipasto','primo'],$('lc0'));rc(['secondo'],$('lc1'));rc(['pesce'],$('lc2'));rc(['contorno','dolce','bevanda','altro'],$('lc3'))}
+
+async function resetMenu(t){
+  if(!confirm('Cancellare TUTTO il menu '+t+' di oggi? Non si può annullare.'))return;
+  if(t==='pranzo')mP=[];else mO=[];
+  const k='tc_m_'+t+'_'+oggi();localStorage.removeItem(k);
+  const u=fb('menu_'+t+'_'+oggi());
+  if(u){try{await fetch(u,{method:'DELETE'})}catch(e){}}
+  rCol(t);toast('🗑️ Menu '+t+' azzerato','var(--r)')}
 
 async function lAdd(id,t){const p=LIB.find(l=>l.id===id);if(!p)return;const pi={id:'p'+Date.now(),nome:p.nome,cat:p.cat};if(t==='pranzo')mP.push(pi);else mO.push(pi);await saveM(t);rCol(t);rLib();toast('✅ '+p.nome+' → '+t,'var(--g)')}
 
