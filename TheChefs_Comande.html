@@ -96,14 +96,16 @@ input,select,textarea{font-family:inherit;font-size:13px;padding:9px 11px;border
 <button style="flex:1;padding:12px;border:none;border-radius:10px;background:var(--g);color:#fff;font-size:15px;font-weight:700;cursor:pointer" onclick="showCmd()">🔥 Comande <span id="s2-cnt" style="background:var(--r);padding:1px 8px;border-radius:16px;font-size:12px">0</span></button>
 <button style="flex:1;padding:12px;border:none;border-radius:10px;background:#fff;color:var(--g);font-size:15px;font-weight:700;cursor:pointer;border:2px solid var(--g)" onclick="showLib()">📚 Libreria</button></div>
 <div id="S2C" class="hid" style="padding:8px;height:calc(100vh - 56px);overflow-y:auto"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:16px;font-weight:700">🔥 Comande</div><div><button class="btn bs bo" onclick="refresh()">🔄</button> <button class="btn bs bg" onclick="hideCmd()">← Menu</button></div></div><div id="s2-cmd"></div></div>
-<div id="S2L" class="hid ov" onclick="if(event.target===this)hideLib()"><div class="ov-box">
-<div style="padding:12px 16px;background:var(--g);color:#fff;display:flex;justify-content:space-between;align-items:center"><div style="font-size:16px;font-weight:700">📚 Libreria — 513 Piatti</div><div style="display:flex;gap:6px"><input id="lib-q" placeholder="Cerca..." oninput="rLib()" style="width:180px;font-size:12px;padding:5px 10px;border-radius:6px;border:none"><button style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:5px 12px;border-radius:6px;cursor:pointer;font-weight:700" onclick="hideLib()">✕</button></div></div>
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;min-height:55vh">
-<div style="border-right:1px solid #eee"><div style="background:#e8f5e9;padding:6px 10px;font-size:10px;font-weight:800;text-transform:uppercase;color:var(--g)">🍽️ Antipasti / 🍝 Primi</div><div id="lc0" style="max-height:55vh;overflow-y:auto;font-size:11px;padding:2px"></div></div>
-<div style="border-right:1px solid #eee"><div style="background:#fce4ec;padding:6px 10px;font-size:10px;font-weight:800;text-transform:uppercase;color:var(--r)">🥩 Secondi Carne</div><div id="lc1" style="max-height:55vh;overflow-y:auto;font-size:11px;padding:2px"></div></div>
-<div style="border-right:1px solid #eee"><div style="background:#e3f2fd;padding:6px 10px;font-size:10px;font-weight:800;text-transform:uppercase;color:var(--bl)">🐟 Pesce</div><div id="lc2" style="max-height:55vh;overflow-y:auto;font-size:11px;padding:2px"></div></div>
-<div><div style="background:#fff3e0;padding:6px 10px;font-size:10px;font-weight:800;text-transform:uppercase;color:#e65100">🥗 Contorni / 🍰 Dolci</div><div id="lc3" style="max-height:55vh;overflow-y:auto;font-size:11px;padding:2px"></div></div>
-</div></div></div>
+<div id="S2L" class="hid ov" onclick="if(event.target===this)hideLib()"><div class="ov-box" style="max-width:680px">
+<div style="padding:12px 16px;background:var(--g);color:#fff;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10">
+  <div style="font-size:15px;font-weight:700">📚 Libreria — <span id="lib-cnt">513</span> Piatti</div>
+  <div style="display:flex;gap:6px;align-items:center">
+    <input id="lib-q" placeholder="🔍 Cerca piatto..." oninput="rLib()" style="width:180px;font-size:12px;padding:6px 10px;border-radius:6px;border:none;outline:none">
+    <button style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:6px 14px;border-radius:6px;cursor:pointer;font-weight:700;font-size:14px" onclick="hideLib()">✕</button>
+  </div>
+</div>
+<div id="lib-body" style="overflow-y:auto;max-height:calc(100vh - 120px);padding:6px 0"></div>
+</div></div>
 </div>
 
 <div id="pa" class="hid"></div>
@@ -643,26 +645,44 @@ const DB=[
 
 // Auto-load library — forza sempre la ricostruzione da DB se LIB è incompleta
 function initLib(){
-  // Ricostruisce sempre da DB per evitare dati corrotti in localStorage
+  // Ricostruisce da DB pulito, scarta qualsiasi dato corrotto
   LIB=[];
   DB.forEach((p,i)=>{LIB.push({id:'d'+i,nome:p.nome,cat:p.cat})});
   sLib();
   console.log('LIB inizializzata:',LIB.length,'piatti');
 }
-// Valida LIB: se ha voci senza nome o cat corrette, rifa da DB
+// Valida LIB: ricostruisce se incompleta, corrotta, o contiene artefatti [file:N]
 const catValid=['antipasto','primo','secondo','contorno','pesce','dolce','bevanda','altro'];
-if(LIB.length<100||LIB.some(p=>!p.nome||!p.cat||!catValid.includes(p.cat))){initLib()}
+if(LIB.length<100||LIB.some(p=>!p.nome||!p.cat||!catValid.includes(p.cat)||p.nome.includes('[file:'))){initLib()}
 
 async function testFb(){
   const f=$('s-fb').value.trim();const d=$('fb-test');
-  if(!f){d.style.color='var(--r)';d.textContent='⚠️ Inserisci prima l\'URL Firebase';return}
-  d.style.color='var(--m)';d.textContent='⏳ Test in corso...';
+  if(!f){d.style.color='var(--r)';d.innerHTML='⚠️ Inserisci prima l\'URL Firebase';return}
+  d.style.color='var(--m)';d.innerHTML='⏳ Test in corso...';
+  // Normalizza URL: rimuove slash finale e aggiunge .firebaseio.com se mancante
+  let url=f.replace(/\/+$/,'');
+  if(!url.includes('firebaseio.com')&&!url.includes('firebase.io'))url=url+'.firebaseio.com';
   try{
-    const url=f.replace(/\/$/,'')+'/comande/ping.json';
-    const r=await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({ts:Date.now()})});
-    if(r.ok){d.style.color='green';d.textContent='✅ Firebase connesso! ('+f.split('//')[1]?.split('.')[0]+')'}
-    else{d.style.color='var(--r)';d.textContent='❌ Errore HTTP '+r.status+' — controlla URL e regole DB'}
-  }catch(e){d.style.color='var(--r)';d.textContent='❌ Connessione fallita: '+e.message}}
+    const testUrl=url+'/comande/ping.json';
+    const r=await fetch(testUrl,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({ts:Date.now()})});
+    if(r.ok){
+      d.style.color='green';
+      d.innerHTML='✅ Firebase connesso e scrivibile!';
+    } else if(r.status===401||r.status===403){
+      const dbId=url.split('//')[1]?.split('.')[0];
+      d.style.color='var(--r)';
+      d.innerHTML='❌ Errore '+r.status+' — Database bloccato.<br>'
+        +'<b>Devi aprire le regole Firebase:</b><br>'
+        +'<a href="https://console.firebase.google.com/project/'+dbId+'/database/'+dbId+'-default-rtdb/rules" target="_blank" style="color:var(--bl)">→ Apri Regole Firebase</a><br>'
+        +'<span style="font-size:10px">Imposta: <code style="background:#f5f5f5;padding:1px 4px">{ "rules": { ".read": true, ".write": true } }</code></span>';
+    } else {
+      d.style.color='var(--r)';d.innerHTML='❌ Errore HTTP '+r.status+' — controlla URL';
+    }
+  }catch(e){
+    d.style.color='var(--r)';
+    d.innerHTML='❌ Connessione fallita.<br><span style="font-size:10px">Verifica che l\'URL sia corretto: https://NomeProgetto-default-rtdb.europe-west1.firebaseio.com</span>';
+  }
+}
 
 // Setup
 if(C.fb){$('s-nome').value=C.nome||'';$('s-fb').value=C.fb||'';$('s-tav').value=C.tav||40;$('s-user').value=C.user||''}
@@ -824,20 +844,41 @@ function hideLib(){$('S2L').classList.add('hid')}
 function rLib(){
   const q=($('lib-q')?.value||'').toLowerCase();
   const pN=new Set(mP.map(m=>m.nome.toLowerCase())),oN=new Set(mO.map(m=>m.nome.toLowerCase()));
-  function rc(cats,div){
-    let items=LIB.filter(p=>cats.includes(p.cat));
+  // Pulisce LIB da eventuali voci corrotte (con [file:N] o senza cat valida)
+  const catValid=['antipasto','primo','secondo','contorno','pesce','dolce','bevanda','altro'];
+  const libPulita=LIB.filter(p=>p.nome&&!p.nome.includes('[file:')&&catValid.includes(p.cat));
+  const SEZIONI=[
+    {label:'🍽️ Antipasti',     bg:'#e8f5e9',col:'#2e7d32', cats:['antipasto']},
+    {label:'🍝 Primi',          bg:'#fff8e1',col:'#f57f17', cats:['primo']},
+    {label:'🥩 Secondi Carne',  bg:'#fce4ec',col:'#c62828', cats:['secondo']},
+    {label:'🐟 Pesce',          bg:'#e3f2fd',col:'#1565c0', cats:['pesce']},
+    {label:'🥗 Contorni',       bg:'#f3e5f5',col:'#6a1b9a', cats:['contorno']},
+    {label:'🍰 Dolci',          bg:'#fff3e0',col:'#e65100', cats:['dolce']},
+    {label:'🍷 Bevande / Altro', bg:'#fafafa',col:'#555',    cats:['bevanda','altro']},
+  ];
+  let h='',tot=0;
+  SEZIONI.forEach(s=>{
+    let items=libPulita.filter(p=>s.cats.includes(p.cat));
     if(q)items=items.filter(p=>p.nome.toLowerCase().includes(q));
     items.sort((a,b)=>a.nome.localeCompare(b.nome));
-    if(!items.length){div.innerHTML='<div style="color:var(--m);padding:6px">—</div>';return}
-    div.innerHTML=items.map(p=>{
+    if(!items.length)return;
+    tot+=items.length;
+    h+='<div style="background:'+s.bg+';padding:7px 14px;font-size:10px;font-weight:800;text-transform:uppercase;color:'+s.col+';letter-spacing:.5px;position:sticky;top:0">'+s.label+' ('+items.length+')</div>';
+    items.forEach(p=>{
       const iP=pN.has(p.nome.toLowerCase()),iO=oN.has(p.nome.toLowerCase());
-      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 2px;border-bottom:1px solid #f5f5f5">'+
-        '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+p.nome+'">'+p.nome+'</span>'+
-        '<span style="display:flex;gap:2px;flex-shrink:0">'+
-        (iP?'<span style="font-size:8px;color:var(--g);padding:1px 3px">✓P</span>':'<button style="font-size:8px;padding:1px 4px;border:1px solid var(--g);border-radius:3px;background:#fff;color:var(--g);cursor:pointer" onclick="lAdd(\''+p.id+'\',\'pranzo\')">+P</button>')+
-        (iO?'<span style="font-size:8px;color:var(--go);padding:1px 3px">✓O</span>':'<button style="font-size:8px;padding:1px 4px;border:1px solid var(--go);border-radius:3px;background:#fff;color:var(--go);cursor:pointer" onclick="lAdd(\''+p.id+'\',\'osteria\')">+O</button>')+
-        '</span></div>'}).join('')}
-  rc(['antipasto','primo'],$('lc0'));rc(['secondo'],$('lc1'));rc(['pesce'],$('lc2'));rc(['contorno','dolce','bevanda','altro'],$('lc3'))}
+      h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-bottom:1px solid #f0f0f0;gap:8px">';
+      h+='<span style="flex:1;font-size:13px">'+p.nome+'</span>';
+      h+='<span style="display:flex;gap:4px;flex-shrink:0">';
+      h+=(iP?'<span style="font-size:10px;color:var(--g);font-weight:700;padding:3px 6px;background:#e8f5e9;border-radius:4px">✓P</span>'
+            :'<button style="font-size:11px;padding:4px 8px;border:1.5px solid var(--g);border-radius:5px;background:#fff;color:var(--g);cursor:pointer;font-weight:700" onclick="lAdd(\''+p.id+'\',\'pranzo\')">+Pranzo</button>');
+      h+=(iO?'<span style="font-size:10px;color:var(--gd);font-weight:700;padding:3px 6px;background:#e8f5e9;border-radius:4px">✓O</span>'
+            :'<button style="font-size:11px;padding:4px 8px;border:1.5px solid var(--gd);border-radius:5px;background:#fff;color:var(--gd);cursor:pointer;font-weight:700" onclick="lAdd(\''+p.id+'\',\'osteria\')">+Osteria</button>');
+      h+='</span></div>'});
+  });
+  if(!h)h='<div style="text-align:center;padding:40px;color:var(--m)">Nessun piatto trovato per "'+q+'"</div>';
+  $('lib-body').innerHTML=h;
+  $('lib-cnt').textContent=q?tot:libPulita.length;
+}
 
 async function resetMenu(t){
   if(!confirm('Cancellare TUTTO il menu '+t+' di oggi? Non si può annullare.'))return;
