@@ -62,6 +62,8 @@ input,select,textarea{font-family:inherit;font-size:13px;padding:9px 11px;border
 <div style="margin-top:16px">
 <div onclick="go('sala')" style="display:flex;align-items:center;gap:12px;padding:14px;border:2px solid #eee;border-radius:10px;cursor:pointer;margin-bottom:8px"><span style="font-size:26px">📝</span><div><div style="font-weight:700">Sala / Cameriere</div><div style="font-size:11px;color:var(--m)">Prendi comande dal telefono</div></div></div>
 <div onclick="go('cucina')" style="display:flex;align-items:center;gap:12px;padding:14px;border:2px solid #eee;border-radius:10px;cursor:pointer"><span style="font-size:26px">👨‍🍳</span><div><div style="font-weight:700">Cucina / Chef</div><div style="font-size:11px;color:var(--m)">Ricevi comande · Stampa termica</div></div></div>
+<button onclick="testFb()" style="width:100%;margin-top:10px;padding:10px;background:#f0f0f0;border:1px solid #ccc;border-radius:10px;cursor:pointer;font-size:12px;font-weight:600">🔌 Test connessione Firebase</button>
+<div id="fb-test" style="font-size:11px;margin-top:6px;color:var(--m);text-align:center"></div>
 </div></div></div>
 
 <!-- SALA -->
@@ -639,8 +641,23 @@ const DB=[
 {nome:'Uova in Trippa',cat:'secondo'},
 {nome:'Zampone',cat:'secondo'}];
 
-// Auto-load library
-if(LIB.length<100){DB.forEach((p,i)=>{if(!LIB.find(l=>l.nome.toLowerCase()===p.nome.toLowerCase()))LIB.push({id:'d'+i,nome:p.nome,cat:p.cat})});sLib()}
+// Auto-load library — forza sempre la ricostruzione da DB se LIB è incompleta
+function initLib(){
+  DB.forEach((p,i)=>{if(!LIB.find(l=>l.nome.toLowerCase()===p.nome.toLowerCase()))LIB.push({id:'d'+i,nome:p.nome,cat:p.cat})});
+  sLib();
+}
+if(LIB.length<100)initLib();
+
+async function testFb(){
+  const f=$('s-fb').value.trim();const d=$('fb-test');
+  if(!f){d.style.color='var(--r)';d.textContent='⚠️ Inserisci prima l\'URL Firebase';return}
+  d.style.color='var(--m)';d.textContent='⏳ Test in corso...';
+  try{
+    const url=f.replace(/\/$/,'')+'/comande/ping.json';
+    const r=await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({ts:Date.now()})});
+    if(r.ok){d.style.color='green';d.textContent='✅ Firebase connesso! ('+f.split('//')[1]?.split('.')[0]+')'}
+    else{d.style.color='var(--r)';d.textContent='❌ Errore HTTP '+r.status+' — controlla URL e regole DB'}
+  }catch(e){d.style.color='var(--r)';d.textContent='❌ Connessione fallita: '+e.message}}
 
 // Setup
 if(C.fb){$('s-nome').value=C.nome||'';$('s-fb').value=C.fb||'';$('s-tav').value=C.tav||40;$('s-user').value=C.user||''}
@@ -653,7 +670,7 @@ function go(r){
 }
 
 /* ═══ SALA ═══ */
-function initSala(){$('S1').classList.remove('hid');$('s1-info').textContent=C.nome+' · '+C.user;mkTav();rfSt();rtm=setInterval(rfSt,5000)}
+function initSala(){$('S1').classList.remove('hid');$('s1-info').textContent=C.nome+' · '+C.user;mkTav();rfSt();rtm=setInterval(rfSt,5000);setInterval(()=>{if(srv)loadSala()},20000)}
 function mkTav(){let h='';for(let i=1;i<=C.tav;i++)h+='<div class="tv" onclick="selT('+i+')">'+i+'</div>';$('tgrid').innerHTML=h}
 function tab(t){['A','B','C','D'].forEach(x=>$('S1'+x).classList.add('hid'));$('S1'+t).classList.remove('hid');document.querySelectorAll('.tbb>div').forEach((d,i)=>d.classList.toggle('a',i==={A:0,D:1}[t]||false));if(t==='D')rfSt()}
 function selT(n){tav=n;sel=[];cov=2;tab('B');$('s1-tav').textContent=n}
@@ -662,13 +679,25 @@ function cop(d){cov=Math.max(1,Math.min(30,cov+d));$('s1c-cop').textContent=cov}
 
 async function loadSala(){
   const k='tc_m_'+srv+'_'+oggi(),u=fb('menu_'+srv+'_'+oggi());let menu=[];
-  if(u){try{const r=await fetch(u);const d=await r.json();if(d){menu=Object.values(d);localStorage.setItem(k,JSON.stringify(menu))}else menu=JSON.parse(localStorage.getItem(k)||'[]')}catch(e){menu=JSON.parse(localStorage.getItem(k)||'[]')}}
-  else menu=JSON.parse(localStorage.getItem(k)||'[]');
-  if(srv==='pranzo')mP=menu;else mO=menu;rSala()}
+  const div=$('s1-piatti');
+  // mostra loading
+  if(div)div.innerHTML='<div style="text-align:center;padding:24px;color:var(--m)">⏳ Caricamento menu...</div>';
+  if(u){
+    try{
+      const r=await fetch(u+'?t='+Date.now()); // cache-bust
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      const d=await r.json();
+      if(d&&Object.keys(d).length>0){menu=Object.values(d);localStorage.setItem(k,JSON.stringify(menu));console.log('Menu caricato da Firebase:',menu.length,'piatti')}
+      else{menu=JSON.parse(localStorage.getItem(k)||'[]');console.log('Firebase vuoto, uso locale:',menu.length,'piatti')}
+    }catch(e){console.error('loadSala fetch error:',e);menu=JSON.parse(localStorage.getItem(k)||'[]')}
+  } else menu=JSON.parse(localStorage.getItem(k)||'[]');
+  if(srv==='pranzo')mP=menu;else mO=menu;
+  if(!menu.length)toast('⚠️ Menu '+srv+' non ancora inserito dalla cucina','#e65100');
+  rSala()}
 
 function rSala(){
   const menu=srv==='pranzo'?mP:mO,div=$('s1-piatti');
-  if(!menu.length){div.innerHTML='<div style="text-align:center;padding:24px;color:var(--m)">Menu non inserito.<br><button class="btn bs bo" style="margin-top:8px" onclick="loadSala()">🔄 Ricarica</button></div>';return}
+  if(!menu.length){div.innerHTML='<div style="text-align:center;padding:24px;color:var(--m)"><div style="font-size:32px;margin-bottom:8px">'+(srv==='pranzo'?'☀️':'🌙')+'</div><div style="font-weight:700;margin-bottom:4px">Menu '+(srv==='pranzo'?'Pranzo':'Osteria')+' non ancora inserito</div><div style="font-size:11px;margin-bottom:12px">La cucina deve inserire e salvare il menu prima</div><button class="btn bs bo" style="margin-top:4px" onclick="loadSala()">🔄 Ricarica da Firebase</button></div>';return}
   let h='';
   OC.forEach(cat=>{const pp=menu.filter(p=>p.cat===cat);if(!pp.length)return;
     h+='<div class="cat-h">'+(CI[cat]||'')+' '+(CN[cat]||cat)+'</div>';
@@ -710,13 +739,13 @@ async function send(){
 
 async function rfSt(){
   const u=fb('ordini_'+srv+'_'+oggi());if(!u)return;
-  try{const r=await fetch(u);const d=await r.json();const ls=d?Object.values(d).filter(c=>c.stato!=='completato').sort((a,b)=>b.ts-a.ts):[];
-    const div=$('s1-att')||$('s1-stato');if(!div)return;
-    if(!ls.length){div.innerHTML='<div style="color:var(--m);font-size:12px">Nessuna comanda attiva</div>';if($('s1-stato'))$('s1-stato').innerHTML=div.innerHTML;return}
-    const h=ls.map(c=>{const cl=c.stato==='nuova'?'var(--r)':c.stato==='inCorso'?'var(--go)':'var(--g)';const lb=c.stato==='nuova'?'⏳ Attesa':c.stato==='inCorso'?'🔥 Prepara':'✅ Pronto';
-      return '<div style="padding:8px 0;border-bottom:1px solid #f0f0f0"><div style="display:flex;justify-content:space-between"><div><b style="font-size:14px">T'+c.tavolo+'</b> <span style="font-size:10px;color:var(--m)">'+c.ora+'</span></div><span style="font-size:11px;font-weight:700;color:'+cl+'">'+lb+'</span></div><div style="font-size:11px;color:var(--m)">'+c.piatti.map(p=>p.qty+'x '+p.nome).join(' · ')+'</div>'+(c.note?'<div style="font-size:10px;color:var(--r)">⚠️ '+c.note+'</div>':'')+'</div>'}).join('');
-    div.innerHTML=h;if($('s1-stato')&&div!==$('s1-stato'))$('s1-stato').innerHTML=h;
-  }catch(e){}}
+  try{const r=await fetch(u+'?t='+Date.now());const d=await r.json();const ls=d?Object.values(d).filter(c=>c.stato!=='completato').sort((a,b)=>b.ts-a.ts):[];
+    const h=ls.length?ls.map(c=>{const cl=c.stato==='nuova'?'var(--r)':c.stato==='inCorso'?'var(--go)':'var(--g)';const lb=c.stato==='nuova'?'⏳ Attesa':c.stato==='inCorso'?'🔥 Prepara':'✅ Pronto';
+      return '<div style="padding:8px 0;border-bottom:1px solid #f0f0f0"><div style="display:flex;justify-content:space-between"><div><b style="font-size:14px">T'+c.tavolo+'</b> <span style="font-size:10px;color:var(--m)">'+c.ora+'</span></div><span style="font-size:11px;font-weight:700;color:'+cl+'">'+lb+'</span></div><div style="font-size:11px;color:var(--m)">'+c.piatti.map(p=>p.qty+'x '+p.nome).join(' · ')+'</div>'+(c.note?'<div style="font-size:10px;color:var(--r)">⚠️ '+c.note+'</div>':'')+'</div>'}).join('')
+      :'<div style="color:var(--m);font-size:12px">Nessuna comanda attiva</div>';
+    if($('s1-att'))$('s1-att').innerHTML=h;
+    if($('s1-stato'))$('s1-stato').innerHTML=h;
+  }catch(e){console.error('rfSt error',e)}}
 
 /* ═══ CUCINA ═══ */
 function initCuc(){$('S2').classList.remove('hid');$('s2-info').textContent=C.nome;$('s2-data').textContent=new Date().toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'});loadCuc();refresh();rtm=setInterval(refresh,3000)}
@@ -742,7 +771,7 @@ function rCol(t){
   h+='<div style="text-align:center;padding:4px;font-size:10px;color:var(--m)">'+m.length+' piatti</div>';
   div.innerHTML=h}
 
-function addP(t){
+async function addP(t){
   const inp=$(t==='pranzo'?'p-new':'o-new'),cat=$(t==='pranzo'?'p-cat':'o-cat').value;
   const txt=inp.value.trim();if(!txt){toast('Scrivi un piatto','var(--r)');return}
   const righe=txt.split(/[\n;]+/).map(s=>s.trim()).filter(s=>s.length>2);
@@ -751,7 +780,7 @@ function addP(t){
     if(t==='pranzo')mP.push(p);else mO.push(p);
     if(!LIB.find(l=>l.nome.toLowerCase()===nome.toLowerCase())){LIB.push({id:p.id,nome,cat});sLib()}
     c++});
-  saveM(t);inp.value='';inp.focus();rCol(t);toast('✅ '+c+' piatto/i aggiunto/i','var(--g)')}
+  await saveM(t);inp.value='';inp.focus();rCol(t);toast('✅ '+c+' piatto/i aggiunto/i','var(--g)')}
 
 function rmP(t,id){if(t==='pranzo')mP=mP.filter(p=>p.id!==id);else mO=mO.filter(p=>p.id!==id);saveM(t);rCol(t)}
 
@@ -763,14 +792,17 @@ function editP(t,id){
 async function saveM(t){
   const m=t==='pranzo'?mP:mO,k='tc_m_'+t+'_'+oggi();
   localStorage.setItem(k,JSON.stringify(m));
-  const u=fb('menu_'+t+'_'+oggi());if(!u)return;
-  const o={};m.forEach(p=>{o[p.id]=p});
-  try{await fetch(u,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(o)})}catch(e){console.log(e)}
-  toast('💾 Menu '+t+' salvato','var(--g)')}
+  const u=fb('menu_'+t+'_'+oggi());if(!u){toast('⚠️ Firebase non configurato — salvato in locale','#e65100');return}
+  try{
+    const r=await fetch(u,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({})}); // reset
+    const o={};m.forEach((p,i)=>{o[p.id||'p'+i]=p});
+    await fetch(u,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(o)});
+    toast('💾 Menu '+t+' salvato su Firebase','var(--g)')
+  }catch(e){console.error('saveM error',e);toast('⚠️ Errore Firebase — salvato solo in locale','#e65100')}}
 
 function showCmd(){$('S2M').classList.add('hid');$('S2C').classList.remove('hid');refresh()}
 function hideCmd(){$('S2C').classList.add('hid');$('S2M').classList.remove('hid')}
-function showLib(){$('S2L').classList.remove('hid');rLib()}
+function showLib(){if(LIB.length<100)initLib();$('S2L').classList.remove('hid');rLib()}
 function hideLib(){$('S2L').classList.add('hid')}
 
 function rLib(){
