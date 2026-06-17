@@ -37,7 +37,7 @@ input,select,textarea{font-family:inherit;font-size:13px;padding:9px 11px;border
 .cc.urg{border-left-color:var(--r);background:#fff5f5}.cc.wip{border-left-color:var(--go)}
 @keyframes si{from{transform:translateX(-16px);opacity:0}to{transform:translateX(0);opacity:1}}
 /* Print 80mm */
-@media print{body *{visibility:hidden}#pa,#pa *{visibility:visible}#pa{position:fixed;top:0;left:0;width:56mm;padding:1mm 2mm;color:#000!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}#pa *{color:#000!important;font-weight:900!important}.bar,.tbb,.toast{display:none!important}@page{size:58mm auto;margin:0 1mm}}
+@media print{body *{visibility:hidden}#pa,#pa *{visibility:visible}#pa{position:absolute;top:0;left:0;width:100%;padding:0;margin:0;color:#000!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}#pa *{color:#000!important;font-weight:900!important}.bar,.tbb,.toast{display:none!important}@page{size:58mm auto;margin:0}}
 /* Overlay */
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;overflow-y:auto;padding:8px;display:flex;align-items:flex-start;justify-content:center}
 .ov-box{background:#fff;border-radius:14px;width:100%;max-width:1100px;margin-top:20px;overflow:hidden}
@@ -952,7 +952,7 @@ function prn(id,silent=false){const c=cmd.find(x=>x.id===id);if(!c)return;
   const gruppi={};
   c.piatti.forEach(p=>{const cat=p.cat||'altro';if(!gruppi[cat])gruppi[cat]=[];gruppi[cat].push(p)});
   // Larghezza 54mm — area utile Bixolon SRP-350 su carta 58mm
-  let h='<div style="font-family:Courier New,monospace;width:54mm;max-width:54mm;color:#000;font-weight:900;overflow:hidden">';
+  let h='<div style="font-family:Courier New,monospace;width:100%;max-width:100%;color:#000;font-weight:900;overflow:hidden;padding:1mm 2mm">';
   h+='<div style="text-align:center;font-size:11px;font-weight:900;border-bottom:2px solid #000;padding-bottom:3px;letter-spacing:1px;word-break:break-all">'+(C.nome||'RISTORANTE').toUpperCase()+'</div>';
   h+='<div style="text-align:center;font-size:9px;font-weight:900;margin:2px 0">'+c.data+' · '+c.ora+' · '+(c.servizio==='pranzo'?'PRANZO':'OSTERIA')+'</div>';
   h+='<div style="text-align:center;font-size:22px;font-weight:900;border:2px solid #000;padding:2px;margin:3px 0;letter-spacing:2px">TAVOLO '+c.tavolo+'</div>';
