@@ -105,6 +105,9 @@ body{font-family:'Segoe UI',-apple-system,sans-serif;background:var(--bg);color:
 .e-btn{background:none;border:none;cursor:pointer;font-size:14px;color:var(--grigio);padding:2px 4px;border-radius:4px;}
 .e-btn:hover{background:var(--bg);}
 .sett-tot{background:#faf9f5;border-top:2px solid var(--linea);}
+.day-row.pagato{background:#d4f5e2!important;}
+.day-row.pagato .c-data,.day-row.pagato .c-gg,.day-row.pagato .c-ore{color:#155724!important;font-weight:700;}
+.pagato-badge{font-size:10px;font-weight:700;color:#155724;background:#c3e6cb;padding:1px 5px;border-radius:8px;}
 .sett-tot-row{display:grid;grid-template-columns:90px 76px 1fr 60px 60px 60px 60px 56px 36px;}
 .sett-tot-row>div{padding:6px 6px;font-size:12px;font-weight:700;border-right:1px solid var(--linea);}
 .sett-tot-row>div:last-child{border-right:none;}
@@ -347,6 +350,7 @@ let S={
   ],
   defaultRate:15,
   pin:null,
+  pagati:{},
   dbUrl:"https://ore-lavoro-6c3bd-default-rtdb.europe-west1.firebasedatabase.app"
 };
 let agMon=new Date(), orMon=new Date();
@@ -439,6 +443,15 @@ window.lockApp=function(){
 };
 window.openChangePIN=function(){openSettings();swTab('p');};
 
+/* ---- PAGATO ---- */
+function togglePagato(id){
+  if(!S.pagati) S.pagati={};
+  if(S.pagati[id]) delete S.pagati[id];
+  else S.pagati[id]=true;
+  persist();
+  renderAll();
+}
+
 /* ---- PRIMO AVVIO ---- */
 load();
 if(!S.pin){
@@ -503,14 +516,18 @@ function renderAg(){
       }else{
         entries.forEach((e,i)=>{
           const az=S.aziende.find(a=>a.id===e.aziendaId);const mins=eMin(e);
-          html+=`<div class="day-row filled${isT?' oggi':''}" onclick="openEntry('${e.id}',null)">
+          const isPagato=S.pagati&&S.pagati[e.id];
+          html+=`<div class="day-row filled${isT?' oggi':''}${isPagato?' pagato':''}" onclick="openEntry('${e.id}',null)">
             <div class="c-data">${i===0?fmt(ds):''}</div>
             <div class="c-gg">${i===0?ggn(ds):''}</div>
             <div>${esc(e.evento||'—')}${az?`<span class="az-chip">${az.id}</span>`:''}</div>
             <div>${e.im||'—'}</div><div>${e.fm||'—'}</div>
             <div class="hm">${e.ip||'—'}</div><div class="hm">${e.fp||'—'}</div>
-            <div class="c-ore">${mins>0?hhmm(mins):''}</div>
-            <div><button class="e-btn" onclick="event.stopPropagation();openEntry('${e.id}',null)">&#9998;</button></div>
+            <div class="c-ore">${mins>0?hhmm(mins):''}${isPagato?'<br><span class="pagato-badge">&#10003;</span>':''}</div>
+            <div>
+              <button class="e-btn" onclick="event.stopPropagation();openEntry('${e.id}',null)" title="Modifica">&#9998;</button>
+              <button class="e-btn" onclick="event.stopPropagation();togglePagato('${e.id}')" title="${isPagato?'Segna non pagato':'Segna pagato'}" style="color:${isPagato?'#155724':'#bbb'};font-size:15px;font-weight:700;">&#8364;</button>
+            </div>
           </div>`;
         });
       }
@@ -532,11 +549,13 @@ function renderOre(){
   let tMin=0,tRev=0;const pa={};
   me.forEach(e=>{const mn=eMin(e);tMin+=mn;tRev+=(mn/60)*rate(e.aziendaId);if(e.aziendaId)pa[e.aziendaId]=(pa[e.aziendaId]||0)+mn;});
   const gg=new Set(me.map(e=>e.data)).size;
+  const revPagata=me.reduce((acc,e)=>acc+(S.pagati&&S.pagati[e.id]?(eMin(e)/60)*rate(e.aziendaId):0),0);
   document.getElementById('summary').innerHTML=`
     <div><div class="s-lbl">Ore totali mese</div><div class="s-val">${hhmm(tMin)}</div></div>
     <div><div class="s-lbl">Giorni lavorati</div><div class="s-val">${gg}</div></div>
     <div><div class="s-lbl">Voci inserite</div><div class="s-val">${me.length}</div></div>
-    <div><div class="s-lbl">Compenso stimato</div><div class="s-val green">&#8364;${tRev.toFixed(2).replace('.',',')}</div></div>`;
+    <div><div class="s-lbl">Compenso stimato</div><div class="s-val green">&#8364;${tRev.toFixed(2).replace('.',',')}</div></div>
+    <div><div class="s-lbl" style="color:#5fd49a;">&#10003; Già incassato</div><div class="s-val green">&#8364;${revPagata.toFixed(2).replace('.',',')}</div></div>`;
   const wrap=document.getElementById('azList');wrap.innerHTML='';
   S.aziende.forEach(az=>{
     const row=document.createElement('div');row.className='az-row';
