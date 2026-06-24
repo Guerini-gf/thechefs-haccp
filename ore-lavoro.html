@@ -372,7 +372,8 @@ function persist(){
 /* ---- FIREBASE (senza auth) ---- */
 let fbApp=null;
 function initFB(){
-  if(fbApp)return;
+  if(fbApp) return;
+  if(typeof firebase==='undefined'){ setTimeout(initFB,400); return; }
   const url=S.dbUrl||"https://ore-lavoro-6c3bd-default-rtdb.europe-west1.firebasedatabase.app";
   try{
     fbApp=firebase.initializeApp({
