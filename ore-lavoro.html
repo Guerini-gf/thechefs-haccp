@@ -356,15 +356,14 @@ let S={
 };
 let agMon=new Date(), orMon=new Date();
 let pinBuf='', settingPin=false;
-let suppress=false;
+
 
 /* ---- LOCALE ---- */
 function load(){const r=localStorage.getItem('stc_ore2');if(r){try{S=Object.assign(S,JSON.parse(r));}catch(e){}}}
 function save(){localStorage.setItem('stc_ore2',JSON.stringify(S));}
 function persist(){
   save();
-  if(!suppress) pushFB();
-  suppress=false;
+  pushFB(); // sempre invia, senza controllo suppress
 }
 
 /* ---- FIREBASE (senza auth) ---- */
@@ -446,8 +445,11 @@ window.openChangePIN=function(){openSettings();swTab('p');};
 /* ---- PAGATO ---- */
 function togglePagato(id){
   if(!S.pagati) S.pagati={};
-  if(S.pagati[id]) delete S.pagati[id];
-  else S.pagati[id]=true;
+  if(S.pagati[id]){
+    delete S.pagati[id];
+  } else {
+    S.pagati[id] = Date.now(); // timestamp del pagamento
+  }
   persist();
   renderAll();
 }
