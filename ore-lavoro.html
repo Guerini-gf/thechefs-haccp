@@ -78,7 +78,7 @@ body{font-family:'Segoe UI',-apple-system,sans-serif;background:var(--bg);color:
   width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--testo);}
 .nav-btn:hover{background:#eae8e0;}
 
-.agenda-wrap{background:var(--card);border:1px solid var(--linea);border-radius:12px;overflow:hidden;margin-bottom:12px;}
+.agenda-wrap{background:var(--card);border:1px solid var(--linea);border-radius:12px;overflow-x:auto;overflow-y:hidden;margin-bottom:12px;}
 .agenda-head{display:grid;grid-template-columns:90px 76px 1fr 60px 60px 60px 60px 56px 36px;
   background:var(--verde-scuro);color:#fff;font-size:11px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;}
 .agenda-head>div{padding:8px 6px;border-right:1px solid rgba(255,255,255,.12);}
@@ -111,6 +111,11 @@ body{font-family:'Segoe UI',-apple-system,sans-serif;background:var(--bg);color:
 .sett-tot{background:#faf9f5;border-top:2px solid var(--linea);}
 .day-row.pagato{background:#d4f5e2!important;}
 .day-row.pagato .c-data,.day-row.pagato .c-gg,.day-row.pagato .c-ore{color:#155724!important;font-weight:700;}
+@media(min-width:901px){
+  .agenda-head{grid-template-columns:82px 72px 1fr 58px 58px 58px 58px 50px 54px;}
+  .day-row{grid-template-columns:82px 72px 1fr 58px 58px 58px 58px 50px 54px;}
+  .sett-tot-row{grid-template-columns:82px 72px 1fr 58px 58px 58px 58px 50px 54px;}
+}
 .pagato-badge{font-size:10px;font-weight:700;color:#155724;background:#c3e6cb;padding:1px 5px;border-radius:8px;}
 .sett-tot-row{display:grid;grid-template-columns:90px 76px 1fr 60px 60px 60px 60px 56px 36px;}
 .sett-tot-row>div{padding:6px 6px;font-size:12px;font-weight:700;border-right:1px solid var(--linea);}
@@ -159,9 +164,9 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--verde);}
 .tab-btn.active{background:var(--verde);color:#fff;border-color:var(--verde);}
 
 @media(max-width:600px){
-  .agenda-head{grid-template-columns:70px 56px 1fr 48px 48px 44px 52px;}
-  .day-row{grid-template-columns:70px 56px 1fr 48px 48px 44px 52px;}
-  .sett-tot-row{grid-template-columns:70px 56px 1fr 48px 48px 44px 52px;}
+  .agenda-head{grid-template-columns:68px 54px 1fr 50px 50px 46px 52px;}
+  .day-row{grid-template-columns:68px 54px 1fr 50px 50px 46px 52px;}
+  .sett-tot-row{grid-template-columns:68px 54px 1fr 50px 50px 46px 52px;}
   .hm{display:none!important;}
   .agenda-head>div:nth-child(6),.agenda-head>div:nth-child(7){display:none;}
 }
