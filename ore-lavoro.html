@@ -356,45 +356,42 @@ let S={
 };
 let agMon=new Date(), orMon=new Date();
 let pinBuf='', settingPin=false;
-let fbDb=null, suppress=false;
+let suppress=false;
 
 /* ---- LOCALE ---- */
 function load(){const r=localStorage.getItem('stc_ore2');if(r){try{S=Object.assign(S,JSON.parse(r));}catch(e){}}}
 function save(){localStorage.setItem('stc_ore2',JSON.stringify(S));}
 function persist(){
   save();
-  if(fbDb&&!suppress){
-    fbDb.ref('orelavoro/gianfelice/dati').set({entries:S.entries,aziende:S.aziende,defaultRate:S.defaultRate}).catch(e=>console.warn(e));
-  }
+  if(!suppress) pushFB();
   suppress=false;
 }
 
 /* ---- FIREBASE (senza auth) ---- */
-let fbApp=null;
+
 function initFB(){
-  if(fbApp) return;
-  if(typeof firebase==='undefined'){ setTimeout(initFB,400); return; }
-  const url=S.dbUrl||"https://ore-lavoro-6c3bd-default-rtdb.europe-west1.firebasedatabase.app";
-  try{
-    fbApp=firebase.initializeApp({
-      apiKey:"AIzaSyD8KHmdLAeBdCUsZ3sQUoTtTE8nRIUgfX8",
-      authDomain:"ore-lavoro-6c3bd.firebaseapp.com",
-      databaseURL:url,
-      projectId:"ore-lavoro-6c3bd",
-      appId:"1:901356287816:web:be2e37499ea2b0c5e6e57d"
-    });
-    fbDb=firebase.database();
-    fbDb.ref('orelavoro/gianfelice/dati').on('value',snap=>{
-      const v=snap.val();
-      if(v){
-        S.entries=v.entries||[];
-        S.aziende=v.aziende||S.aziende;
-        S.defaultRate=v.defaultRate??S.defaultRate;
-        save();renderAll();
+  const FB_URL="https://ore-lavoro-6c3bd-default-rtdb.europe-west1.firebasedatabase.app/orelavoro/gianfelice/dati.json";
+  fetch(FB_URL)
+    .then(r=>r.json())
+    .then(v=>{
+      if(v&&!v.error){
+        if(v.entries)   S.entries=v.entries;
+        if(v.aziende)   S.aziende=v.aziende;
+        if(v.defaultRate!==undefined) S.defaultRate=v.defaultRate;
+        S.pagati=v.pagati||{};
+        save(); renderAll();
       }
       setPill(true,'Sincronizzato');
-    },err=>{setPill(false,'Solo locale');});
-  }catch(e){console.warn(e);setPill(false,'Solo locale');}
+    })
+    .catch(()=>setPill(false,'Solo locale'));
+}
+
+function pushFB(){
+  const FB_URL="https://ore-lavoro-6c3bd-default-rtdb.europe-west1.firebasedatabase.app/orelavoro/gianfelice/dati.json";
+  const data={entries:S.entries,aziende:S.aziende,defaultRate:S.defaultRate,pagati:S.pagati||{}};
+  fetch(FB_URL,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})
+    .then(()=>setPill(true,'Sincronizzato'))
+    .catch(()=>setPill(false,'Solo locale'));
 }
 function setPill(on,l){
   const p=document.getElementById('syncPill');if(!p)return;
@@ -436,6 +433,7 @@ function openApp(){
   document.getElementById('setPinWrap').style.display='block';
   initFB();
   renderAll();
+  setInterval(initFB, 30000);
 }
 window.lockApp=function(){
   pinBuf=''; updDots();
