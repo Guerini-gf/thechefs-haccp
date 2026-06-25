@@ -557,7 +557,13 @@ function renderOre(){
   document.getElementById('oreLbl').textContent=orMon.toLocaleDateString('it-IT',{month:'long',year:'numeric'});
   const me=S.entries.filter(e=>{const d=new Date(e.data+'T00:00:00');return d.getFullYear()===y&&d.getMonth()===m;});
   let tMin=0,tRev=0;const pa={};
-  me.forEach(e=>{const mn=eMin(e);tMin+=mn;tRev+=(mn/60)*rate(e.aziendaId);if(e.aziendaId)pa[e.aziendaId]=(pa[e.aziendaId]||0)+mn;});
+  me.forEach(e=>{
+    const mn=eMin(e);
+    tMin+=mn;tRev+=(mn/60)*rate(e.aziendaId);
+    // pa conta solo le ore NON ancora pagate per azienda
+    if(e.aziendaId&&!(S.pagati&&S.pagati[e.id]))
+      pa[e.aziendaId]=(pa[e.aziendaId]||0)+mn;
+  });
   const gg=new Set(me.map(e=>e.data)).size;
   let minPagati=0,revPagata=0,minDaPagare=0,revDaPagare=0;
   me.forEach(e=>{
@@ -584,7 +590,7 @@ function renderOre(){
     row.innerHTML=`<div class="az-num">${az.id}</div>
       <input type="text" value="${esc(az.nome)}" onchange="updAzN('${az.id}',this.value)" style="flex:2;">
       <input type="number" step="0.5" placeholder="&#8364;/h" value="${az.rate!=null?az.rate:''}" onchange="updAzR('${az.id}',this.value)" style="flex:1;">
-      <div class="az-stat">${hhmm(pa[az.id]||0)} h</div>
+      <div class="az-stat" style="${(pa[az.id]||0)>0?'color:var(--verde-scuro);font-weight:700;':'color:#bbb;'}">${hhmm(pa[az.id]||0)} h da pagare</div>
       <button style="background:none;border:none;cursor:pointer;color:var(--rosso);font-size:15px;" onclick="remAz('${az.id}')">&#10005;</button>`;
     wrap.appendChild(row);
   });
