@@ -104,8 +104,10 @@ body{font-family:'Segoe UI',-apple-system,sans-serif;background:var(--bg);color:
 .c-ore{font-weight:700;color:var(--verde-scuro);text-align:center;}
 .az-chip{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;
   border-radius:10px;background:var(--verde-scuro);color:#fff;margin-left:4px;}
-.e-btn{background:none;border:none;cursor:pointer;font-size:14px;color:var(--grigio);padding:2px 4px;border-radius:4px;}
+.e-btn{background:none;border:none;cursor:pointer;font-size:13px;color:var(--grigio);padding:2px 3px;border-radius:4px;line-height:1;}
 .e-btn:hover{background:var(--bg);}
+.e-btn.pagato-btn{color:#155724;font-size:14px;font-weight:700;}
+.e-btn.pagato-btn.unpaid{color:#ccc;}
 .sett-tot{background:#faf9f5;border-top:2px solid var(--linea);}
 .day-row.pagato{background:#d4f5e2!important;}
 .day-row.pagato .c-data,.day-row.pagato .c-gg,.day-row.pagato .c-ore{color:#155724!important;font-weight:700;}
@@ -157,9 +159,9 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--verde);}
 .tab-btn.active{background:var(--verde);color:#fff;border-color:var(--verde);}
 
 @media(max-width:600px){
-  .agenda-head{grid-template-columns:70px 56px 1fr 48px 48px 44px 28px;}
-  .day-row{grid-template-columns:70px 56px 1fr 48px 48px 44px 28px;}
-  .sett-tot-row{grid-template-columns:70px 56px 1fr 48px 48px 44px 28px;}
+  .agenda-head{grid-template-columns:70px 56px 1fr 48px 48px 44px 52px;}
+  .day-row{grid-template-columns:70px 56px 1fr 48px 48px 44px 52px;}
+  .sett-tot-row{grid-template-columns:70px 56px 1fr 48px 48px 44px 52px;}
   .hm{display:none!important;}
   .agenda-head>div:nth-child(6),.agenda-head>div:nth-child(7){display:none;}
 }
@@ -529,7 +531,7 @@ function renderAg(){
             <div class="c-ore">${mins>0?hhmm(mins):''}${isPagato?'<br><span class="pagato-badge">&#10003;</span>':''}</div>
             <div>
               <button class="e-btn" onclick="event.stopPropagation();openEntry('${e.id}',null)" title="Modifica">&#9998;</button>
-              <button class="e-btn" onclick="event.stopPropagation();togglePagato('${e.id}')" title="${isPagato?'Segna non pagato':'Segna pagato'}" style="color:${isPagato?'#155724':'#bbb'};font-size:15px;font-weight:700;">&#8364;</button>
+              <button class="e-btn ${isPagato?'pagato-btn':'pagato-btn unpaid'}" onclick="event.stopPropagation();togglePagato('${e.id}')" title="${isPagato?'Pagato — clicca per annullare':'Segna come pagato'}">&#8364;</button>
             </div>
           </div>`;
         });
