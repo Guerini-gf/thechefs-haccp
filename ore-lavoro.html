@@ -559,13 +559,25 @@ function renderOre(){
   let tMin=0,tRev=0;const pa={};
   me.forEach(e=>{const mn=eMin(e);tMin+=mn;tRev+=(mn/60)*rate(e.aziendaId);if(e.aziendaId)pa[e.aziendaId]=(pa[e.aziendaId]||0)+mn;});
   const gg=new Set(me.map(e=>e.data)).size;
-  const revPagata=me.reduce((acc,e)=>acc+(S.pagati&&S.pagati[e.id]?(eMin(e)/60)*rate(e.aziendaId):0),0);
+  let minPagati=0,revPagata=0,minDaPagare=0,revDaPagare=0;
+  me.forEach(e=>{
+    const mn=eMin(e);
+    if(S.pagati&&S.pagati[e.id]){minPagati+=mn;revPagata+=(mn/60)*rate(e.aziendaId);}
+    else{minDaPagare+=mn;revDaPagare+=(mn/60)*rate(e.aziendaId);}
+  });
   document.getElementById('summary').innerHTML=`
     <div><div class="s-lbl">Ore totali mese</div><div class="s-val">${hhmm(tMin)}</div></div>
     <div><div class="s-lbl">Giorni lavorati</div><div class="s-val">${gg}</div></div>
-    <div><div class="s-lbl">Voci inserite</div><div class="s-val">${me.length}</div></div>
-    <div><div class="s-lbl">Compenso stimato</div><div class="s-val green">&#8364;${tRev.toFixed(2).replace('.',',')}</div></div>
-    <div><div class="s-lbl" style="color:#5fd49a;">&#10003; Già incassato</div><div class="s-val green">&#8364;${revPagata.toFixed(2).replace('.',',')}</div></div>`;
+    <div style="border:2px solid #f0a500;border-radius:10px;padding:10px;background:#2a2000;">
+      <div class="s-lbl" style="color:#f0a500;">&#9200; Ore da incassare</div>
+      <div class="s-val" style="color:#f0a500;">${hhmm(minDaPagare)}</div>
+      <div style="font-size:13px;color:#f0a500;margin-top:2px;">&#8364;${revDaPagare.toFixed(2).replace('.',',')}</div>
+    </div>
+    <div style="border:2px solid #5fd49a;border-radius:10px;padding:10px;background:#002a1a;">
+      <div class="s-lbl" style="color:#5fd49a;">&#10003; Già incassato</div>
+      <div class="s-val" style="color:#5fd49a;">${hhmm(minPagati)}</div>
+      <div style="font-size:13px;color:#5fd49a;margin-top:2px;">&#8364;${revPagata.toFixed(2).replace('.',',')}</div>
+    </div>`;
   const wrap=document.getElementById('azList');wrap.innerHTML='';
   S.aziende.forEach(az=>{
     const row=document.createElement('div');row.className='az-row';
