@@ -370,11 +370,12 @@ function handleScanResult(text){
   renderHistoryPreview();
 }
 
+var currentResultText = '';
 function renderResult(a){
   var area=document.getElementById('resultArea');
   var typeLabels={url:'Link', wifi:'WiFi', email:'Email', phone:'Telefono', text:'Testo'};
   var html='';
-  var encoded = encodeURIComponent(a.raw);
+  currentResultText = a.raw;
   if(a.isUrl){
     html += '<div class="result-card">'
       + '<span class="result-type-badge">'+typeLabels[a.type]+'</span>'
@@ -382,9 +383,9 @@ function renderResult(a){
       + '<div class="result-domain">&#127760; '+esc(a.domain)+'</div>'
       + '<div class="result-fullurl">'+esc(a.raw)+'</div>'
       + '<div class="result-actions">'
-      + '<button class="btn" onclick="openLink(\''+encoded+'\')">Apri link</button>'
-      + '<button class="btn sec" onclick="copyText(\''+encoded+'\')">Copia</button>'
-      + '<button class="btn sec" onclick="document.getElementById(\'resultArea\').innerHTML=\'\';">Chiudi</button>'
+      + '<button class="btn" onclick="openCurrentLink()">Apri link</button>'
+      + '<button class="btn sec" onclick="copyCurrentText()">Copia</button>'
+      + '<button class="btn sec" onclick="closeResult()">Chiudi</button>'
       + '</div></div>';
   } else {
     html += '<div class="result-card safe">'
@@ -392,20 +393,32 @@ function renderResult(a){
       + '<div class="result-head safe">&#10003; Contenuto letto</div>'
       + '<div class="result-fullurl" style="max-height:140px;">'+esc(a.raw)+'</div>'
       + '<div class="result-actions">'
-      + '<button class="btn sec" onclick="copyText(\''+encoded+'\')">Copia</button>'
-      + '<button class="btn sec" onclick="document.getElementById(\'resultArea\').innerHTML=\'\';">Chiudi</button>'
+      + '<button class="btn sec" onclick="copyCurrentText()">Copia</button>'
+      + '<button class="btn sec" onclick="closeResult()">Chiudi</button>'
       + '</div></div>';
   }
   area.innerHTML=html;
 }
-function openLink(encoded){
-  if(confirm('Stai per aprire questo link esterno:\n\n'+decodeURIComponent(encoded)+'\n\nContinuare?')){
-    window.open(decodeURIComponent(encoded), '_blank');
+function openCurrentLink(){
+  if(confirm('Stai per aprire questo link esterno:\n\n'+currentResultText+'\n\nContinuare?')){
+    window.open(currentResultText, '_blank');
   }
 }
-function copyText(encoded){
-  var text=decodeURIComponent(encoded);
-  navigator.clipboard.writeText(text).then(function(){ alert('Copiato!'); });
+function copyCurrentText(){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(currentResultText).then(function(){ alert('Copiato!'); }).catch(function(){ fallbackCopy(currentResultText); });
+  } else {
+    fallbackCopy(currentResultText);
+  }
+}
+function fallbackCopy(text){
+  var ta=document.createElement('textarea');
+  ta.value=text; document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); alert('Copiato!'); }catch(e){ alert('Impossibile copiare automaticamente.'); }
+  document.body.removeChild(ta);
+}
+function closeResult(){
+  document.getElementById('resultArea').innerHTML='';
 }
 
 /* ---- STORICO ---- */
