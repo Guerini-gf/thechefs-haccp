@@ -176,6 +176,13 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--verde);}
         <div style="margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
           <button class="btn" id="startBtn" onclick="startScan()">&#128247; Avvia scansione</button>
           <button class="btn sec" id="stopBtn" onclick="stopScan()" style="display:none;">Ferma</button>
+          <label class="btn sec" style="cursor:pointer;">
+            &#128193; Scegli foto QR
+            <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="scanFromFile(this)">
+          </label>
+        </div>
+        <div id="scanHint" style="display:none;margin-top:10px;font-size:12px;color:var(--grigio);">
+          Non rilevato? Assicurati che il QR sia ben illuminato e centrato, oppure usa "Scegli foto QR".
         </div>
       </div>
 
@@ -302,6 +309,10 @@ function swView(v){
 
 /* ---- SCANNER ---- */
 function startScan(){
+  if(typeof jsQR === 'undefined'){
+    alert('La libreria di scansione non si e\' caricata (connessione lenta o bloccata).\n\nUsa il pulsante "Scegli foto QR" per analizzare uno screenshot o una foto del codice.');
+    return;
+  }
   navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
     .then(function(s){
       stream=s;
@@ -311,6 +322,7 @@ function startScan(){
       document.getElementById('scanPlaceholder').style.display='none';
       document.getElementById('startBtn').style.display='none';
       document.getElementById('stopBtn').style.display='inline-block';
+      tickCount=0;
       requestAnimationFrame(tick);
     })
     .catch(function(err){
@@ -324,23 +336,63 @@ function stopScan(){
   document.getElementById('startBtn').style.display='inline-block';
   document.getElementById('stopBtn').style.display='none';
 }
+var tickCount=0;
 function tick(){
   if(!stream) return;
-  var video=document.getElementById('video');
-  var canvas=document.getElementById('canvas');
-  if(video.readyState===video.HAVE_ENOUGH_DATA){
-    canvas.width=video.videoWidth; canvas.height=video.videoHeight;
-    var ctx=canvas.getContext('2d');
-    ctx.drawImage(video,0,0,canvas.width,canvas.height);
-    var imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
-    var code=jsQR(imgData.data, imgData.width, imgData.height);
-    if(code && code.data){
-      handleScanResult(code.data);
-      stopScan();
-      return;
+  try{
+    var video=document.getElementById('video');
+    var canvas=document.getElementById('canvas');
+    if(video.readyState===video.HAVE_ENOUGH_DATA && video.videoWidth>0){
+      canvas.width=video.videoWidth; canvas.height=video.videoHeight;
+      var ctx=canvas.getContext('2d');
+      ctx.drawImage(video,0,0,canvas.width,canvas.height);
+      var imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
+      var code=jsQR(imgData.data, imgData.width, imgData.height);
+      if(code && code.data){
+        handleScanResult(code.data);
+        stopScan();
+        return;
+      }
     }
+    tickCount++;
+    if(tickCount===150){ // ~5 secondi senza risultato, suggerisce alternativa
+      var ph=document.getElementById('scanHint');
+      if(ph) ph.style.display='block';
+    }
+  }catch(e){
+    console.warn('Errore scansione:', e);
   }
   requestAnimationFrame(tick);
+}
+
+/* ---- SCANSIONE DA FOTO (backup) ---- */
+function scanFromFile(input){
+  var file=input.files && input.files[0];
+  if(!file) return;
+  var img=new Image();
+  var reader=new FileReader();
+  reader.onload=function(e){
+    img.onload=function(){
+      var canvas=document.getElementById('canvas');
+      canvas.width=img.width; canvas.height=img.height;
+      var ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0);
+      var imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
+      if(typeof jsQR === 'undefined'){
+        alert('Libreria di scansione non disponibile. Controlla la connessione internet.');
+        return;
+      }
+      var code=jsQR(imgData.data, imgData.width, imgData.height);
+      if(code && code.data){
+        handleScanResult(code.data);
+      } else {
+        alert('Nessun QR code trovato in questa immagine. Riprova con una foto piu\' chiara e centrata.');
+      }
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+  input.value='';
 }
 
 /* ---- ANALISI RISULTATO ---- */
