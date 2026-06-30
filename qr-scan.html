@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>QR Scan — SOFTTHECHEFS</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --verde:#2bb673;--verde-scuro:#103d2b;--verde-testo:#1c6b4a;
+  --rosso:#c0392b;--nero:#161616;--bg:#f3f2ee;
+  --card:#fff;--linea:#e2e0d8;--testo:#222018;--grigio:#7a766a;
+  --giallo:#f0a500;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',-apple-system,sans-serif;background:var(--bg);color:var(--testo);-webkit-font-smoothing:antialiased;}
+
+/* LOCK */
+#lockScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(160deg,#2bb673,#1c8c5a);padding:24px 14px;}
+.lock-card{background:#fff;border-radius:20px;padding:32px 24px 24px;width:100%;max-width:340px;
+  box-shadow:0 18px 50px rgba(0,0,0,.2);text-align:center;}
+.lock-logo{width:64px;height:64px;margin:0 auto 14px;border-radius:16px;background:var(--nero);
+  display:flex;align-items:center;justify-content:center;font-size:28px;}
+.lock-title{font-size:21px;font-weight:800;color:var(--verde-testo);margin-bottom:3px;}
+.lock-sub{color:var(--grigio);font-size:13px;margin-bottom:22px;}
+.pin-dots{display:flex;justify-content:center;gap:14px;margin-bottom:22px;}
+.pin-dot{width:18px;height:18px;border-radius:50%;border:2.5px solid var(--verde);background:#fff;transition:.15s;}
+.pin-dot.filled{background:var(--verde);}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:260px;margin:0 auto;}
+.pin-btn{background:#f3f2ee;border:2px solid transparent;border-radius:14px;padding:18px 10px;
+  font-size:22px;font-weight:700;cursor:pointer;color:var(--testo);touch-action:manipulation;}
+.pin-btn:active{background:#d5f0e3;border-color:var(--verde);color:var(--verde-scuro);}
+.pin-btn.del{font-size:18px;color:var(--grigio);}
+.pin-err{color:var(--rosso);font-size:13px;margin-top:12px;min-height:20px;font-weight:600;}
+
+/* APP */
+#app{display:none;flex-direction:column;min-height:100vh;}
+.topbar{background:var(--nero);color:#fff;padding:12px 16px;display:flex;
+  align-items:center;justify-content:space-between;gap:10px;flex-shrink:0;}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand-logo{width:34px;height:34px;border-radius:9px;background:var(--verde);
+  display:flex;align-items:center;justify-content:center;font-size:18px;}
+.brand-text{font-weight:800;font-size:16px;letter-spacing:.4px;}
+.brand-text span{color:var(--verde);}
+.brand-sub{font-size:10px;color:#bbb;letter-spacing:1px;text-transform:uppercase;}
+.icon-btn{background:#222;border:1px solid #3a3a3a;color:#eee;width:36px;height:36px;
+  border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;}
+
+.app-body{flex:1;overflow-y:auto;padding:14px;padding-bottom:80px;}
+.view{display:none;}
+.view.active{display:block;}
+
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;
+  border-top:1px solid var(--linea);display:flex;z-index:40;box-shadow:0 -2px 12px rgba(0,0,0,.08);}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:10px 4px 8px;cursor:pointer;border:none;background:none;color:var(--grigio);
+  font-size:11px;font-weight:600;gap:3px;}
+.bnav-icon{font-size:22px;line-height:1;}
+.bnav-btn.active{color:var(--verde);}
+
+/* SCANNER */
+.scan-card{background:var(--card);border:1px solid var(--linea);border-radius:14px;
+  padding:16px;margin-bottom:14px;text-align:center;}
+#video{width:100%;border-radius:12px;background:#000;max-height:340px;object-fit:cover;display:none;}
+#canvas{display:none;}
+.scan-placeholder{padding:50px 20px;color:var(--grigio);}
+.scan-placeholder .big-icon{font-size:48px;margin-bottom:10px;}
+.btn{background:var(--verde);color:#fff;border:none;border-radius:8px;padding:11px 20px;
+  font-size:14px;font-weight:700;cursor:pointer;}
+.btn:hover{background:var(--verde-scuro);}
+.btn.sec{background:var(--bg);color:var(--testo);border:1px solid var(--linea);}
+.btn.danger{background:var(--rosso);}
+.btn.full{width:100%;}
+
+/* RISULTATO SCANSIONE */
+.result-card{background:var(--card);border:2px solid var(--giallo);border-radius:14px;
+  padding:16px;margin-bottom:14px;}
+.result-card.safe{border-color:var(--verde);}
+.result-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-weight:800;font-size:14px;}
+.result-head.warn{color:var(--giallo);}
+.result-head.safe{color:var(--verde-testo);}
+.result-domain{background:var(--bg);border-radius:8px;padding:10px 12px;font-size:15px;
+  font-weight:700;word-break:break-all;margin-bottom:8px;}
+.result-fullurl{background:#faf9f5;border:1px solid var(--linea);border-radius:8px;
+  padding:10px 12px;font-size:12px;color:var(--grigio);word-break:break-all;margin-bottom:12px;
+  max-height:80px;overflow-y:auto;}
+.result-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.result-type-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;
+  border-radius:10px;background:var(--verde-scuro);color:#fff;margin-bottom:8px;}
+
+/* STORICO */
+.hist-item{background:var(--card);border:1px solid var(--linea);border-radius:10px;
+  padding:12px 14px;margin-bottom:8px;cursor:pointer;}
+.hist-item:active{background:#f7fdf9;}
+.hist-date{font-size:11px;color:var(--grigio);margin-bottom:3px;}
+.hist-content{font-size:13px;font-weight:600;word-break:break-all;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hist-empty{text-align:center;padding:40px 20px;color:var(--grigio);}
+
+/* GENERATORE */
+.gen-types{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.gen-type-btn{background:var(--card);border:2px solid var(--linea);border-radius:10px;
+  padding:12px 8px;text-align:center;cursor:pointer;font-size:11px;font-weight:600;color:var(--grigio);}
+.gen-type-btn.active{border-color:var(--verde);color:var(--verde-testo);background:#eaf7f0;}
+.gen-type-btn .gi{font-size:22px;display:block;margin-bottom:4px;}
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:11px;color:var(--grigio);margin-bottom:5px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.3px;}
+input,select,textarea{font-family:inherit;font-size:14px;padding:9px 11px;
+  border:1px solid var(--linea);border-radius:8px;background:#fff;color:var(--testo);width:100%;}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--verde);}
+#qrOutput{display:flex;justify-content:center;padding:20px;background:#fff;
+  border-radius:12px;margin:14px 0;min-height:100px;align-items:center;}
+.section-title{font-size:13px;font-weight:700;color:var(--grigio);text-transform:uppercase;
+  letter-spacing:.4px;margin:18px 0 10px;}
+</style>
+</head>
+<body>
+
+<!-- LOCK -->
+<div id="lockScreen">
+  <div class="lock-card">
+    <div class="lock-logo">&#128247;</div>
+    <div class="lock-title">SOFTTHECHEFS</div>
+    <p class="lock-sub" id="lockSub">QR Scan — accesso privato</p>
+    <div class="pin-dots">
+      <div class="pin-dot" id="d0"></div>
+      <div class="pin-dot" id="d1"></div>
+      <div class="pin-dot" id="d2"></div>
+      <div class="pin-dot" id="d3"></div>
+    </div>
+    <div class="pin-pad">
+      <button class="pin-btn" onclick="pinPress('1')">1</button>
+      <button class="pin-btn" onclick="pinPress('2')">2</button>
+      <button class="pin-btn" onclick="pinPress('3')">3</button>
+      <button class="pin-btn" onclick="pinPress('4')">4</button>
+      <button class="pin-btn" onclick="pinPress('5')">5</button>
+      <button class="pin-btn" onclick="pinPress('6')">6</button>
+      <button class="pin-btn" onclick="pinPress('7')">7</button>
+      <button class="pin-btn" onclick="pinPress('8')">8</button>
+      <button class="pin-btn" onclick="pinPress('9')">9</button>
+      <button class="pin-btn" style="opacity:0;pointer-events:none;"></button>
+      <button class="pin-btn" onclick="pinPress('0')">0</button>
+      <button class="pin-btn del" onclick="pinDel()">&#9003;</button>
+    </div>
+    <div class="pin-err" id="pinErr"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-logo">&#128247;</div>
+      <div>
+        <div class="brand-text">SOFT<span>THE</span>CHEFS</div>
+        <div class="brand-sub" id="topSub">QR Scan</div>
+      </div>
+    </div>
+    <button class="icon-btn" onclick="lockApp()" title="Blocca">&#128274;</button>
+  </div>
+
+  <div class="app-body">
+
+    <!-- SCANNER -->
+    <div class="view active" id="vScan">
+      <div class="scan-card">
+        <video id="video" playsinline></video>
+        <canvas id="canvas"></canvas>
+        <div id="scanPlaceholder" class="scan-placeholder">
+          <div class="big-icon">&#128247;</div>
+          <p>Premi per attivare la fotocamera e scansionare un codice QR</p>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+          <button class="btn" id="startBtn" onclick="startScan()">&#128247; Avvia scansione</button>
+          <button class="btn sec" id="stopBtn" onclick="stopScan()" style="display:none;">Ferma</button>
+        </div>
+      </div>
+
+      <div id="resultArea"></div>
+
+      <div class="section-title">Scansioni recenti</div>
+      <div id="historyPreview"></div>
+    </div>
+
+    <!-- STORICO -->
+    <div class="view" id="vHistory">
+      <div class="section-title" style="margin-top:0;">Tutte le scansioni</div>
+      <div id="historyFull"></div>
+    </div>
+
+    <!-- GENERATORE -->
+    <div class="view" id="vGen">
+      <div class="section-title" style="margin-top:0;">Tipo di QR da generare</div>
+      <div class="gen-types">
+        <div class="gen-type-btn active" data-type="url" onclick="setGenType('url')">
+          <span class="gi">&#127760;</span>Link / Sito
+        </div>
+        <div class="gen-type-btn" data-type="wifi" onclick="setGenType('wifi')">
+          <span class="gi">&#128246;</span>WiFi
+        </div>
+        <div class="gen-type-btn" data-type="text" onclick="setGenType('text')">
+          <span class="gi">&#128221;</span>Testo
+        </div>
+        <div class="gen-type-btn" data-type="phone" onclick="setGenType('phone')">
+          <span class="gi">&#128222;</span>Telefono
+        </div>
+        <div class="gen-type-btn" data-type="email" onclick="setGenType('email')">
+          <span class="gi">&#9993;</span>Email
+        </div>
+        <div class="gen-type-btn" data-type="social" onclick="setGenType('social')">
+          <span class="gi">&#128247;</span>Social
+        </div>
+      </div>
+
+      <div id="genFields"></div>
+
+      <button class="btn full" onclick="generateQR()">Genera QR Code</button>
+
+      <div id="qrOutput"></div>
+      <div id="qrActions" style="display:none;text-align:center;">
+        <button class="btn sec" onclick="downloadQR()">&#11015; Scarica immagine</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="bottom-nav">
+    <button class="bnav-btn active" id="bn-scan" onclick="swView('scan')">
+      <span class="bnav-icon">&#128247;</span>Scansiona
+    </button>
+    <button class="bnav-btn" id="bn-hist" onclick="swView('hist')">
+      <span class="bnav-icon">&#128337;</span>Storico
+    </button>
+    <button class="bnav-btn" id="bn-gen" onclick="swView('gen')">
+      <span class="bnav-icon">&#10024;</span>Genera
+    </button>
+  </div>
+</div>
+
+<script>
+/* ---- STATO ---- */
+var S = { pin:null, history:[] };
+var stream=null, scanLoop=null, genType='url';
+
+function load(){ var r=localStorage.getItem('stc_qr'); if(r){ try{ S=Object.assign(S,JSON.parse(r)); }catch(e){} } }
+function save(){ localStorage.setItem('stc_qr', JSON.stringify(S)); }
+
+/* ---- PIN ---- */
+var pinBuf='';
+function pinPress(n){
+  if(pinBuf.length>=4) return;
+  pinBuf+=n; updDots();
+  if(pinBuf.length===4) setTimeout(checkPin,150);
+}
+function pinDel(){ pinBuf=pinBuf.slice(0,-1); updDots(); document.getElementById('pinErr').textContent=''; }
+function updDots(){ for(var i=0;i<4;i++) document.getElementById('d'+i).classList.toggle('filled', i<pinBuf.length); }
+function checkPin(){
+  if(!S.pin){
+    S.pin=pinBuf; save();
+    document.getElementById('pinErr').style.color='var(--verde-testo)';
+    document.getElementById('pinErr').textContent='PIN impostato!';
+    setTimeout(openApp,800);
+    return;
+  }
+  if(pinBuf===S.pin){ openApp(); }
+  else{
+    document.getElementById('pinErr').style.color='var(--rosso)';
+    document.getElementById('pinErr').textContent='PIN errato.';
+    pinBuf=''; updDots();
+  }
+}
+function openApp(){
+  document.getElementById('lockScreen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  renderHistoryPreview();
+}
+function lockApp(){
+  stopScan();
+  pinBuf=''; updDots();
+  document.getElementById('pinErr').textContent='';
+  document.getElementById('app').style.display='none';
+  document.getElementById('lockScreen').style.display='flex';
+}
+load();
+if(!S.pin) document.getElementById('lockSub').textContent='Scegli il tuo PIN a 4 cifre';
+
+/* ---- NAVIGAZIONE ---- */
+function swView(v){
+  document.getElementById('vScan').classList.toggle('active', v==='scan');
+  document.getElementById('vHistory').classList.toggle('active', v==='hist');
+  document.getElementById('vGen').classList.toggle('active', v==='gen');
+  document.getElementById('bn-scan').classList.toggle('active', v==='scan');
+  document.getElementById('bn-hist').classList.toggle('active', v==='hist');
+  document.getElementById('bn-gen').classList.toggle('active', v==='gen');
+  document.getElementById('topSub').textContent = v==='scan'?'Scansiona':(v==='hist'?'Storico':'Genera QR');
+  if(v==='scan') stopScan();
+  if(v==='hist') renderHistoryFull();
+}
+
+/* ---- SCANNER ---- */
+function startScan(){
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
+    .then(function(s){
+      stream=s;
+      var video=document.getElementById('video');
+      video.srcObject=s; video.setAttribute('playsinline',true); video.play();
+      video.style.display='block';
+      document.getElementById('scanPlaceholder').style.display='none';
+      document.getElementById('startBtn').style.display='none';
+      document.getElementById('stopBtn').style.display='inline-block';
+      requestAnimationFrame(tick);
+    })
+    .catch(function(err){
+      alert('Impossibile accedere alla fotocamera: '+err.message+'\n\nVerifica i permessi del browser.');
+    });
+}
+function stopScan(){
+  if(stream){ stream.getTracks().forEach(function(t){t.stop();}); stream=null; }
+  document.getElementById('video').style.display='none';
+  document.getElementById('scanPlaceholder').style.display='block';
+  document.getElementById('startBtn').style.display='inline-block';
+  document.getElementById('stopBtn').style.display='none';
+}
+function tick(){
+  if(!stream) return;
+  var video=document.getElementById('video');
+  var canvas=document.getElementById('canvas');
+  if(video.readyState===video.HAVE_ENOUGH_DATA){
+    canvas.width=video.videoWidth; canvas.height=video.videoHeight;
+    var ctx=canvas.getContext('2d');
+    ctx.drawImage(video,0,0,canvas.width,canvas.height);
+    var imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
+    var code=jsQR(imgData.data, imgData.width, imgData.height);
+    if(code && code.data){
+      handleScanResult(code.data);
+      stopScan();
+      return;
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+/* ---- ANALISI RISULTATO ---- */
+function analyzeContent(text){
+  var type='text', domain=null, isUrl=false;
+  var urlMatch = text.match(/^https?:\/\/([^\/\s]+)/i);
+  if(urlMatch){
+    isUrl=true; type='url'; domain=urlMatch[1];
+  } else if(text.match(/^WIFI:/i)){
+    type='wifi';
+  } else if(text.match(/^mailto:/i)){
+    type='email';
+  } else if(text.match(/^tel:/i)){
+    type='phone';
+  } else if(text.match(/^[\w.-]+@[\w.-]+\.\w+$/)){
+    type='email';
+  }
+  return {type:type, domain:domain, isUrl:isUrl, raw:text};
+}
+
+function handleScanResult(text){
+  var analysis = analyzeContent(text);
+  S.history.unshift({ data:text, type:analysis.type, domain:analysis.domain, date:new Date().toISOString() });
+  if(S.history.length>100) S.history=S.history.slice(0,100);
+  save();
+  renderResult(analysis);
+  renderHistoryPreview();
+}
+
+function renderResult(a){
+  var area=document.getElementById('resultArea');
+  var typeLabels={url:'Link', wifi:'WiFi', email:'Email', phone:'Telefono', text:'Testo'};
+  var html='';
+  var encoded = encodeURIComponent(a.raw);
+  if(a.isUrl){
+    html += '<div class="result-card">'
+      + '<span class="result-type-badge">'+typeLabels[a.type]+'</span>'
+      + '<div class="result-head warn">&#9888; Verifica prima di aprire</div>'
+      + '<div class="result-domain">&#127760; '+esc(a.domain)+'</div>'
+      + '<div class="result-fullurl">'+esc(a.raw)+'</div>'
+      + '<div class="result-actions">'
+      + '<button class="btn" onclick="openLink(\''+encoded+'\')">Apri link</button>'
+      + '<button class="btn sec" onclick="copyText(\''+encoded+'\')">Copia</button>'
+      + '<button class="btn sec" onclick="document.getElementById(\'resultArea\').innerHTML=\'\';">Chiudi</button>'
+      + '</div></div>';
+  } else {
+    html += '<div class="result-card safe">'
+      + '<span class="result-type-badge">'+typeLabels[a.type]+'</span>'
+      + '<div class="result-head safe">&#10003; Contenuto letto</div>'
+      + '<div class="result-fullurl" style="max-height:140px;">'+esc(a.raw)+'</div>'
+      + '<div class="result-actions">'
+      + '<button class="btn sec" onclick="copyText(\''+encoded+'\')">Copia</button>'
+      + '<button class="btn sec" onclick="document.getElementById(\'resultArea\').innerHTML=\'\';">Chiudi</button>'
+      + '</div></div>';
+  }
+  area.innerHTML=html;
+}
+function openLink(encoded){
+  if(confirm('Stai per aprire questo link esterno:\n\n'+decodeURIComponent(encoded)+'\n\nContinuare?')){
+    window.open(decodeURIComponent(encoded), '_blank');
+  }
+}
+function copyText(encoded){
+  var text=decodeURIComponent(encoded);
+  navigator.clipboard.writeText(text).then(function(){ alert('Copiato!'); });
+}
+
+/* ---- STORICO ---- */
+function fmtDate(iso){
+  var d=new Date(iso);
+  return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear()
+    +' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+function renderHistoryPreview(){
+  var el=document.getElementById('historyPreview');
+  var items=S.history.slice(0,5);
+  if(!items.length){ el.innerHTML='<div class="hist-empty">Nessuna scansione ancora.</div>'; return; }
+  el.innerHTML=items.map(function(h,i){
+    return '<div class="hist-item" onclick="reopenHistory('+i+')">'
+      +'<div class="hist-date">'+fmtDate(h.date)+'</div>'
+      +'<div class="hist-content">'+esc(h.data)+'</div></div>';
+  }).join('');
+}
+function renderHistoryFull(){
+  var el=document.getElementById('historyFull');
+  if(!S.history.length){ el.innerHTML='<div class="hist-empty">Nessuna scansione ancora.</div>'; return; }
+  el.innerHTML=S.history.map(function(h,i){
+    return '<div class="hist-item" onclick="reopenHistory('+i+')">'
+      +'<div class="hist-date">'+fmtDate(h.date)+'</div>'
+      +'<div class="hist-content">'+esc(h.data)+'</div></div>';
+  }).join('') + '<button class="btn danger" style="margin-top:10px;" onclick="clearHistory()">Cancella storico</button>';
+}
+function reopenHistory(i){
+  var h=S.history[i];
+  swView('scan');
+  var a=analyzeContent(h.data);
+  renderResult(a);
+}
+function clearHistory(){
+  if(!confirm('Cancellare tutto lo storico?')) return;
+  S.history=[]; save(); renderHistoryFull(); renderHistoryPreview();
+}
+function esc(s){ return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+
+/* ---- GENERATORE ---- */
+function setGenType(t){
+  genType=t;
+  document.querySelectorAll('.gen-type-btn').forEach(function(b){
+    b.classList.toggle('active', b.dataset.type===t);
+  });
+  renderGenFields();
+  document.getElementById('qrOutput').innerHTML='';
+  document.getElementById('qrActions').style.display='none';
+}
+function renderGenFields(){
+  var el=document.getElementById('genFields');
+  if(genType==='url'){
+    el.innerHTML='<div class="field"><label>Indirizzo sito web</label><input type="text" id="g_url" placeholder="https://softthechefs.com"></div>';
+  } else if(genType==='social'){
+    el.innerHTML='<div class="field"><label>Piattaforma</label>'
+      +'<select id="g_socialType"><option value="instagram">Instagram</option><option value="facebook">Facebook</option>'
+      +'<option value="tiktok">TikTok</option><option value="whatsapp">WhatsApp</option><option value="other">Altro link</option></select></div>'
+      +'<div class="field"><label>Username o link completo</label><input type="text" id="g_socialVal" placeholder="es. softthechefs oppure link completo"></div>';
+  } else if(genType==='wifi'){
+    el.innerHTML='<div class="field"><label>Nome rete (SSID)</label><input type="text" id="g_ssid" placeholder="Nome WiFi"></div>'
+      +'<div class="field"><label>Password</label><input type="text" id="g_pass" placeholder="Password WiFi"></div>'
+      +'<div class="field"><label>Sicurezza</label><select id="g_sec"><option value="WPA">WPA/WPA2</option><option value="WEP">WEP</option><option value="nopass">Nessuna</option></select></div>';
+  } else if(genType==='text'){
+    el.innerHTML='<div class="field"><label>Testo libero</label><textarea id="g_text" rows="4" placeholder="Scrivi il testo da codificare"></textarea></div>';
+  } else if(genType==='phone'){
+    el.innerHTML='<div class="field"><label>Numero di telefono</label><input type="text" id="g_phone" placeholder="+39 333 1234567"></div>';
+  } else if(genType==='email'){
+    el.innerHTML='<div class="field"><label>Indirizzo email</label><input type="email" id="g_email" placeholder="info@softthechefs.com"></div>'
+      +'<div class="field"><label>Oggetto (opzionale)</label><input type="text" id="g_subject" placeholder="Oggetto"></div>';
+  }
+}
+setGenType('url');
+
+function generateQR(){
+  var content='';
+  if(genType==='url'){
+    var v=document.getElementById('g_url').value.trim();
+    if(!v){ alert('Inserisci un indirizzo.'); return; }
+    if(!/^https?:\/\//i.test(v)) v='https://'+v;
+    content=v;
+  } else if(genType==='social'){
+    var t=document.getElementById('g_socialType').value;
+    var val=document.getElementById('g_socialVal').value.trim();
+    if(!val){ alert('Inserisci username o link.'); return; }
+    if(/^https?:\/\//i.test(val)){ content=val; }
+    else if(t==='instagram') content='https://instagram.com/'+val.replace('@','');
+    else if(t==='facebook') content='https://facebook.com/'+val;
+    else if(t==='tiktok') content='https://tiktok.com/@'+val.replace('@','');
+    else if(t==='whatsapp') content='https://wa.me/'+val.replace(/\D/g,'');
+    else content=val;
+  } else if(genType==='wifi'){
+    var ssid=document.getElementById('g_ssid').value.trim();
+    var pass=document.getElementById('g_pass').value.trim();
+    var sec=document.getElementById('g_sec').value;
+    if(!ssid){ alert('Inserisci il nome della rete.'); return; }
+    content='WIFI:T:'+sec+';S:'+ssid+';P:'+pass+';;';
+  } else if(genType==='text'){
+    var txt=document.getElementById('g_text').value.trim();
+    if(!txt){ alert('Inserisci del testo.'); return; }
+    content=txt;
+  } else if(genType==='phone'){
+    var ph=document.getElementById('g_phone').value.trim();
+    if(!ph){ alert('Inserisci un numero.'); return; }
+    content='tel:'+ph;
+  } else if(genType==='email'){
+    var em=document.getElementById('g_email').value.trim();
+    var subj=document.getElementById('g_subject').value.trim();
+    if(!em){ alert('Inserisci un indirizzo email.'); return; }
+    content='mailto:'+em+(subj?'?subject='+encodeURIComponent(subj):'');
+  }
+  var out=document.getElementById('qrOutput');
+  out.innerHTML='';
+  new QRCode(out, { text:content, width:220, height:220, colorDark:'#103d2b', colorLight:'#ffffff' });
+  document.getElementById('qrActions').style.display='block';
+}
+function downloadQR(){
+  var img=document.querySelector('#qrOutput img');
+  var canvas=document.querySelector('#qrOutput canvas');
+  var url = img ? img.src : (canvas ? canvas.toDataURL('image/png') : null);
+  if(!url){ alert('Genera prima un QR.'); return; }
+  var a=document.createElement('a');
+  a.href=url; a.download='qrcode-softthechefs.png';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+</script>
+</body>
+</html>
