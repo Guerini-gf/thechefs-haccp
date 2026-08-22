@@ -42,7 +42,8 @@
   .tabs button{flex:1;min-width:0;padding:10px 4px;font-size:12.5px;}
   .tabs button.on{background:rgba(90,200,235,.16);border-color:var(--acc);color:#bfeaf6;}
   .hide{display:none;}
-  .player{position:sticky;bottom:8px;margin-top:12px;box-shadow:0 -8px 24px rgba(0,0,0,.4);}
+  .player{position:sticky;bottom:8px;margin-top:12px;background:#0f1a2c;border:1px solid rgba(90,200,235,.35);box-shadow:0 -10px 30px rgba(0,0,0,.7);}
+  .player.hide-on-set{display:none!important;}
   .player .pt{font-size:14px;color:#e3edf8;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .ctr{display:flex;align-items:center;gap:14px;justify-content:center;}
   .slbl{display:flex;justify-content:space-between;font-size:11px;color:var(--mut);}
@@ -254,7 +255,7 @@ function pinKey(k){ const err=document.getElementById('lerr'); err.textContent='
   if(pinBuf.length===4){ if(pinBuf===getPin()){ setTimeout(()=>{ document.getElementById('lock').classList.add('hide'); pinBuf=''; updDots(); },140); }
     else{ err.textContent='Codice errato'; setTimeout(()=>{ pinBuf=''; updDots(); },500); } } }
 function savePin(){ const v=(document.getElementById('newPin').value||'').replace(/\D/g,''); if(v.length!==4){alert('Il codice deve avere 4 cifre.');return;} localStorage.setItem('ascolta_pin',v); document.getElementById('newPin').value=''; alert('Codice aggiornato: '+v); }
-function show(w){['lib','add','rec','det','set'].forEach(x=>{document.getElementById(x).classList.toggle('hide',x!==w);document.getElementById('tab'+x[0].toUpperCase()+x.slice(1)).classList.toggle('on',x===w);});}
+function show(w){['lib','add','rec','det','set'].forEach(x=>{document.getElementById(x).classList.toggle('hide',x!==w);document.getElementById('tab'+x[0].toUpperCase()+x.slice(1)).classList.toggle('on',x===w);}); const pc=document.getElementById('playerCard'); if(pc)pc.classList.toggle('hide-on-set', w==='set'); }
 
 /* ---------- BIBLIOTECA ---------- */
 function renderList(){
