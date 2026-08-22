@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Ascolta — SOFTTHECHEFS</title>
+<style>
+  :root{ --bg:#070b14; --card:rgba(18,28,46,.6); --bd:rgba(80,140,210,.18); --tx:#dbe6f2; --mut:#6f8bab; --acc:#5ac8eb; }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;padding:16px;}
+  .aurora{position:fixed;inset:-10%;z-index:0;pointer-events:none;overflow:hidden;filter:blur(80px);opacity:.32;}
+  .aurora span{position:absolute;border-radius:50%;mix-blend-mode:screen;}
+  .a1{width:60vw;height:60vw;left:-10vw;top:-10vw;background:#1f8f7a;animation:d1 30s ease-in-out infinite alternate;}
+  .a2{width:55vw;height:55vw;right:-10vw;bottom:-10vw;background:#6a4fb0;animation:d1 36s ease-in-out infinite alternate;}
+  @keyframes d1{from{transform:translate(0,0)}to{transform:translate(6vw,5vw) scale(1.15)}}
+  .wrap{position:relative;z-index:1;max-width:640px;margin:0 auto;}
+  .brand{display:flex;align-items:center;gap:12px;margin-bottom:4px;}
+  .logo{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#2a6fb0,#5ac8eb);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 0 18px rgba(90,200,235,.35);}
+  .logo svg{width:30px;height:30px;}
+  .brand .bn{font-size:12px;letter-spacing:.14em;color:var(--acc);font-weight:600;}
+  .brand h1{font-size:22px;font-weight:600;color:#eaf2fb;line-height:1;}
+  .sub{color:var(--mut);font-size:12.5px;margin:2px 0 16px 58px;}
+  .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px 16px;margin-bottom:12px;}
+  .row{display:flex;align-items:center;gap:10px;}
+  button{font-family:inherit;cursor:pointer;border-radius:12px;border:1px solid var(--bd);background:rgba(30,45,70,.6);color:var(--tx);padding:10px 14px;font-size:14px;}
+  button.acc{background:rgba(90,200,235,.16);border-color:var(--acc);color:#bfeaf6;}
+  button.big{font-size:20px;width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+  button.rec{background:rgba(217,90,90,.16);border-color:#d95a5a;color:#eab0b0;}
+  input,select,textarea{width:100%;font-family:inherit;background:rgba(10,16,28,.7);border:1px solid var(--bd);border-radius:10px;color:var(--tx);padding:10px 12px;font-size:14px;outline:none;}
+  textarea{min-height:120px;resize:vertical;line-height:1.5;}
+  label{display:block;font-size:12px;color:var(--mut);margin:10px 0 4px;text-transform:uppercase;letter-spacing:.04em;}
+  .item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(80,140,210,.1);}
+  .item:last-child{border-bottom:none;}
+  .item .t{flex:1;min-width:0;}
+  .item .t .n{color:#e3edf8;font-weight:500;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .item .t .k{color:var(--mut);font-size:12px;}
+  .item .play{width:44px;height:44px;border-radius:50%;flex-shrink:0;font-size:18px;display:flex;align-items:center;justify-content:center;}
+  .bar{height:4px;background:rgba(80,140,210,.15);border-radius:2px;margin-top:6px;overflow:hidden;}
+  .bar>i{display:block;height:100%;background:var(--acc);border-radius:2px;}
+  .empty{color:var(--mut);font-style:italic;font-size:14px;padding:8px 0;}
+  .tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+  .tabs button{flex:1;min-width:0;padding:10px 4px;font-size:12.5px;}
+  .tabs button.on{background:rgba(90,200,235,.16);border-color:var(--acc);color:#bfeaf6;}
+  .hide{display:none;}
+  .player{position:sticky;bottom:8px;margin-top:12px;box-shadow:0 -8px 24px rgba(0,0,0,.4);}
+  .player .pt{font-size:14px;color:#e3edf8;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ctr{display:flex;align-items:center;gap:14px;justify-content:center;}
+  .slbl{display:flex;justify-content:space-between;font-size:11px;color:var(--mut);}
+  .now{background:rgba(90,200,235,.06);border:1px solid rgba(90,200,235,.25);border-radius:10px;padding:8px 12px;margin-top:10px;font-size:14px;color:#cfe6f4;line-height:1.55;max-height:130px;overflow:auto;}
+  .mini{font-size:12px;color:var(--mut);}
+  .prog{font-size:12px;color:var(--acc);text-align:center;margin-top:8px;}
+  .vitem{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(80,140,210,.1);}
+  .warn{background:rgba(217,154,87,.10);border:1px solid rgba(217,154,87,.35);color:#e6b784;border-radius:10px;padding:8px 12px;font-size:12.5px;margin-top:8px;}
+  .lock{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;}
+  .lock.hide{display:none!important;}
+  .lock .box{position:relative;z-index:1;background:var(--card);border:1px solid var(--bd);border-radius:24px;padding:30px 22px;max-width:360px;width:100%;text-align:center;backdrop-filter:blur(10px);}
+  .lock .llogo{width:74px;height:74px;border-radius:20px;margin:0 auto 14px;background:linear-gradient(135deg,#2a6fb0,#5ac8eb);display:flex;align-items:center;justify-content:center;box-shadow:0 0 26px rgba(90,200,235,.45);}
+  .lock .llogo svg{width:46px;height:46px;}
+  .lock h2{font-size:22px;letter-spacing:.12em;color:#eaf2fb;font-weight:700;}
+  .lock .lsub{color:var(--mut);font-size:13px;margin-top:5px;}
+  .dots{display:flex;gap:16px;justify-content:center;margin:24px 0;}
+  .dots i{width:15px;height:15px;border-radius:50%;border:2px solid var(--acc);display:block;transition:.15s;}
+  .dots i.f{background:var(--acc);box-shadow:0 0 10px rgba(90,200,235,.6);}
+  .pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  .pad button{height:62px;font-size:24px;font-weight:600;border-radius:16px;background:rgba(30,45,70,.5);border:1px solid var(--bd);color:var(--tx);}
+  .pad button:active{background:rgba(90,200,235,.28);}
+  .pad button.ek{background:none;border:none;}
+  .lerr{color:#e88a8a;font-size:13px;height:17px;margin-top:8px;}
+</style>
+</head>
+<body>
+<div class="aurora"><span class="a1"></span><span class="a2"></span></div>
+<div class="lock" id="lock">
+  <div class="box">
+    <div class="llogo"><svg viewBox="0 0 32 32" fill="none" stroke="#eaf6ff" stroke-width="2.4" stroke-linecap="round"><path d="M6 16h3l3-7 4 14 3-9 2 4h5"/></svg></div>
+    <h2>SOFTTHECHEFS</h2>
+    <div class="lsub">Ascolta — accesso privato</div>
+    <div class="dots" id="dots"><i></i><i></i><i></i><i></i></div>
+    <div class="pad" id="pad"></div>
+    <div class="lerr" id="lerr"></div>
+  </div>
+</div>
+<div class="wrap">
+  <div class="brand">
+    <div class="logo"><svg viewBox="0 0 32 32" fill="none" stroke="#eaf6ff" stroke-width="2.4" stroke-linecap="round"><path d="M6 16h3l3-7 4 14 3-9 2 4h5"/></svg></div>
+    <div><div class="bn">SOFTTHECHEFS</div><h1>Ascolta</h1></div>
+  </div>
+  <div class="sub">La tua voce libro · privata · sul tuo telefono</div>
+
+  <div class="tabs">
+    <button id="tabLib" class="on" onclick="show('lib')">📚 Libri</button>
+    <button id="tabAdd" onclick="show('add')">＋ Testo</button>
+    <button id="tabRec" onclick="show('rec')">🎙 Registra</button>
+    <button id="tabDet" onclick="show('det')">✍ Detta</button>
+    <button id="tabSet" onclick="show('set')">⚙ Voci</button>
+  </div>
+
+  <!-- LIBRI -->
+  <div id="lib"><div class="card">
+    <div class="row" style="gap:8px;margin-bottom:12px">
+      <button style="flex:1" onclick="exportBackup()">💾 Salva nel PC (backup)</button>
+      <button style="flex:1" onclick="document.getElementById('impBackup').click()">📂 Ripristina</button>
+      <input type="file" id="impBackup" accept="application/json,.json" onchange="importBackup(this)" style="display:none">
+    </div>
+    <div id="list"></div>
+  </div></div>
+
+  <!-- AGGIUNGI -->
+  <div id="add" class="hide">
+    <div class="card">
+      <label>Titolo</label>
+      <input id="addTitle" placeholder="Es. L'amore dietro a una chat — Cap. 1">
+      <label>Tipo</label>
+      <select id="addType"><option>Libro</option><option>Capitolo</option><option>Nota</option><option>Poesia</option></select>
+      <label>Importa un file (estrae il testo)</label>
+      <input type="file" id="impFile" accept=".pdf,.docx,.txt,image/*" onchange="importFile(this)" style="padding:8px">
+      <div id="impState" class="mini" style="margin-top:6px">PDF, Word (.docx), .txt o immagine con testo (OCR).</div>
+      <label>Testo (incolla o importa un libro intero)</label>
+      <textarea id="addText" placeholder="Incolla qui il testo, oppure importa un file. Puoi mettere un libro intero: verrà letto tutto e riprendi da dove hai lasciato."></textarea>
+      <button class="acc" style="width:100%;margin-top:12px" onclick="saveText()">Salva nella biblioteca</button>
+    </div>
+  </div>
+
+  <!-- REGISTRA -->
+  <div id="rec" class="hide">
+    <div class="card">
+      <div class="mini" style="margin-bottom:12px">Registra la tua voce e riascoltala. (Per il TESTO da mettere su Word, usa «Detta».)</div>
+      <div class="ctr"><button id="recBtn" class="big rec" onclick="toggleRec()">●</button></div>
+      <div id="recState" class="mini" style="text-align:center;margin-top:10px">Pronto</div>
+      <div id="recAfter" class="hide" style="margin-top:12px">
+        <audio id="recAudio" controls style="width:100%"></audio>
+        <label>Titolo</label>
+        <input id="recTitle" placeholder="Es. Idea per il capitolo 3">
+        <button class="acc" style="width:100%;margin-top:10px" onclick="saveRec()">Salva nella biblioteca</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETTA -->
+  <div id="det" class="hide">
+    <div class="card">
+      <div class="mini" style="margin-bottom:12px">Parla e la tua voce diventa <b>testo</b>. Poi copialo nel Word del tuo libro.</div>
+      <div class="ctr"><button id="detBtn" class="big rec" onclick="toggleDet()">🎤</button></div>
+      <div id="detState" class="mini" style="text-align:center;margin:10px 0">Premi e parla</div>
+      <textarea id="detText" placeholder="Qui compare il testo dettato…"></textarea>
+      <div class="row" style="margin-top:10px;gap:8px">
+        <button style="flex:1" onclick="copyDet()">📋 Copia</button>
+        <button class="acc" style="flex:1" onclick="saveDet()">Salva come testo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- IMPOSTAZIONI / VOCI -->
+  <div id="set" class="hide">
+    <div class="card">
+      <label>Chiave ElevenLabs (resta solo su questo dispositivo)</label>
+      <input id="elKey" type="password" placeholder="Incolla qui la tua API key" oninput="saveKey()">
+      <div class="warn">La chiave resta salvata SOLO qui sul tuo dispositivo, non nel codice. Non condividere questo campo con nessuno.</div>
+      <label>Modello</label>
+      <select id="elModel" onchange="localStorage.setItem('el_model',this.value)">
+        <option value="eleven_multilingual_v2">Multilingue v2 (consigliato per l'italiano)</option>
+        <option value="eleven_turbo_v2_5">Turbo v2.5 (più economico/veloce)</option>
+      </select>
+      <hr style="border:none;border-top:1px solid var(--bd);margin:16px 0">
+      <label>Le tue voci (nome + Voice ID di ElevenLabs)</label>
+      <div id="voiceList"></div>
+      <div class="row" style="gap:8px;margin-top:8px">
+        <input id="vName" placeholder="Nome (es. Aida)" style="flex:1">
+        <input id="vId" placeholder="Voice ID" style="flex:1.4">
+      </div>
+      <button class="acc" style="width:100%;margin-top:8px" onclick="addVoice()">＋ Aggiungi voce</button>
+      <div class="mini" style="margin-top:10px">Il Voice ID lo trovi in ElevenLabs, nella pagina della voce (o nell'indirizzo). Aggiungi Aida, Laura, Paolo.</div>
+      <hr style="border:none;border-top:1px solid var(--bd);margin:16px 0">
+      <label>Codice di accesso (4 cifre)</label>
+      <input id="newPin" type="tel" inputmode="numeric" maxlength="4" placeholder="Nuovo codice (predefinito 1234)">
+      <button class="acc" style="width:100%;margin-top:8px" onclick="savePin()">Salva codice</button>
+      <div class="mini" style="margin-top:6px">All'apertura l'app chiede questo codice. Predefinito: 1234.</div>
+      <hr style="border:none;border-top:1px solid var(--bd);margin:16px 0">
+      <label>Sincronizzazione Firebase (telefono ↔ PC)</label>
+      <textarea id="fbConfig" placeholder="Incolla qui la configurazione Firebase del tuo progetto: { apiKey: ..., authDomain: ..., databaseURL: ..., projectId: ... }" style="min-height:90px"></textarea>
+      <button class="acc" style="width:100%;margin-top:8px" onclick="saveFbConfig()">Attiva sincronizzazione</button>
+      <div id="fbStatus" class="mini" style="margin-top:8px">Non attiva. (Serve un progetto Firebase con Realtime Database attivo.)</div>
+      <div class="warn">Con la sincronizzazione, la biblioteca è la stessa su tutti i dispositivi: l'ultimo che modifica aggiorna gli altri.</div>
+    </div>
+  </div>
+
+  <!-- PLAYER -->
+  <div id="playerCard" class="card player hide">
+    <div class="pt" id="pTitle">—</div>
+    <div class="ctr">
+      <button onclick="restart()" title="Da capo">⏮</button>
+      <button onclick="seek(-1)" title="Indietro">⏪</button>
+      <button id="pPlay" class="big acc" onclick="togglePlay()">▶</button>
+      <button onclick="seek(1)" title="Avanti">⏩</button>
+      <button onclick="stopPlay()" title="Ferma">⏹</button>
+    </div>
+    <div class="prog" id="pProg">—</div>
+    <details style="margin-top:10px" open><summary class="mini">Voce e velocità</summary>
+      <label>Voce</label>
+      <select id="pVoice" onchange="voiceChanged()"></select>
+      <label>Velocità (solo voci del dispositivo)</label>
+      <input type="range" id="pRate" min="0.6" max="1.3" step="0.05" value="0.95" oninput="rateLbl()">
+      <div class="slbl"><span>più lenta</span><span id="rateVal">0.95×</span><span>più veloce</span></div>
+    </details>
+    <div class="now" id="pNow"></div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script>
+if(window.pdfjsLib){ pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; }
+const LS='softthechefs_ascolta_v4';
+let items = JSON.parse(localStorage.getItem(LS)||'[]');
+let elVoices = JSON.parse(localStorage.getItem('el_voices')||'[]');
+function saveAll(){ localStorage.setItem(LS, JSON.stringify(items)); fbPush(); }
+/* ---------- SINCRONIZZAZIONE FIREBASE ---------- */
+let fbRef=null, fbLast='';
+function parseCfg(txt){ const m=(txt||'').match(/\{[\s\S]*\}/); if(!m) throw new Error('configurazione non trovata'); return (new Function('return ('+m[0]+')'))(); }
+function setFbStatus(t){ const el=document.getElementById('fbStatus'); if(el)el.textContent=t; }
+function initFirebase(){
+  const cfgTxt=localStorage.getItem('fb_config'); if(!cfgTxt||!window.firebase) return;
+  let cfg; try{ cfg=parseCfg(cfgTxt); }catch(e){ setFbStatus('Config non valida: '+e.message); return; }
+  try{
+    if(!firebase.apps.length) firebase.initializeApp(cfg);
+    fbRef=firebase.database().ref('ascolta_library');
+    fbRef.on('value',snap=>{ const rem=snap.val(); if(rem&&Array.isArray(rem)){ const s=JSON.stringify(rem); if(s!==JSON.stringify(items)){ items=rem; localStorage.setItem(LS,s); fbLast=s; renderList(); } } });
+    setFbStatus('Sincronizzazione attiva ✓');
+  }catch(e){ setFbStatus('Errore Firebase: '+e.message+' (serve databaseURL e Realtime Database attivo).'); }
+}
+function fbPush(){ if(!fbRef)return; const s=JSON.stringify(items); if(s===fbLast)return; fbLast=s; try{ fbRef.set(items); }catch(e){} }
+function saveFbConfig(){
+  const v=(document.getElementById('fbConfig').value||'').trim();
+  localStorage.setItem('fb_config',v);
+  if(!v){ setFbStatus('Incolla prima la configurazione Firebase, poi premi Attiva.'); return; }
+  if(!window.firebase){ setFbStatus('Firebase non caricato: controlla la connessione a internet e riapri l\'app.'); return; }
+  setFbStatus('Attivazione in corso...');
+  setTimeout(initFirebase, 50);
+}
+function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+/* ---------- BLOCCO CON CODICE (home privata) ---------- */
+function getPin(){ return localStorage.getItem('ascolta_pin')||'1234'; }
+let pinBuf='';
+function buildPad(){ const pad=document.getElementById('pad'); if(!pad)return;
+  const keys=['1','2','3','4','5','6','7','8','9','','0','⌫'];
+  pad.innerHTML=keys.map(k=> k===''? '<button class="ek" disabled></button>' : '<button onclick="pinKey(\''+k+'\')">'+k+'</button>').join(''); }
+function updDots(){ document.querySelectorAll('#dots i').forEach((d,i)=>d.classList.toggle('f',i<pinBuf.length)); }
+function pinKey(k){ const err=document.getElementById('lerr'); err.textContent='';
+  if(k==='⌫'){ pinBuf=pinBuf.slice(0,-1); updDots(); return; }
+  if(pinBuf.length>=4)return;
+  pinBuf+=k; updDots();
+  if(pinBuf.length===4){ if(pinBuf===getPin()){ setTimeout(()=>{ document.getElementById('lock').classList.add('hide'); pinBuf=''; updDots(); },140); }
+    else{ err.textContent='Codice errato'; setTimeout(()=>{ pinBuf=''; updDots(); },500); } } }
+function savePin(){ const v=(document.getElementById('newPin').value||'').replace(/\D/g,''); if(v.length!==4){alert('Il codice deve avere 4 cifre.');return;} localStorage.setItem('ascolta_pin',v); document.getElementById('newPin').value=''; alert('Codice aggiornato: '+v); }
+function show(w){['lib','add','rec','det','set'].forEach(x=>{document.getElementById(x).classList.toggle('hide',x!==w);document.getElementById('tab'+x[0].toUpperCase()+x.slice(1)).classList.toggle('on',x===w);});}
+
+/* ---------- BIBLIOTECA ---------- */
+function renderList(){
+  const el=document.getElementById('list');
+  if(!items.length){el.innerHTML='<div class="empty">Ancora niente. Aggiungi un testo, registra o detta.</div>';return;}
+  el.innerHTML=items.map((it,i)=>{
+    const pct = it.frac? Math.round(it.frac*100) : 0;
+    const bar = (!it.audio)? '<div class="bar"><i style="width:'+pct+'%"></i></div>' : '';
+    return '<div class="item"><button class="play acc" onclick="'+(it.audio?'openAudio':'openText')+'('+i+')">▶</button>'+
+    '<div class="t"><div class="n">'+esc(it.title)+'</div><div class="k">'+esc(it.type)+(it.audio?' · registrazione':(' · '+pct+'%'))+'</div>'+bar+'</div>'+
+    '<button onclick="del('+i+')" title="Elimina">🗑</button></div>';}).join('');
+}
+function del(i){ if(!confirm('Eliminare "'+items[i].title+'"?'))return; if(curItem===i)stopPlay(); items.splice(i,1); saveAll(); renderList(); }
+function saveText(){
+  const t=document.getElementById('addTitle').value.trim(), txt=document.getElementById('addText').value.trim();
+  if(!t||!txt){alert('Metti titolo e testo.');return;}
+  items.unshift({title:t,type:document.getElementById('addType').value,text:txt,frac:0});
+  saveAll(); document.getElementById('addTitle').value='';document.getElementById('addText').value='';
+  show('lib'); renderList();
+}
+function exportBackup(){ if(!items.length){alert('Vuota.');return;} const b=new Blob([JSON.stringify(items,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='ascolta-backup-'+new Date().toISOString().slice(0,10)+'.json'; document.body.appendChild(a); a.click(); a.remove(); }
+function importBackup(input){ const f=input.files[0]; if(!f)return; const r=new FileReader();
+  r.onload=()=>{ try{ const d=JSON.parse(r.result); if(!Array.isArray(d))throw 0; if(confirm('Ripristinare '+d.length+' elementi? Sostituisce la biblioteca.')){items=d;saveAll();renderList();alert('Ripristinata.');} }catch(e){alert('File non valido.');} };
+  r.readAsText(f); input.value=''; }
+
+/* ---------- VOCI (Impostazioni) ---------- */
+function saveKey(){ localStorage.setItem('el_key', document.getElementById('elKey').value.trim()); }
+function renderVoices(){
+  document.getElementById('voiceList').innerHTML = elVoices.length? elVoices.map((v,i)=>
+    '<div class="vitem"><div style="flex:1"><b>'+esc(v.name)+'</b> <span class="mini">'+esc(v.id)+'</span></div><button onclick="delVoice('+i+')">🗑</button></div>').join('')
+    : '<div class="mini">Nessuna voce ElevenLabs. Aggiungi Aida, Laura, Paolo.</div>';
+}
+function addVoice(){ const n=document.getElementById('vName').value.trim(), id=document.getElementById('vId').value.trim();
+  if(!n||!id){alert('Metti nome e Voice ID.');return;} elVoices.push({name:n,id:id}); localStorage.setItem('el_voices',JSON.stringify(elVoices));
+  document.getElementById('vName').value='';document.getElementById('vId').value=''; renderVoices(); loadVoices(); }
+function delVoice(i){ elVoices.splice(i,1); localStorage.setItem('el_voices',JSON.stringify(elVoices)); renderVoices(); loadVoices(); }
+
+/* ---------- ARCHIVIO AUDIO (IndexedDB, per non rigenerare) ---------- */
+let _db=null;
+function idb(){ return new Promise((res,rej)=>{ if(_db)return res(_db); const r=indexedDB.open('ascolta_audio',1);
+  r.onupgradeneeded=()=>r.result.createObjectStore('a'); r.onsuccess=()=>{_db=r.result;res(_db);}; r.onerror=()=>rej(r.error); }); }
+async function idbGet(k){ const db=await idb(); return new Promise(res=>{ const t=db.transaction('a').objectStore('a').get(k); t.onsuccess=()=>res(t.result||null); t.onerror=()=>res(null); }); }
+async function idbSet(k,v){ const db=await idb(); return new Promise(res=>{ const t=db.transaction('a','readwrite').objectStore('a').put(v,k); t.onsuccess=()=>res(); t.onerror=()=>res(); }); }
+function hashStr(s){ let h=0; for(let i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))|0;} return (h>>>0).toString(36); }
+
+async function fetchEl(text, voiceId){
+  const key=localStorage.getItem('el_key'); if(!key) throw new Error('Manca la chiave ElevenLabs (scheda ⚙ Voci).');
+  const model=localStorage.getItem('el_model')||'eleven_multilingual_v2';
+  const res=await fetch('https://api.elevenlabs.io/v1/text-to-speech/'+voiceId,{method:'POST',
+    headers:{'xi-api-key':key,'Content-Type':'application/json','Accept':'audio/mpeg'},
+    body:JSON.stringify({text,model_id:model,voice_settings:{stability:0.5,similarity_boost:0.8}})});
+  if(!res.ok){ let m='errore '+res.status; try{const j=await res.json(); m=(j.detail&&(j.detail.message||j.detail.status))||m;}catch(e){} throw new Error(m); }
+  return await res.blob();
+}
+async function getElAudio(text, voiceId){
+  const k='el_'+voiceId+'_'+hashStr(text);
+  let b=await idbGet(k); if(b) return b;
+  b=await fetchEl(text, voiceId); await idbSet(k,b); return b;
+}
+
+/* ---------- VOCI DISPONIBILI (dispositivo + ElevenLabs) ---------- */
+let devVoices=[], allV=[];
+function loadVoices(){
+  let all=(('speechSynthesis' in window)?speechSynthesis.getVoices():[])||[];
+  devVoices=all.filter(v=>/it/i.test(v.lang)); if(!devVoices.length)devVoices=all;
+  allV=[];
+  elVoices.forEach(v=>allV.push({type:'el',name:'★ '+v.name+' (ElevenLabs)',id:v.id}));
+  devVoices.forEach(v=>allV.push({type:'dev',name:v.name+' ('+v.lang+')',voice:v}));
+  const sel=document.getElementById('pVoice'); if(!sel)return;
+  sel.innerHTML=allV.map((v,i)=>'<option value="'+i+'">'+esc(v.name)+'</option>').join('')||'<option>—</option>';
+  const saved=localStorage.getItem('stc_voice');
+  if(saved!==null && allV[saved]) sel.value=saved;
+  else { let fem=allV.findIndex(v=>v.type==='el'); if(fem<0)fem=allV.findIndex(v=>v.type==='dev'&&/elsa|isabella|alice|federica|bianca|giulia|chiara|silvia|female|donna/i.test(v.name)); if(fem<0)fem=0; if(fem>=0)sel.value=fem; }
+}
+if('speechSynthesis' in window){ speechSynthesis.onvoiceschanged=loadVoices; }
+
+/* ---------- LETTURA con SEGNALIBRO (frazione) ---------- */
+function cleanText(t){ return (t||'').replace(/(\p{L})[-­]\s+(\p{L})/gu,'$1$2').replace(/­/g,'').replace(/\s+/g,' ').trim(); }
+function splitSentences(t){ return (cleanText(t).match(/[^.!?…]+[.!?…]*/g)||[t]).map(s=>s.trim()).filter(Boolean); }
+function groupChunks(sents,max){ const out=[]; let cur=''; for(const s of sents){ if((cur+' '+s).length>max && cur){out.push(cur);cur=s;} else {cur=cur?cur+' '+s:s;} } if(cur)out.push(cur); return out; }
+
+let chunks=[], idx=0, playing=false, curItem=-1, mode='dev', elAudio=null;
+function curVoice(){ const sel=document.getElementById('pVoice'); return allV[sel.value]; }
+function buildChunks(){ const it=items[curItem]; if(!it)return; const v=curVoice(); mode=v?v.type:'dev';
+  chunks = (mode==='el') ? groupChunks(splitSentences(it.text),900) : splitSentences(it.text);
+  idx = Math.min(chunks.length-1, Math.max(0, Math.floor((it.frac||0)*chunks.length))); }
+function openText(i){ curItem=i; document.getElementById('playerCard').classList.remove('hide');
+  document.getElementById('pTitle').textContent=items[i].title;
+  document.getElementById('pRate').value=localStorage.getItem('stc_rate')||0.95; rateLbl(true);
+  buildChunks(); updProg(); startPlay(); }
+function updProg(){ document.getElementById('pProg').textContent = chunks.length? ('parte '+(idx+1)+' di '+chunks.length+' · '+Math.round(idx/chunks.length*100)+'%'+(mode==='el'?' · voce ElevenLabs':'')) : '—'; }
+function saveFrac(){ if(curItem>-1&&items[curItem]){ items[curItem].frac = chunks.length? idx/chunks.length : 0; saveAll(); } }
+function startPlay(){ playing=true; document.getElementById('pPlay').textContent='⏸'; playChunk(); }
+function stopUI(){ playing=false; document.getElementById('pPlay').textContent='▶'; renderList(); }
+
+async function playChunk(){
+  if(!playing) return;
+  if(idx>=chunks.length){ idx=chunks.length-1; saveFrac(); stopUI(); document.getElementById('pNow').textContent='— Fine —'; return; }
+  document.getElementById('pNow').textContent=chunks[idx]; updProg();
+  if(mode==='el'){
+    const v=curVoice();
+    try{ document.getElementById('pNow').textContent='🔊 '+chunks[idx];
+      const blob=await getElAudio(chunks[idx], v.id); if(!playing)return;
+      if(elAudio){elAudio.pause();} elAudio=new Audio(URL.createObjectURL(blob));
+      elAudio.onended=()=>{ if(playing){ idx++; saveFrac(); updProg(); playChunk(); } };
+      elAudio.play();
+      if(chunks[idx+1]) getElAudio(chunks[idx+1], v.id).catch(()=>{}); // prepara la parte successiva
+    }catch(e){ playing=false; document.getElementById('pPlay').textContent='▶'; document.getElementById('pNow').innerHTML='<span style="color:#d98a8a">Voce ElevenLabs non disponibile: '+esc(e.message)+'</span>'; }
+  } else {
+    const u=new SpeechSynthesisUtterance(chunks[idx]); const v=curVoice(); if(v&&v.voice)u.voice=v.voice;
+    u.lang='it-IT'; u.rate=parseFloat(document.getElementById('pRate').value);
+    u.onend=()=>{ if(playing){ idx++; saveFrac(); updProg(); playChunk(); } };
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+  }
+}
+function stopAudio(){ speechSynthesis.cancel(); if(elAudio){elAudio.pause();elAudio=null;} }
+function togglePlay(){ if(playing){ playing=false; stopAudio(); saveFrac(); document.getElementById('pPlay').textContent='▶'; } else { playing=true; document.getElementById('pPlay').textContent='⏸'; playChunk(); } }
+function stopPlay(){ playing=false; stopAudio(); saveFrac(); document.getElementById('pPlay').textContent='▶'; renderList(); }
+function restart(){ idx=0; saveFrac(); stopAudio(); if(playing)playChunk(); else{updProg();document.getElementById('pNow').textContent=chunks[0]||'';} }
+function seek(d){ idx=Math.max(0,Math.min(chunks.length-1,idx+d)); saveFrac(); updProg(); stopAudio(); if(playing)playChunk(); else document.getElementById('pNow').textContent=chunks[idx]; }
+function voiceChanged(){ const sel=document.getElementById('pVoice'); localStorage.setItem('stc_voice',sel.value);
+  const frac = chunks.length? idx/chunks.length : 0; const wasPlaying=playing; playing=false; stopAudio();
+  if(curItem>-1){ buildChunks(); idx=Math.floor(frac*chunks.length); updProg(); if(wasPlaying){playing=true;document.getElementById('pPlay').textContent='⏸';playChunk();} } }
+function rateLbl(silent){ const r=parseFloat(document.getElementById('pRate').value); document.getElementById('rateVal').textContent=r.toFixed(2)+'×'; localStorage.setItem('stc_rate',r); if(!silent&&playing&&mode==='dev'){speechSynthesis.cancel();playChunk();} }
+
+/* ---------- REGISTRA / DETTA / IMPORT ---------- */
+let mediaRec=null, recChunks=[], recBlob=null, recording=false;
+async function toggleRec(){ if(!recording){ try{ const s=await navigator.mediaDevices.getUserMedia({audio:true}); mediaRec=new MediaRecorder(s); recChunks=[];
+  mediaRec.ondataavailable=e=>recChunks.push(e.data); mediaRec.onstop=()=>{recBlob=new Blob(recChunks,{type:'audio/webm'});document.getElementById('recAudio').src=URL.createObjectURL(recBlob);document.getElementById('recAfter').classList.remove('hide');s.getTracks().forEach(t=>t.stop());};
+  mediaRec.start();recording=true;document.getElementById('recBtn').textContent='■';document.getElementById('recState').textContent='Registrazione…'; }catch(e){alert('Microfono non disponibile: '+e.message);} }
+  else{ mediaRec.stop();recording=false;document.getElementById('recBtn').textContent='●';document.getElementById('recState').textContent='Ascolta e salva.'; } }
+function saveRec(){ const t=document.getElementById('recTitle').value.trim()||('Registrazione '+new Date().toLocaleString('it-IT'));
+  const r=new FileReader(); r.onload=()=>{items.unshift({title:t,type:'Registrazione',audio:r.result});saveAll();document.getElementById('recAfter').classList.add('hide');document.getElementById('recTitle').value='';document.getElementById('recState').textContent='Pronto';show('lib');renderList();}; r.readAsDataURL(recBlob); }
+function openAudio(i){ const a=new Audio(items[i].audio); a.play(); }
+
+let recog=null, dictating=false;
+function toggleDet(){ const SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR){document.getElementById('detState').textContent='Dettatura non supportata (usa Chrome).';return;}
+  if(!dictating){ recog=new SR();recog.lang='it-IT';recog.continuous=true;recog.interimResults=true;
+    recog.onresult=e=>{let fin='';for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)fin+=e.results[i][0].transcript+' ';} if(fin){const ta=document.getElementById('detText');ta.value+=(ta.value&&!/\s$/.test(ta.value)?' ':'')+fin;}};
+    recog.onend=()=>{if(dictating)recog.start();}; recog.start();dictating=true;document.getElementById('detBtn').textContent='■';document.getElementById('detState').textContent='Ti ascolto…'; }
+  else{dictating=false;recog.stop();document.getElementById('detBtn').textContent='🎤';document.getElementById('detState').textContent='Fermato. Copia o salva.';} }
+function copyDet(){ const ta=document.getElementById('detText');ta.select();document.execCommand('copy');document.getElementById('detState').textContent='Copiato! Incollalo nel Word.'; }
+function saveDet(){ const txt=document.getElementById('detText').value.trim();if(!txt){alert('Niente da salvare.');return;} const t=prompt('Titolo:','Dettato '+new Date().toLocaleDateString('it-IT'))||'Dettato'; items.unshift({title:t,type:'Nota',text:txt,frac:0});saveAll();document.getElementById('detText').value='';show('lib');renderList(); }
+
+async function importFile(input){ const f=input.files[0]; if(!f)return; const st=document.getElementById('impState'); const name=f.name.replace(/\.[^.]+$/,'');
+  if(!document.getElementById('addTitle').value.trim())document.getElementById('addTitle').value=name; st.textContent='Estraggo il testo…';
+  try{ let text='';
+    if(/\.pdf$/i.test(f.name)){ if(!window.pdfjsLib)throw new Error('Lettore PDF non caricato (serve internet).'); const ab=await f.arrayBuffer();const pdf=await pdfjsLib.getDocument({data:ab}).promise;for(let p=1;p<=pdf.numPages;p++){const pg=await pdf.getPage(p);const c=await pg.getTextContent();text+=c.items.map(i=>i.str).join(' ')+'\n\n';st.textContent='Estraggo… pagina '+p+'/'+pdf.numPages;} }
+    else if(/\.docx$/i.test(f.name)){ const ab=await f.arrayBuffer();const r=await mammoth.extractRawText({arrayBuffer:ab});text=r.value; }
+    else if(/\.txt$/i.test(f.name)){ text=await f.text(); }
+    else if(/^image\//i.test(f.type)||/\.(png|jpe?g|webp|bmp|gif)$/i.test(f.name)){ st.textContent='Riconosco il testo dall’immagine…'; await loadTess(); const {data}=await Tesseract.recognize(f,'ita',{logger:m=>{if(m.status==='recognizing text')st.textContent='OCR… '+Math.round((m.progress||0)*100)+'%';}}); text=data.text; }
+    else{ st.textContent='Formato non riconosciuto.'; return; }
+    text=(text||'').replace(/[ \t]+\n/g,'\n').trim(); document.getElementById('addText').value=text;
+    st.textContent=text?('Testo estratto ('+text.length+' caratteri). Controlla e salva.'):'Nessun testo (PDF scansionato? importalo come immagine per l’OCR).';
+  }catch(e){ st.textContent='Errore: '+e.message; } input.value=''; }
+function loadTess(){ return new Promise((res,rej)=>{ if(window.Tesseract)return res(); const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';s.onload=res;s.onerror=()=>rej(new Error('OCR non caricato.'));document.head.appendChild(s); }); }
+
+/* init */
+document.getElementById('elKey').value=localStorage.getItem('el_key')||'';
+document.getElementById('elModel').value=localStorage.getItem('el_model')||'eleven_multilingual_v2';
+renderVoices(); loadVoices(); renderList(); buildPad();
+(function(){ const f=document.getElementById('fbConfig'); if(f)f.value=localStorage.getItem('fb_config')||''; initFirebase(); })();
+</script>
+</body>
+</html>
