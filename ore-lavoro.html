@@ -483,7 +483,20 @@ window.chMon=function(v,d){
 
 /* ---- HELPERS ---- */
 function t2m(t){if(!t)return 0;const[h,m]=t.split(':').map(Number);return h*60+m;}
-function eMin(e){let m=0;if(e.im&&e.fm)m+=Math.max(0,t2m(e.fm)-t2m(e.im));if(e.ip&&e.fp)m+=Math.max(0,t2m(e.fp)-t2m(e.ip));return m;}
+function eMin(e){
+  let m=0;
+  if(e.im&&e.fm){
+    let diff=t2m(e.fm)-t2m(e.im);
+    if(diff<0) diff+=1440; // oltre mezzanotte
+    m+=diff;
+  }
+  if(e.ip&&e.fp){
+    let diff=t2m(e.fp)-t2m(e.ip);
+    if(diff<0) diff+=1440; // oltre mezzanotte
+    m+=diff;
+  }
+  return m;
+}
 function hhmm(t){return Math.floor(t/60)+','+String(t%60).padStart(2,'0');}
 const GG=['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'];
 function iso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
