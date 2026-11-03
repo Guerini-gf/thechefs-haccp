@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#111114">
+<title>Gobbo — SOFTTHECHEFS</title>
+<!-- Gobbo: teleprompter e registratore video personale. SOFTTHECHEFS, progettista Gian Felice Guerini, 03/11/2026. RISERVATO. -->
+<style>
+:root{--bg:#111114;--panel:#1b1b20;--panel2:#24242b;--line:#33333c;--text:#f3f1ec;--muted:#a3a0a8;--accent:#e8a33d;--accent2:#c9852a;--rec:#e5484d;--ok:#3fb27f;--r:14px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+input,textarea,select{font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+textarea{min-height:220px;resize:vertical;line-height:1.5}
+.hidden{display:none!important}
+/* PIN */
+#lock{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 30%,#2a2219,#111114 70%);padding:16px}
+.lock-card{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:34px 26px 26px;width:100%;max-width:360px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.logo{width:88px;height:88px;margin:0 auto 14px}
+.lock-title{font-size:22px;font-weight:800;letter-spacing:.06em}
+.lock-sub{color:var(--muted);font-size:13px;margin:4px 0 22px}
+.dots{display:flex;justify-content:center;gap:12px;margin-bottom:20px}
+.dot{width:15px;height:15px;border-radius:50%;border:2px solid var(--accent);transition:.15s}
+.dot.on{background:var(--accent)}
+.shake{animation:sh .35s}@keyframes sh{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:240px;margin:0 auto}
+.pad button{background:var(--panel2);border-radius:12px;padding:16px;font-size:20px;font-weight:600}
+.pad button:active{background:#3a2f20}
+/* Layout */
+header{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5}
+header .logo{width:34px;height:34px;margin:0}
+header h1{font-size:17px;margin:0;flex:1;letter-spacing:.03em}
+header h1 small{display:block;font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.08em}
+.tabs{display:flex;gap:6px}
+.tab{padding:8px 12px;border-radius:10px;color:var(--muted);font-weight:600;font-size:14px}
+.tab.on{background:var(--panel2);color:var(--text)}
+main{max-width:900px;margin:0 auto;padding:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-weight:600;font-size:14px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#1a1307}
+.btn.danger{color:#ff8a8d}
+.muted{color:var(--muted);font-size:13px}
+h2{font-size:15px;margin:0 0 12px;letter-spacing:.02em}
+.item{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.item:first-of-type{border-top:0}
+.item .t{flex:1;min-width:0}
+.item .t b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.take video{width:180px;max-width:40vw;border-radius:10px;background:#000}
+/* Studio */
+#studio{position:fixed;inset:0;z-index:20;background:#000;display:flex;flex-direction:column}
+#cam{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#cam.selfie{transform:scaleX(-1)}
+#prompter{position:absolute;left:0;right:0;top:0;height:42%;overflow:hidden;background:linear-gradient(rgba(0,0,0,.78),rgba(0,0,0,.55) 85%,rgba(0,0,0,0));padding:0 6%;scrollbar-width:none}
+#prompter::-webkit-scrollbar{display:none}
+#ptext{white-space:pre-wrap;line-height:1.35;font-weight:600;padding:30% 0 60%;text-shadow:0 2px 6px rgba(0,0,0,.8)}
+#ptext.mirror{transform:scaleX(-1)}
+#guide{position:absolute;left:0;right:0;top:calc(42% * .3);height:0;border-top:2px solid rgba(232,163,61,.55);pointer-events:none}
+.stop-bar{position:absolute;left:0;right:0;bottom:0;padding:14px 16px calc(14px + env(safe-area-inset-bottom));background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.85) 35%);display:flex;flex-direction:column;gap:12px}
+.ctrls{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
+.cbtn{width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:18px;backdrop-filter:blur(6px)}
+.cbtn.on{background:var(--accent);color:#1a1307}
+#recBtn{width:72px;height:72px;border-radius:50%;border:4px solid #fff;background:transparent;display:flex;align-items:center;justify-content:center}
+#recBtn i{width:52px;height:52px;border-radius:50%;background:var(--rec);transition:.2s}
+#recBtn.on i{width:28px;height:28px;border-radius:6px}
+.sliders{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;font-size:12px;color:#ddd}
+.sliders label{display:flex;align-items:center;gap:8px}
+.sliders input{width:120px;padding:0;accent-color:var(--accent)}
+#timer{position:absolute;top:calc(42% + 10px);left:50%;transform:translateX(-50%);background:rgba(0,0,0,.55);padding:5px 12px;border-radius:20px;font-variant-numeric:tabular-nums;font-size:14px;display:flex;gap:8px;align-items:center}
+#timer.rec::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--rec);animation:bl 1s infinite}
+@keyframes bl{50%{opacity:.2}}
+#count{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:140px;font-weight:800;color:#fff;text-shadow:0 4px 30px rgba(0,0,0,.7);pointer-events:none}
+#closeStudio{position:absolute;top:calc(42% + 8px);left:12px}
+#camErr{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;color:var(--muted)}
+footer{text-align:center;color:var(--muted);font-size:11px;padding:24px 16px 40px;letter-spacing:.06em}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="stc" viewBox="0 0 100 100"><rect width="100" height="100" rx="24" fill="#1f1a14"/><rect x="2" y="2" width="96" height="96" rx="22" fill="none" stroke="#e8a33d" stroke-width="2.5"/><rect x="20" y="30" width="60" height="7" rx="3.5" fill="#f3f1ec"/><rect x="20" y="45" width="44" height="7" rx="3.5" fill="#e8a33d"/><rect x="20" y="60" width="52" height="7" rx="3.5" fill="#f3f1ec" opacity=".6"/><circle cx="76" cy="74" r="8" fill="#e5484d"/></symbol>
+</defs></svg>
+
+<!-- Accesso con codice -->
+<div id="lock">
+  <div class="lock-card">
+    <svg class="logo"><use href="#stc"/></svg>
+    <div class="lock-title">SOFTTHECHEFS</div>
+    <div class="lock-sub">Gobbo</div>
+    <div class="dots" id="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+    <div class="pad" id="pad"><button>1</button><button>2</button><button>3</button><button>4</button><button>5</button><button>6</button><button>7</button><button>8</button><button>9</button><button style="visibility:hidden"></button><button>0</button><button>⌫</button></div>
+  </div>
+</div>
+
+<header>
+  <svg class="logo"><use href="#stc"/></svg>
+  <h1>Gobbo<small>SOFTTHECHEFS · LEGGI E REGISTRA</small></h1>
+  <nav class="tabs">
+    <button class="tab on" data-v="testi">Testi</button>
+    <button class="tab" data-v="riprese">Riprese</button>
+    <button class="tab" data-v="impostazioni">⚙</button>
+  </nav>
+</header>
+
+<main>
+  <!-- TESTI -->
+  <section id="v-testi">
+    <div class="card">
+      <h2>Nuovo testo</h2>
+      <input id="nTitle" placeholder="Titolo (es. Libro 1, capitolo 3)" style="margin-bottom:10px">
+      <textarea id="nBody" placeholder="Incolla qui il testo da leggere davanti alla fotocamera, oppure importa un file."></textarea>
+      <div class="row" style="margin-top:10px">
+        <button class="btn primary" id="saveText">Salva testo</button>
+        <label class="btn">Importa file (.txt, .docx)<input type="file" id="fileIn" accept=".txt,.md,.docx" hidden></label>
+        <span class="muted" id="importMsg"></span>
+      </div>
+    </div>
+    <div class="card">
+      <h2>I tuoi testi</h2>
+      <div id="textList"></div>
+    </div>
+    <div class="card">
+      <h2>Registrazione libera</h2>
+      <p class="muted" style="margin-top:0">Parla senza testo: apre la fotocamera e registra.</p>
+      <button class="btn" id="freeRec">Apri lo studio senza testo</button>
+    </div>
+  </section>
+
+  <!-- RIPRESE -->
+  <section id="v-riprese" class="hidden">
+    <div class="card">
+      <h2>Le tue riprese</h2>
+      <p class="muted" style="margin-top:0">Restano salvate in questo dispositivo. Scaricale per lavorarle o tenerle al sicuro.</p>
+      <div id="takeList"></div>
+    </div>
+  </section>
+
+  <!-- IMPOSTAZIONI -->
+  <section id="v-impostazioni" class="hidden">
+    <div class="card">
+      <h2>Codice di accesso</h2>
+      <div class="row"><input id="newPin" inputmode="numeric" maxlength="4" placeholder="Nuovo codice a 4 cifre" style="max-width:220px"><button class="btn primary" id="setPin">Cambia codice</button></div>
+      <p class="muted" id="pinMsg"></p>
+    </div>
+    <div class="card">
+      <h2>Qualità video</h2>
+      <select id="quality" style="max-width:260px"><option value="720">HD 720p (leggero)</option><option value="1080">Full HD 1080p</option></select>
+      <p class="muted">Sul telefono tienilo in verticale per i video da social, in orizzontale per YouTube.</p>
+    </div>
+    <div class="card">
+      <h2>Comandi da tastiera (PC)</h2>
+      <p class="muted" style="margin:0">Spazio: avvia/ferma lo scorrimento · R: registra/stop · Frecce su/giù: velocità · Esc: chiudi lo studio</p>
+    </div>
+  </section>
+</main>
+<footer>SOFTTHECHEFS · progettista Gian Felice Guerini · RISERVATO, vietata la divulgazione</footer>
+
+<!-- STUDIO -->
+<div id="studio" class="hidden">
+  <video id="cam" autoplay playsinline muted></video>
+  <div id="camErr" class="hidden"></div>
+  <div id="prompter"><div id="ptext"></div></div>
+  <div id="guide"></div>
+  <button class="cbtn" id="closeStudio" title="Chiudi">✕</button>
+  <div id="timer">00:00</div>
+  <div id="count" class="hidden"></div>
+  <div class="stop-bar">
+    <div class="sliders">
+      <label>Velocità <input type="range" id="speed" min="5" max="200" value="45"></label>
+      <label>Testo <input type="range" id="fsize" min="20" max="80" value="38"></label>
+    </div>
+    <div class="ctrls">
+      <button class="cbtn" id="playBtn" title="Scorri (spazio)">▶</button>
+      <button class="cbtn" id="topBtn" title="Torna all'inizio">⤒</button>
+      <button id="recBtn" title="Registra (R)"><i></i></button>
+      <button class="cbtn" id="mirBtn" title="Testo a specchio">⇋</button>
+      <button class="cbtn" id="flipBtn" title="Cambia fotocamera">⟲</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(()=>{
+const $=s=>document.querySelector(s);
+const LS={get:(k,d)=>{try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+/* ---------- Accesso con codice ---------- */
+let entry='';
+const pin=()=>LS.get('gobbo_pin','1234');
+const pad=$('#pad');
+pad.querySelectorAll('button').forEach(b=>{const k=b.textContent;if(k)b.onclick=()=>press(k)});
+function press(k){
+  if(k==='⌫')entry=entry.slice(0,-1);else if(entry.length<4)entry+=k;
+  document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('on',i<entry.length));
+  if(entry.length===4){
+    if(entry===pin()){$('#lock').classList.add('hidden');entry=''}
+    else{const c=$('.lock-card');c.classList.add('shake');setTimeout(()=>{c.classList.remove('shake');entry='';document.querySelectorAll('.dot').forEach(d=>d.classList.remove('on'))},380)}
+  }
+}
+document.addEventListener('keydown',e=>{if(!$('#lock').classList.contains('hidden')){if(/^\d$/.test(e.key))press(e.key);else if(e.key==='Backspace')press('⌫')}});
+
+/* ---------- Schede ---------- */
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===t));
+  ['testi','riprese','impostazioni'].forEach(v=>$('#v-'+v).classList.toggle('hidden',v!==t.dataset.v));
+  if(t.dataset.v==='riprese')renderTakes();
+});
+
+/* ---------- Testi ---------- */
+let texts=LS.get('gobbo_texts',[]);
+const saveTexts=()=>LS.set('gobbo_texts',texts);
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function renderTexts(){
+  const el=$('#textList');
+  if(!texts.length){el.innerHTML='<p class="muted">Nessun testo ancora. Incollane uno qui sopra.</p>';return}
+  el.innerHTML=texts.map((t,i)=>`<div class="item"><div class="t"><b>${esc(t.title)}</b><span class="muted">${t.body.split(/\s+/).filter(Boolean).length} parole · circa ${Math.max(1,Math.round(t.body.split(/\s+/).length/140))} min${t.pos?' · segnalibro salvato':''}</span></div><button class="btn primary" data-open="${i}">Leggi e registra</button><button class="btn danger" data-del="${i}">Elimina</button></div>`).join('');
+  el.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openStudio(+b.dataset.open));
+  el.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{const t=texts[+b.dataset.del];if(confirm('Eliminare "'+t.title+'" da questa app? Il file originale non viene toccato.')){texts.splice(+b.dataset.del,1);saveTexts();renderTexts()}});
+}
+$('#saveText').onclick=()=>{
+  const body=$('#nBody').value.trim();if(!body){$('#nBody').focus();return}
+  texts.unshift({title:$('#nTitle').value.trim()||('Testo del '+new Date().toLocaleDateString('it-IT')),body,pos:0});
+  saveTexts();$('#nTitle').value='';$('#nBody').value='';renderTexts();
+};
+$('#fileIn').onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;const msg=$('#importMsg');msg.textContent='Lettura del file…';
+  try{
+    let txt;
+    if(/\.docx$/i.test(f.name)){await loadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js');txt=(await mammoth.extractRawText({arrayBuffer:await f.arrayBuffer()})).value}
+    else txt=await f.text();
+    $('#nBody').value=txt.replace(/\n{3,}/g,'\n\n').trim();
+    if(!$('#nTitle').value)$('#nTitle').value=f.name.replace(/\.[^.]+$/,'');
+    msg.textContent='File caricato. Controlla e premi "Salva testo".';
+  }catch(err){msg.textContent='Non riesco a leggere il file. Prova a copiare e incollare il testo.'}
+  e.target.value='';
+};
+function loadScript(src){return new Promise((ok,ko)=>{if(window.mammoth)return ok();const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=ko;document.head.appendChild(s)})}
+
+/* ---------- Riprese (salvate nel dispositivo) ---------- */
+let db;
+function idb(){return db?Promise.resolve(db):new Promise((ok,ko)=>{const r=indexedDB.open('gobbo',1);r.onupgradeneeded=()=>r.result.createObjectStore('takes',{keyPath:'id'});r.onsuccess=()=>{db=r.result;ok(db)};r.onerror=()=>ko(r.error)})}
+async function putTake(t){try{const d=await idb();d.transaction('takes','readwrite').objectStore('takes').put(t)}catch(e){memTakes.push(t)}}
+const memTakes=[];
+async function allTakes(){try{const d=await idb();return await new Promise(ok=>{const q=d.transaction('takes').objectStore('takes').getAll();q.onsuccess=()=>ok(q.result.concat(memTakes))})}catch(e){return memTakes}}
+async function delTake(id){try{const d=await idb();d.transaction('takes','readwrite').objectStore('takes').delete(id)}catch(e){}}
+const urls=[];
+async function renderTakes(){
+  urls.splice(0).forEach(u=>URL.revokeObjectURL(u));
+  const list=(await allTakes()).sort((a,b)=>b.id-a.id),el=$('#takeList');
+  if(!list.length){el.innerHTML='<p class="muted">Nessuna ripresa ancora.</p>';return}
+  el.innerHTML='';
+  list.forEach(t=>{
+    const u=URL.createObjectURL(t.blob);urls.push(u);
+    const ext=t.blob.type.includes('mp4')?'mp4':'webm';
+    const name=(t.title||'Ripresa').replace(/[^\w\- àèéìòù]/gi,'').trim()+' '+new Date(t.id).toISOString().slice(0,16).replace('T',' ').replace(':','.')+'.'+ext;
+    const row=document.createElement('div');row.className='item take';
+    row.innerHTML=`<video src="${u}" controls playsinline preload="metadata"></video><div class="t"><b>${esc(t.title||'Registrazione libera')}</b><span class="muted">${new Date(t.id).toLocaleString('it-IT')} · ${fmt(t.dur)} · ${(t.blob.size/1048576).toFixed(1)} MB</span></div>`;
+    const a=document.createElement('a');a.className='btn primary';a.textContent='Scarica';a.href=u;a.download=name;
+    const d=document.createElement('button');d.className='btn danger';d.textContent='Elimina';
+    d.onclick=async()=>{if(confirm('Eliminare questa ripresa dal dispositivo? Se non l\'hai scaricata, va persa.')){await delTake(t.id);renderTakes()}};
+    row.append(a,d);el.appendChild(row);
+  });
+}
+const fmt=s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(Math.floor(s%60)).padStart(2,'0');
+
+/* ---------- Studio ---------- */
+let cur=-1,stream=null,facing='user',playing=false,last=0,rec=null,chunks=[],recStart=0,tick=null;
+const P=$('#prompter'),T=$('#ptext');
+let speed=LS.get('gobbo_speed',45),fsize=LS.get('gobbo_fsize',38),mirror=LS.get('gobbo_mirror',false);
+$('#speed').value=speed;$('#fsize').value=fsize;$('#quality').value=LS.get('gobbo_q','720');
+$('#quality').onchange=e=>LS.set('gobbo_q',e.target.value);
+function applyLook(){T.style.fontSize=fsize+'px';T.classList.toggle('mirror',mirror);$('#mirBtn').classList.toggle('on',mirror)}
+$('#speed').oninput=e=>{speed=+e.target.value;LS.set('gobbo_speed',speed)};
+$('#fsize').oninput=e=>{fsize=+e.target.value;LS.set('gobbo_fsize',fsize);applyLook()};
+$('#mirBtn').onclick=()=>{mirror=!mirror;LS.set('gobbo_mirror',mirror);applyLook()};
+
+async function openStudio(i){
+  cur=i;const t=texts[i];
+  $('#prompter').classList.toggle('hidden',!t);$('#guide').classList.toggle('hidden',!t);
+  $('#playBtn').classList.toggle('hidden',!t);$('#topBtn').classList.toggle('hidden',!t);$('#mirBtn').classList.toggle('hidden',!t);
+  T.textContent=t?t.body:'';applyLook();
+  $('#studio').classList.remove('hidden');document.body.style.overflow='hidden';
+  requestAnimationFrame(()=>{P.scrollTop=t&&t.pos?t.pos:0});
+  await startCam();
+}
+$('#freeRec').onclick=()=>openStudio(-1);
+async function startCam(){
+  stopCam();$('#camErr').classList.add('hidden');
+  const h=+LS.get('gobbo_q','720');
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facing,width:{ideal:h*16/9},height:{ideal:h}},audio:{echoCancellation:true,noiseSuppression:true}});
+    $('#cam').srcObject=stream;$('#cam').classList.toggle('selfie',facing==='user');
+  }catch(e){$('#camErr').textContent='Non riesco ad aprire la fotocamera o il microfono. Controlla di aver dato il permesso al browser, poi riapri lo studio.';$('#camErr').classList.remove('hidden')}
+}
+function stopCam(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}}
+$('#flipBtn').onclick=()=>{if(rec)return;facing=facing==='user'?'environment':'user';startCam()};
+function closeStudio(){
+  if(rec)stopRec();setPlay(false);
+  if(cur>=0&&texts[cur]){texts[cur].pos=P.scrollTop;saveTexts();renderTexts()}
+  stopCam();$('#studio').classList.add('hidden');document.body.style.overflow='';
+}
+$('#closeStudio').onclick=closeStudio;
+
+function setPlay(on){playing=on;$('#playBtn').textContent=on?'❚❚':'▶';$('#playBtn').classList.toggle('on',on);last=0;if(on)requestAnimationFrame(step)}
+function step(ts){if(!playing)return;if(last){P.scrollTop+=speed*(ts-last)/1000*(fsize/38)}last=ts;if(P.scrollTop+P.clientHeight>=P.scrollHeight-2){setPlay(false);return}requestAnimationFrame(step)}
+$('#playBtn').onclick=()=>setPlay(!playing);
+$('#topBtn').onclick=()=>{P.scrollTop=0};
+
+function pickMime(){return['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'].find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported(m))||''}
+async function countdown(){const c=$('#count');c.classList.remove('hidden');for(const n of[3,2,1]){c.textContent=n;await new Promise(r=>setTimeout(r,800))}c.classList.add('hidden')}
+async function startRec(){
+  if(!stream||rec)return;
+  if(!window.MediaRecorder){$('#timer').textContent='Questo browser non registra video: usa Chrome o Safari aggiornati';return}
+  await countdown();
+  chunks=[];const mime=pickMime();
+  try{rec=new MediaRecorder(stream,mime?{mimeType:mime,videoBitsPerSecond:LS.get('gobbo_q','720')==='1080'?8e6:4e6}:undefined)}catch(e){rec=new MediaRecorder(stream)}
+  rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
+  rec.onstop=async()=>{
+    const blob=new Blob(chunks,{type:rec.mimeType||mime||'video/webm'}),dur=(Date.now()-recStart)/1000;
+    await putTake({id:Date.now(),title:cur>=0&&texts[cur]?texts[cur].title:'',dur,blob});
+    rec=null;$('#recBtn').classList.remove('on');$('#timer').classList.remove('rec');
+    $('#timer').textContent='Salvata · '+fmt(dur);
+  };
+  rec.start(1000);recStart=Date.now();$('#recBtn').classList.add('on');$('#timer').classList.add('rec');
+  tick=setInterval(()=>{$('#timer').textContent=fmt((Date.now()-recStart)/1000)},250);
+  if(cur>=0)setPlay(true);
+}
+function stopRec(){if(!rec)return;clearInterval(tick);setPlay(false);rec.stop()}
+$('#recBtn').onclick=()=>rec?stopRec():startRec();
+
+document.addEventListener('keydown',e=>{
+  if($('#studio').classList.contains('hidden'))return;
+  if(e.key===' '){e.preventDefault();setPlay(!playing)}
+  else if(e.key==='r'||e.key==='R')rec?stopRec():startRec();
+  else if(e.key==='ArrowUp'){e.preventDefault();speed=Math.min(200,speed+5);$('#speed').value=speed;LS.set('gobbo_speed',speed)}
+  else if(e.key==='ArrowDown'){e.preventDefault();speed=Math.max(5,speed-5);$('#speed').value=speed;LS.set('gobbo_speed',speed)}
+  else if(e.key==='Escape')closeStudio();
+});
+
+/* ---------- Impostazioni ---------- */
+$('#setPin').onclick=()=>{const v=$('#newPin').value.trim();if(!/^\d{4}$/.test(v)){$('#pinMsg').textContent='Servono 4 cifre.';return}LS.set('gobbo_pin',v);$('#newPin').value='';$('#pinMsg').textContent='Codice cambiato. Ricordalo: serve per entrare.'};
+
+renderTexts();
+})();
+</script>
+</body>
+</html>
