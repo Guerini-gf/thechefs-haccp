@@ -170,6 +170,21 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--verde);}
   .hm{display:none!important;}
   .agenda-head>div:nth-child(6),.agenda-head>div:nth-child(7){display:none;}
 }
+/* FOGLIO ORE SETTIMANALE */
+.fg-modal{max-width:640px;max-height:94vh;overflow-y:auto;}
+.fg-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;}
+.fg-nav span{font-weight:700;font-size:14px;text-align:center;flex:1;}
+.fg-canvas{width:100%;height:auto;border:1px solid var(--linea);border-radius:8px;background:#fff;display:block;}
+.fg-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.fg-actions .btn{flex:1;min-width:120px;}
+.fg-hint{font-size:12px;color:var(--grigio);margin-top:8px;}
+#fgPrint{display:none;}
+@media print{
+  body>*{display:none!important;}
+  #fgPrint{display:block!important;}
+  #fgPrint img{width:100%;}
+  @page{size:A4;margin:12mm;}
+}
 </style>
 </head>
 <body>
@@ -270,8 +285,32 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--verde);}
     <button class="bnav-btn" id="bn-ore" onclick="swView('ore')">
       <span class="bnav-icon">&#128182;</span>Ore &amp; Totale
     </button>
+    <button class="bnav-btn" id="bn-fg" onclick="openFoglio()">
+      <span class="bnav-icon">&#128196;</span>Foglio ore
+    </button>
   </div>
 </div>
+
+<!-- MODALE FOGLIO ORE SETTIMANALE -->
+<div class="modal-bg" id="mFoglio">
+  <div class="modal fg-modal">
+    <div class="m-title">&#128196; Foglio ore settimanale</div>
+    <div class="field"><label>Azienda</label><select id="fgAz" onchange="drawFoglio()"></select></div>
+    <div class="fg-nav">
+      <button class="nav-btn" onclick="fgWeek(-1)">&#8249;</button>
+      <span id="fgLbl">—</span>
+      <button class="nav-btn" onclick="fgWeek(1)">&#8250;</button>
+    </div>
+    <canvas id="fgCanvas" class="fg-canvas" width="1240" height="1754"></canvas>
+    <div class="fg-hint">Il foglio prende le ore scritte in Agenda. Per correggere una riga, modificala in Agenda.</div>
+    <div class="fg-actions">
+      <button class="btn sec" onclick="closeFoglio()">Chiudi</button>
+      <button class="btn sec" onclick="printFoglio()">&#128424; PDF / Stampa</button>
+      <button class="btn" onclick="shareFoglio()">&#128228; Invia</button>
+    </div>
+  </div>
+</div>
+<div id="fgPrint"><img id="fgPrintImg" alt="Foglio ore"></div>
 
 <!-- MODALE VOCE -->
 <div class="modal-bg" id="mEntry">
@@ -507,6 +546,117 @@ function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;',
 function rate(id){const az=S.aziende.find(a=>a.id===id);if(az&&az.rate!=null&&az.rate!=='')return Number(az.rate);return Number(S.defaultRate)||0;}
 function renderAll(){renderAg();renderOre();}
 
+/* ---- FOGLIO ORE SETTIMANALE (per azienda, da inviare) ---- */
+let fgMon=monOf(iso(new Date()));
+function fgHM(m){return Math.floor(m/60)+':'+String(m%60).padStart(2,'0');}
+function fgEnd(){const d=new Date(fgMon+'T00:00:00');d.setDate(d.getDate()+6);return iso(d);}
+function fgWeekEntries(){
+  const azId=document.getElementById('fgAz').value,endS=fgEnd();
+  return S.entries.filter(e=>e.aziendaId===azId&&e.data>=fgMon&&e.data<=endS&&eMin(e)>0)
+    .sort((a,b)=>a.data<b.data?-1:a.data>b.data?1:t2m(a.im||a.ip)-t2m(b.im||b.ip));
+}
+window.openFoglio=function(wk){
+  if(wk)fgMon=monOf(wk);
+  const sel=document.getElementById('fgAz');const prev=sel.value;
+  sel.innerHTML=S.aziende.map(a=>`<option value="${a.id}">${a.id} — ${esc(a.nome)}</option>`).join('');
+  // propone l'azienda con più ore in quella settimana
+  const endS=fgEnd(),cnt={};
+  S.entries.forEach(e=>{if(e.data>=fgMon&&e.data<=endS&&e.aziendaId)cnt[e.aziendaId]=(cnt[e.aziendaId]||0)+eMin(e);});
+  const best=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0];
+  sel.value=best||prev||(S.aziende[0]&&S.aziende[0].id)||'';
+  document.getElementById('mFoglio').classList.add('show');
+  drawFoglio();
+};
+window.closeFoglio=function(){document.getElementById('mFoglio').classList.remove('show');};
+window.fgWeek=function(d){const x=new Date(fgMon+'T00:00:00');x.setDate(x.getDate()+7*d);fgMon=iso(x);drawFoglio();};
+function fgWrap(ctx,text,maxW){
+  const words=String(text).split(/\s+/);const lines=[];let cur='';
+  words.forEach(w=>{const t=cur?cur+' '+w:w;if(ctx.measureText(t).width>maxW&&cur){lines.push(cur);cur=w;}else cur=t;});
+  if(cur)lines.push(cur);return lines;
+}
+window.drawFoglio=function(){
+  const c=document.getElementById('fgCanvas'),ctx=c.getContext('2d');
+  const W=c.width,H=c.height,L=110,R=W-110,F='Calibri, Arial, sans-serif';
+  const az=S.aziende.find(a=>a.id===document.getElementById('fgAz').value);
+  const endS=fgEnd();
+  document.getElementById('fgLbl').textContent=`Settimana ${fmt(fgMon)} – ${fmt(endS)}`;
+  const rows=fgWeekEntries();
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+  ctx.textBaseline='middle';
+  // titolo verde come il modello
+  const g=ctx.createLinearGradient(0,110,0,230);g.addColorStop(0,'#8fd18a');g.addColorStop(1,'#bfe3b4');
+  ctx.fillStyle=g;ctx.fillRect(L,110,R-L,120);
+  ctx.strokeStyle='#7fae6e';ctx.lineWidth=2;ctx.strokeRect(L,110,R-L,120);
+  ctx.fillStyle='#111';ctx.font='58px '+F;ctx.textAlign='center';
+  ctx.fillText('ORE LAVORO',W/2,172);
+  // azienda e settimana
+  ctx.textAlign='left';ctx.fillStyle='#2f4b7c';ctx.font='bold 34px '+F;
+  ctx.fillText(az?az.nome:'',L,295);
+  ctx.textAlign='right';ctx.fillStyle='#444';ctx.font='28px '+F;
+  ctx.fillText(`Settimana dal ${fmt(fgMon)} al ${fmt(endS)}`,R,295);
+  // tabella
+  const cols=[L,L+190,L+400,R-150,R],top=350,hh=56,rh=62;
+  const nRows=Math.max(8,rows.length);
+  ctx.font='bold 26px '+F;ctx.fillStyle='#2f4b7c';ctx.textAlign='center';
+  ['DATA','GIORNO','LUOGO/LAVORO','ORE'].forEach((t,i)=>ctx.fillText(t,(cols[i]+cols[i+1])/2,top+hh/2));
+  const tb=top+hh+nRows*rh;
+  ctx.strokeStyle='#222';ctx.lineWidth=2;
+  for(let i=-1;i<=nRows;i++){const y=i<0?top:top+hh+i*rh;ctx.beginPath();ctx.moveTo(L,y);ctx.lineTo(R,y);ctx.stroke();}
+  cols.forEach(x=>{ctx.beginPath();ctx.moveTo(x,top);ctx.lineTo(x,tb);ctx.stroke();});
+  let tot=0;ctx.fillStyle='#111';
+  const evW=cols[3]-cols[2]-24;
+  rows.forEach((e,i)=>{
+    const y=top+hh+i*rh+rh/2,m=eMin(e);tot+=m;
+    ctx.font='26px '+F;ctx.textAlign='center';
+    ctx.fillText(fmt(e.data),(cols[0]+cols[1])/2,y);
+    ctx.fillText(ggn(e.data),(cols[1]+cols[2])/2,y);
+    ctx.fillText(fgHM(m),(cols[3]+cols[4])/2,y);
+    ctx.textAlign='left';
+    const ev=e.evento||'';
+    if(fgWrap(ctx,ev,evW).length>1){
+      ctx.font='22px '+F;const l=fgWrap(ctx,ev,evW);
+      ctx.fillText(l[0],cols[2]+12,y-13);ctx.fillText(l.slice(1).join(' '),cols[2]+12,y+14,evW);
+    }else ctx.fillText(ev,cols[2]+12,y);
+  });
+  if(!rows.length){ctx.textAlign='center';ctx.fillStyle='#b00';ctx.font='italic 26px '+F;
+    ctx.fillText('Nessuna ora per questa azienda in questa settimana',W/2,top+hh+rh/2);}
+  // totale settimana
+  const ty=tb+110;
+  ctx.textAlign='left';ctx.fillStyle='#2f4b7c';ctx.font='bold 34px '+F;
+  ctx.fillText('TOTALE ORE SETTIMANA:',L,ty);
+  ctx.strokeStyle='#222';ctx.lineWidth=2;ctx.strokeRect(R-260,ty+40,260,70);
+  ctx.fillStyle='#111';ctx.font='bold 36px '+F;ctx.textAlign='center';
+  ctx.fillText(fgHM(tot),R-130,ty+75);
+  // firma in fondo
+  ctx.textAlign='right';ctx.fillStyle='#222';ctx.font='bold 34px '+F;
+  ctx.fillText('GUERINIGF',R,H-150);
+  ctx.strokeStyle='#999';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(R-300,H-120);ctx.lineTo(R,H-120);ctx.stroke();
+};
+function fgName(){
+  const az=S.aziende.find(a=>a.id===document.getElementById('fgAz').value);
+  return ('Ore '+(az?az.nome:'')+' '+fmt(fgMon).replace(/\//g,'-')).replace(/[^\w\- ']/g,'').trim();
+}
+window.shareFoglio=function(){
+  const c=document.getElementById('fgCanvas');
+  c.toBlob(async blob=>{
+    if(!blob){alert("Non riesco a creare l'immagine. Prova con PDF / Stampa.");return;}
+    const file=new File([blob],fgName()+'.png',{type:'image/png'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      try{await navigator.share({files:[file],title:fgName()});}catch(e){if(e&&e.name!=="AbortError")alert("Invio non riuscito: "+(e.message||e));}
+    }else{
+      const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=file.name;a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+      alert('Immagine salvata nei Download: ora puoi allegarla su WhatsApp.');
+    }
+  },'image/png');
+};
+window.printFoglio=function(){
+  document.getElementById('fgPrintImg').src=document.getElementById('fgCanvas').toDataURL('image/png');
+  const t=document.title;document.title=fgName();
+  setTimeout(()=>{window.print();document.title=t;},200);
+};
+
+
 /* ---- AGENDA ---- */
 function renderAg(){
   const y=agMon.getFullYear(),m=agMon.getMonth();
@@ -526,7 +676,7 @@ function renderAg(){
     const wEnd=new Date(wk+'T00:00:00');wEnd.setDate(wEnd.getDate()+6);
     html+=`<div class="sett-bar">
       <span>&#128197; Sett. ${fmt(wk)} &ndash; ${fmt(iso(wEnd))}</span>
-      <button class="btn-add-sett" onclick="openEntry(null,'${days[0]}')">+ Aggiungi</button>
+      <span><button class="btn-add-sett" onclick="openFoglio('${wk}')">&#128196; Foglio</button> <button class="btn-add-sett" onclick="openEntry(null,'${days[0]}')">+ Aggiungi</button></span>
     </div>`;
     days.forEach(ds=>{
       const entries=eMap[ds]||[];const isT=ds===today;
